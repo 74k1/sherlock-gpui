@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-49462267.js";
+            window.path_to_searchindex_js = "searchindex-5ca3f0e6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-d2a6eaca.js"></script>
@@ -259,7 +259,391 @@ If <code>Port</code> is <code>22</code>: <code>ssh -p 22 myhost</code></p>
 <p>The space is inside the prefix string — there is no space between <code>{prefix[Port]:-p }</code> and <code>{variable:Port}</code>.</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="launchers"><a href="#launchers" class="header">Launchers</a></h1>
+<h1 id="launchers"><a class="header" href="#launchers">Launchers</a></h1>
+<p>Launchers are the backbone of Sherlock. Each item — applications, custom commands, widgets — is backed by a launcher. The <code>fallback.json</code> file controls which launchers are active and how they behave.</p>
+<p>The default location is <code>~/.config/sherlock/fallback.json</code>.</p>
+<hr>
+<h2 id="shared-attributes"><a class="header" href="#shared-attributes">Shared Attributes</a></h2>
+<h3 id="required"><a class="header" href="#required">Required</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Attribute</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>type</code></td><td>The launcher type string (e.g. <code>app_launcher</code>, <code>command</code>)</td></tr>
+<tr><td><code>args</code></td><td>Arguments specific to the launcher type. Can be empty (<code>{}</code>)</td></tr>
+<tr><td><code>priority</code></td><td>Display order at startup. <code>0</code> means the launcher only appears when its <code>alias</code> is active</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="optional"><a class="header" href="#optional">Optional</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Attribute</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>name</code></td><td>Category label shown under the tile’s name</td></tr>
+<tr><td><code>alias</code></td><td>Prefix used to search within this launcher specifically</td></tr>
+<tr><td><code>home</code></td><td>When to show this launcher. One of <code>Home</code>, <code>OnlyHome</code>, <code>Persist</code>, <code>Search</code> (default)</td></tr>
+<tr><td><code>async</code></td><td>Run the launcher asynchronously</td></tr>
+<tr><td><code>on_return</code></td><td>What happens when return is pressed</td></tr>
+<tr><td><code>spawn_focus</code></td><td>Whether the tile auto-focuses when it appears first in the list</td></tr>
+<tr><td><code>shortcut</code></td><td>Whether to show the shortcut indicator</td></tr>
+<tr><td><code>actions</code></td><td>Custom context menu entries — see <a href="#actions">Actions</a></td></tr>
+<tr><td><code>variables</code></td><td>Runtime input fields in the search bar — see <a href="#variable-inputs">Variable Inputs</a></td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="app-launcher"><a class="header" href="#app-launcher">App Launcher</a></h2>
+<p>Searches and launches installed applications from <code>.desktop</code> files.</p>
+<pre><code class="language-json">{
+    "name": "App Launcher",
+    "alias": "app",
+    "type": "app_launcher",
+    "args": {
+        "use_keywords": true
+    },
+    "priority": 2,
+    "home": "Home"
+}
+</code></pre>
+<h3 id="args"><a class="header" href="#args">args</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Required</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>use_keywords</code></td><td>no</td><td>If <code>true</code>, also searches the <code>Keywords</code> field from the <code>.desktop</code> file</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="bookmark-launcher"><a class="header" href="#bookmark-launcher">Bookmark Launcher</a></h2>
+<p>Finds and launches browser bookmarks.</p>
+<pre><code class="language-json">{
+    "name": "Bookmarks",
+    "type": "bookmarks",
+    "args": {},
+    "priority": 3,
+    "home": "Search"
+}
+</code></pre>
+<h3 id="supported-browsers"><a class="header" href="#supported-browsers">Supported browsers</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Browser</th><th>Config value in <code>default_apps</code></th></tr>
+</thead>
+<tbody>
+<tr><td>Zen</td><td><code>zen</code>, <code>zen-browser</code>, <code>/opt/zen-browser-bin/zen-bin %u</code></td></tr>
+<tr><td>Firefox</td><td><code>firefox</code>, <code>/usr/lib/firefox/firefox %u</code></td></tr>
+<tr><td>Brave</td><td><code>brave</code>, <code>brave %u</code></td></tr>
+<tr><td>Chrome</td><td><code>chrome</code>, <code>google-chrome</code>, <code>/usr/bin/google-chrome-stable %u</code></td></tr>
+<tr><td>Thorium</td><td><code>thorium</code>, <code>/usr/bin/thorium-browser %u</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>The browser is matched against the <code>exec</code> string in your config, so both the short name and the full path are accepted.</p>
+<hr>
+<h2 id="calculator"><a class="header" href="#calculator">Calculator</a></h2>
+<p>Evaluates math expressions and unit conversions. On return, copies the result to the clipboard.</p>
+<pre><code class="language-json">{
+    "name": "Calculator",
+    "type": "calculation",
+    "args": {
+        "capabilities": [
+            "calc.math",
+            "calc.units"
+        ]
+    },
+    "priority": 1
+}
+</code></pre>
+<h3 id="args-1"><a class="header" href="#args-1">args</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Required</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>capabilities</code></td><td>no</td><td>List of enabled features. Defaults to <code>calc.math</code> and <code>calc.units</code></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="capabilities"><a class="header" href="#capabilities">Capabilities</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Value</th><th>Enables</th></tr>
+</thead>
+<tbody>
+<tr><td><code>calc.math</code></td><td>Mathematical expression evaluation</td></tr>
+<tr><td><code>calc.units</code></td><td>All unit conversions</td></tr>
+<tr><td><code>calc.length</code></td><td>Length only</td></tr>
+<tr><td><code>calc.weight</code></td><td>Weight only</td></tr>
+<tr><td><code>calc.volume</code></td><td>Volume only</td></tr>
+<tr><td><code>calc.temperature</code></td><td>Temperature only</td></tr>
+<tr><td><code>calc.pressure</code></td><td>Pressure only</td></tr>
+<tr><td><code>calc.digital</code></td><td>Digital storage only</td></tr>
+<tr><td><code>calc.time</code></td><td>Time only</td></tr>
+<tr><td><code>calc.area</code></td><td>Area only</td></tr>
+<tr><td><code>calc.speed</code></td><td>Speed only</td></tr>
+<tr><td><code>calc.currencies</code></td><td>Currency conversion (fetched from TradingView, cached)</td></tr>
+<tr><td><code>colors</code></td><td>Color space conversion (<code>rgb</code>, <code>hex</code>, <code>hsl</code>, <code>hsv</code>, <code>lab</code>)</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="category-launcher"><a class="header" href="#category-launcher">Category Launcher</a></h2>
+<p>Groups launchers or commands under a single tile. Activating the tile switches into that launcher’s mode.</p>
+<pre><code class="language-json">{
+    "name": "Categories",
+    "alias": "cat",
+    "type": "categories",
+    "args": {
+        "categories": {
+            "Kill Processes": {
+                "icon": "sherlock-process",
+                "exec": "kill",
+                "search_string": "terminate;kill;process"
+            },
+            "Power Menu": {
+                "icon": "battery-full-symbolic",
+                "exec": "pm",
+                "search_string": "powermenu;"
+            }
+        }
+    },
+    "priority": 3,
+    "home": "Home"
+}
+</code></pre>
+<h3 id="args-2"><a class="header" href="#args-2">args</a></h3>
+<p><strong><code>categories</code></strong> (required) — a map of named entries:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Required</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>icon</code></td><td>no</td><td>Icon name to display</td></tr>
+<tr><td><code>icon_class</code></td><td>no</td><td>CSS class applied to the icon</td></tr>
+<tr><td><code>exec</code></td><td>no</td><td>Alias of the launcher to activate on return</td></tr>
+<tr><td><code>search_string</code></td><td>no</td><td>String used for fuzzy matching</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="command-launcher"><a class="header" href="#command-launcher">Command Launcher</a></h2>
+<p>Runs custom shell commands. Supports variable inputs and replacement variables.</p>
+<pre><code class="language-json">{
+    "name": "Utilities",
+    "alias": "ex",
+    "type": "command",
+    "args": {
+        "commands": {
+            "NordVPN": {
+                "icon": "nordvpn",
+                "exec": "nordvpn c {variable:location}",
+                "search_string": "nordvpn",
+                "variables": [
+                    { "string_input": "location" }
+                ]
+            }
+        }
+    },
+    "priority": 5
+}
+</code></pre>
+<h3 id="args-3"><a class="header" href="#args-3">args</a></h3>
+<p><strong><code>commands</code></strong> (required) — a map of named entries:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Required</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>exec</code></td><td>yes</td><td>The command to run</td></tr>
+<tr><td><code>icon</code></td><td>no</td><td>Icon name to display</td></tr>
+<tr><td><code>icon_class</code></td><td>no</td><td>CSS class applied to the icon</td></tr>
+<tr><td><code>search_string</code></td><td>no</td><td>String used for fuzzy matching</td></tr>
+<tr><td><code>variables</code></td><td>no</td><td>Variable input fields — see <a href="#variable-inputs">Variable Inputs</a></td></tr>
+<tr><td><code>tag_start</code></td><td>no</td><td>Content shown in the left tag</td></tr>
+<tr><td><code>tag_end</code></td><td>no</td><td>Content shown in the right tag</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="music-player"><a class="header" href="#music-player">Music Player</a></h2>
+<p>Shows the currently playing track and controls playback via MPRIS over D-Bus.</p>
+<pre><code class="language-json">{
+    "name": "Spotify",
+    "type": "audio_sink",
+    "args": {},
+    "async": true,
+    "priority": 1,
+    "home": "Home",
+    "spawn_focus": false,
+    "actions": [
+        {
+            "name": "Skip",
+            "icon": "media-seek-forward",
+            "exec": "playerctl next",
+            "method": "command"
+        }
+    ],
+    "binds": [
+        { "bind": "control+p", "callback": "playpause", "exit": false },
+        { "bind": "control+l", "callback": "next", "exit": false },
+        { "bind": "control+h", "callback": "previous", "exit": false }
+    ]
+}
+</code></pre>
+<h3 id="inner-functions"><a class="header" href="#inner-functions">Inner functions</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Function</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>playpause</code></td><td>Toggle playback</td></tr>
+<tr><td><code>next</code></td><td>Skip to next track</td></tr>
+<tr><td><code>previous</code></td><td>Go to previous track</td></tr>
+<tr><td><code>unbind</code></td><td>Unbind a key (useful to unbind return)</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="weather-launcher"><a class="header" href="#weather-launcher">Weather Launcher</a></h2>
+<p>Shows current weather conditions for a configured location.</p>
+<pre><code class="language-json">{
+    "name": "Weather",
+    "type": "weather",
+    "args": {
+        "location": "berlin",
+        "update_interval": 60,
+        "icon_theme": "Sherlock",
+        "show_datetime": false
+    },
+    "priority": 1,
+    "home": "OnlyHome",
+    "async": true,
+    "shortcut": false,
+    "spawn_focus": false
+}
+</code></pre>
+<h3 id="args-4"><a class="header" href="#args-4">args</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Required</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>location</code></td><td>yes</td><td>City or region name</td></tr>
+<tr><td><code>update_interval</code></td><td>no</td><td>Cache TTL in minutes</td></tr>
+<tr><td><code>icon_theme</code></td><td>no</td><td><code>Sherlock</code> to use bundled icons, omit for system theme</td></tr>
+<tr><td><code>show_datetime</code></td><td>no</td><td>Show current date and time alongside weather</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="web-launcher"><a class="header" href="#web-launcher">Web Launcher</a></h2>
+<p>Opens a search query in the browser using a configured search engine.</p>
+<pre><code class="language-json">{
+    "name": "Web Search",
+    "display_name": "Google Search",
+    "alias": "gg",
+    "type": "web_launcher",
+    "args": {
+        "search_engine": "google",
+        "icon": "google"
+    },
+    "priority": 100
+}
+</code></pre>
+<h3 id="args-5"><a class="header" href="#args-5">args</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Field</th><th>Required</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>search_engine</code></td><td>yes</td><td>Engine name or a custom URL containing <code>{keyword}</code></td></tr>
+<tr><td><code>icon</code></td><td>yes</td><td>Icon name to display</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="built-in-search-engines"><a class="header" href="#built-in-search-engines">Built-in search engines</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Name</th><th>URL</th></tr>
+</thead>
+<tbody>
+<tr><td><code>google</code></td><td><code>https://www.google.com/search?q={keyword}</code></td></tr>
+<tr><td><code>bing</code></td><td><code>https://www.bing.com/search?q={keyword}</code></td></tr>
+<tr><td><code>duckduckgo</code></td><td><code>https://duckduckgo.com/?q={keyword}</code></td></tr>
+<tr><td><code>yahoo</code></td><td><code>https://search.yahoo.com/search?p={keyword}</code></td></tr>
+<tr><td><code>ecosia</code></td><td><code>https://www.ecosia.org/search?q={keyword}</code></td></tr>
+<tr><td><code>startpage</code></td><td><code>https://www.startpage.com/sp/search?q={keyword}</code></td></tr>
+<tr><td><code>qwant</code></td><td><code>https://www.qwant.com/?q={keyword}</code></td></tr>
+<tr><td><code>yandex</code></td><td><code>https://yandex.com/search/?text={keyword}</code></td></tr>
+<tr><td>Custom</td><td>Any URL with <code>{keyword}</code> as the query placeholder</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h2 id="clipboard-launcher"><a class="header" href="#clipboard-launcher">Clipboard Launcher</a></h2>
+<blockquote>
+<p><strong>Not yet implemented in this version</strong></p>
+</blockquote>
+<p>Reads the clipboard and acts on its content — opening URLs, displaying colors, or evaluating expressions.</p>
+<hr>
+<h2 id="debug-launcher"><a class="header" href="#debug-launcher">Debug Launcher</a></h2>
+<blockquote>
+<p><strong>Not yet implemented in this version</strong></p>
+</blockquote>
+<p>Runs internal debug commands such as clearing the cache or resetting launch counts.</p>
+<hr>
+<h2 id="emoji-picker"><a class="header" href="#emoji-picker">Emoji Picker</a></h2>
+<blockquote>
+<p><strong>Not yet implemented in this version</strong></p>
+</blockquote>
+<p>Searches and inserts emoji characters.</p>
+<hr>
+<h2 id="bulk-text"><a class="header" href="#bulk-text">Bulk Text</a></h2>
+<blockquote>
+<p><strong>Not yet implemented in this version</strong></p>
+</blockquote>
+<p>Runs an external script asynchronously and displays its output as a text widget.</p>
+<hr>
+<h2 id="teams-event"><a class="header" href="#teams-event">Teams Event</a></h2>
+<blockquote>
+<p><strong>Not yet implemented in this version</strong></p>
+</blockquote>
+<p>Shows upcoming Microsoft Teams meetings and joins them on return.</p>
+<hr>
+<h2 id="theme-picker"><a class="header" href="#theme-picker">Theme Picker</a></h2>
+<blockquote>
+<p><strong>Not yet implemented in this version</strong></p>
+</blockquote>
+<p>Lists available themes and applies them on selection.</p>
+<hr>
+<h2 id="process-terminator"><a class="header" href="#process-terminator">Process Terminator</a></h2>
+<blockquote>
+<p><strong>Not yet implemented in this version</strong></p>
+</blockquote>
+<p>Lists running user processes and terminates the selected one on return.</p>
+<hr>
+<h2 id="pomodoro-timer"><a class="header" href="#pomodoro-timer">Pomodoro Timer</a></h2>
+<blockquote>
+<p><strong>Not yet implemented in this version</strong></p>
+</blockquote>
+<p>Displays a Pomodoro focus timer. Requires the external <a href="https://github.com/Skxxtz/sherlock-pomodoro">sherlock-pomodoro</a> client.</p>
 
                     </main>
 
