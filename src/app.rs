@@ -15,7 +15,7 @@ use tokio::net::UnixListener;
 
 use crate::{
     SOCKET_PATH,
-    app::theme::{ActiveTheme, ThemeData},
+    app::theme::ActiveTheme,
     loader::{LauncherLoadResult, Loader, SetupResult},
     ui::{
         launcher::{
@@ -53,7 +53,7 @@ pub fn run_app(cx: &mut App, result: SetupResult) {
 
     bindings::register_bindings(cx);
 
-    let theme = ActiveTheme(Arc::new(ThemeData::dark()));
+    let theme = ActiveTheme::default();
     cx.set_global(theme);
 
     let data: RenderableChildEntity = cx.new(|_| Rc::new(Vec::new()));

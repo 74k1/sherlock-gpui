@@ -37,12 +37,25 @@ pub struct ThemeData {
     pub color_warn: Hsla,
     pub color_err: Hsla,
     pub color_succ: Hsla,
+    pub color_info: Hsla,
     // Config banner
     pub banner_bg: Hsla,
     pub banner_border: Hsla,
     pub banner_text: Hsla,
 }
 impl gpui::Global for ActiveTheme {}
+
+impl Default for ActiveTheme {
+    fn default() -> Self {
+        Self(Arc::new(ThemeData::default()))
+    }
+}
+
+impl Default for ThemeData {
+    fn default() -> Self {
+        Self::dark()
+    }
+}
 
 impl ThemeData {
     pub fn dark() -> Self {
@@ -78,6 +91,7 @@ impl ThemeData {
             color_warn: hsla(45.0 / 360.0, 0.85, 0.65, 1.0),
             color_err: hsla(0.0, 0.85, 0.65, 1.0),
             color_succ: hsla(145.0 / 360.0, 0.75, 0.60, 1.0),
+            color_info: hsla(210.0 / 360.0, 0.85, 0.65, 1.0),
             // Config banner
             banner_bg: hsla(0.11, 0.8, 0.12, 1.0),
             banner_border: hsla(0.11, 0.9, 0.35, 1.0),
@@ -122,6 +136,7 @@ impl ThemeData {
             color_warn: hsla(38.0 / 360.0, 0.60, 0.45, 1.0), // Ochre / Gold
             color_err: hsla(0.0, 0.50, 0.50, 1.0),           // Soft Carmine
             color_succ: hsla(150.0 / 360.0, 0.40, 0.45, 1.0), // Sage Green
+            color_info: hsla(210.0 / 360.0, 0.40, 0.50, 1.0), // Desaturated Blue
 
             // Config banner - Light Champagne/Gold
             banner_bg: hsla(45.0 / 360.0, 0.30, 0.92, 1.0),
@@ -158,6 +173,7 @@ impl ThemeData {
             color_warn: hsla(41.0 / 360.0, 0.86, 0.83, 1.0),
             color_err: hsla(343.0 / 360.0, 0.81, 0.75, 1.0),
             color_succ: hsla(115.0 / 360.0, 0.54, 0.76, 1.0),
+            color_info: hsla(205.0 / 360.0, 0.57, 0.70, 1.0),
             banner_bg: hsla(41.0 / 360.0, 0.86, 0.12, 1.0),
             banner_border: hsla(41.0 / 360.0, 0.86, 0.35, 1.0),
             banner_text: hsla(41.0 / 360.0, 0.86, 0.75, 1.0),
@@ -192,6 +208,7 @@ impl ThemeData {
             color_warn: hsla(40.0 / 360.0, 0.70, 0.73, 1.0),
             color_err: hsla(354.0 / 360.0, 0.42, 0.65, 1.0),
             color_succ: hsla(92.0 / 360.0, 0.28, 0.65, 1.0),
+            color_info: hsla(200.0 / 360.0, 0.45, 0.68, 1.0),
             banner_bg: hsla(40.0 / 360.0, 0.70, 0.12, 1.0),
             banner_border: hsla(40.0 / 360.0, 0.70, 0.35, 1.0),
             banner_text: hsla(40.0 / 360.0, 0.70, 0.73, 1.0),

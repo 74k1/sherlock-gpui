@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use gpui::{
     AnyElement, App, FontWeight, InteractiveElement, IntoElement, MouseButton, ParentElement,
-    Styled, div, prelude::FluentBuilder, px,
+    Styled, div, px,
 };
 
 use crate::{
@@ -63,12 +63,12 @@ impl<'a> RenderableChildImpl<'a> for MessageChild {
             ),
             SherlockMessageLevel::Info => (
                 theme
-                    .color_succ
+                    .color_info
                     .alpha(if selection.is_selected { 0.15 } else { 0.08 }),
                 theme
-                    .color_succ
+                    .color_info
                     .alpha(if selection.is_selected { 0.8 } else { 0.4 }),
-                theme.color_succ,
+                theme.color_info,
             ),
         };
 
@@ -102,7 +102,6 @@ impl<'a> RenderableChildImpl<'a> for MessageChild {
             .bg(bg)
             .border_1()
             .border_color(border)
-            .when(selection.is_selected, |this| this.shadow_md())
             .text_size(px(12.0))
             .text_color(text)
             .font_family(theme.font_family.clone())

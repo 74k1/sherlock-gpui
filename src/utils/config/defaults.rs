@@ -1,9 +1,11 @@
-use std::{path::PathBuf, process::Command};
+use std::{collections::HashMap, path::PathBuf, process::Command};
 
 use crate::{
     loader::application_loader::{get_applications_dir, get_desktop_files},
     sherlock_msg,
+    ui::UIFunction,
     utils::{
+        config::ConfigKeybinds,
         errors::{
             SherlockMessage,
             types::{FileAction, SherlockErrorType},
@@ -152,34 +154,32 @@ impl ConstantDefaults {
     }
 }
 
-pub struct BindDefaults {}
-impl BindDefaults {
+pub struct KeybindDefaults;
+impl KeybindDefaults {
+    pub fn binds() -> ConfigKeybinds {
+        ConfigKeybinds(HashMap::from([(
+            "ctrl-<digit>".into(),
+            UIFunction::Shortcut,
+        )]))
+    }
+}
+
+pub struct AppearanceDefaults;
+impl AppearanceDefaults {
     pub fn modkey_ascii() -> [char; 4] {
         ['⌘', '^', '⎇', '⇧']
     }
-    pub fn shortcut_mod() -> String {
-        String::from("⌘")
+    pub fn icon_size() -> i32 {
+        22
     }
-    pub fn up() -> Option<String> {
-        Some(String::from("control-k"))
+    pub fn search_icon() -> String {
+        String::from("system-search-symbolic")
     }
-    pub fn down() -> Option<String> {
-        Some(String::from("control-j"))
+    pub fn search_icon_back() -> String {
+        String::from("sherlock-back")
     }
-    pub fn left() -> Option<String> {
-        Some(String::from("control-ih"))
-    }
-    pub fn right() -> Option<String> {
-        Some(String::from("control-l"))
-    }
-    pub fn context() -> Option<String> {
-        Some(String::from("control-i"))
-    }
-    pub fn modifier() -> Option<String> {
-        Some(String::from("control"))
-    }
-    pub fn exec_inplace() -> Option<String> {
-        Some(String::from("control-return"))
+    pub fn placeholder() -> String {
+        String::from("Search:")
     }
 }
 
@@ -231,17 +231,5 @@ impl OtherDefaults {
     }
     pub fn backdrop_edge() -> String {
         String::from("top")
-    }
-    pub fn icon_size() -> i32 {
-        22
-    }
-    pub fn search_icon() -> String {
-        String::from("system-search-symbolic")
-    }
-    pub fn search_icon_back() -> String {
-        String::from("sherlock-back")
-    }
-    pub fn placeholder() -> String {
-        String::from("Search:")
     }
 }
