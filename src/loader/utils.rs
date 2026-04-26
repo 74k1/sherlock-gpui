@@ -196,6 +196,7 @@ impl AppData {
                 .map(|s| s.as_str())
                 .or(launcher.display_name.as_ref().map(|s| s.as_str()));
             self.search_string = construct_search(name, &self.search_string, use_keywords);
+            self.actions = buffer.into_iter().map(|a| (*a).clone().into()).collect();
         }
     }
     pub fn get_exec(&self, launcher: &Arc<Launcher>) -> Option<String> {
