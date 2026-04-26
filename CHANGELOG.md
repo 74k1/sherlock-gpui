@@ -38,6 +38,20 @@ run `git log main..dev` for all changes
 
 ---
 
+## [Unreleased]
+
+- as of **ab18ec910a4a6ed60ee68bf4c85e4055e1d283f7** 
+
+### improvements
+
+* **Errors/Warnings:** Improved design for `info` tiles
+
+### Fixed
+
+* **Sherlock init:** Fixed sherlock init configs and removed auto-gen of `fallback.json`
+* **Application Actions:** Resolved an issue where Application actions would
+  only be applied to the application if an alias for that file existed.
+
 ## [0.2.1-dev] - 26.04.26
 
 ### Added
