@@ -2,7 +2,10 @@ use std::path::{Path, PathBuf};
 
 use crate::utils::{
     config::{
-        ConfigAppearance, ConfigBackdrop, ConfigBehavior, ConfigCaching, ConfigDefaultApps, ConfigExpand, ConfigFiles, ConfigKeybinds, ConfigUnits, KeybindDefaults, SearchBarIcon, StatusBar, defaults::{AppearanceDefaults, ConstantDefaults, FileDefaults, OtherDefaults}
+        ConfigAppearance, ConfigBackdrop, ConfigBehavior, ConfigCaching, ConfigDefaultApps,
+        ConfigExpand, ConfigFiles, ConfigKeybinds, ConfigUnits, KeybindDefaults, SearchBarIcon,
+        StatusBar,
+        defaults::{AppearanceDefaults, ConstantDefaults, FileDefaults, OtherDefaults},
     },
     files::home_dir,
 };
