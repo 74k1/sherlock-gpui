@@ -72,6 +72,7 @@ impl LauncherProvider for ScriptLauncher {
         &self,
         func: super::variant_type::InnerFunction,
         child: &RenderableChild,
+        _variables: &[(SharedString, SharedString)],
         cx: &mut C,
     ) -> Result<bool, SherlockMessage> {
         let func = ensure_func!(func, InnerFunction::Script);

@@ -1,4 +1,4 @@
-use gpui::{App, AppContext};
+use gpui::{App, AppContext, SharedString};
 use std::mem;
 use std::sync::Arc;
 
@@ -110,10 +110,16 @@ macro_rules! create_variants {
                     Self::Empty => None
                 }
             }
-            pub fn execute_function<C: AppContext>(&self, func: InnerFunction, child: &RenderableChild, cx: &mut C) -> Result<bool, SherlockMessage> {
+            pub fn execute_function<C: AppContext>(
+                &self,
+                func: InnerFunction,
+                child: &RenderableChild,
+                variables: &[(SharedString, SharedString)],
+                cx: &mut C
+            ) -> Result<bool, SherlockMessage> {
                 match self {
                     $(
-                        Self::$variant(inner) => <$inner as LauncherProvider>::execute_function(inner, func, child, cx),
+                        Self::$variant(inner) => <$inner as LauncherProvider>::execute_function(inner, func, child, variables, cx),
                     )*
                     Self::Empty => unimplemented!(),
                 }

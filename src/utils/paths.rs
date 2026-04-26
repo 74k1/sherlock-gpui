@@ -162,3 +162,51 @@ pub fn get_nth_path_completion(input: &str, n: usize) -> Option<String> {
 
     result.strip_prefix(input).map(|s| s.to_string())
 }
+
+/// Returns the nth completion candidate for a given command name input.
+///
+/// This function simulates terminal-style command completion by:
+/// 1. Searching all directories listed in the `PATH` environment variable.
+/// 2. Collecting executables whose names start with the given input prefix.
+/// 3. Deduplicating across PATH dirs, sorting alphabetically, and selecting via `n % count`.
+///
+/// # Arguments
+/// * `input` - The partial command string typed by the user (e.g., "git" or "sys").
+/// * `n` - The index used to cycle through multiple matches.
+///
+/// # Returns
+/// * `Some(String)` - The "ghost text" remainder of the completion (the part after `input`).
+/// * `None` - If the input is empty, `PATH` is unset, or no matches are found.
+///
+/// # Examples
+/// If `PATH` contains `git`, `gitk`, and `git-lfs`:
+/// ```
+/// // input: "git", n: 0 → Some("")       (exact match: "git")
+/// // input: "git", n: 1 → Some("k")      (next match: "gitk")
+/// // input: "git", n: 2 → Some("-lfs")   (next match: "git-lfs")
+/// ```
+pub fn get_nth_command_completion(input: &str, n: usize) -> Option<String> {
+    if input.is_empty() {
+        return None;
+    }
+
+    let path_var = std::env::var("PATH").unwrap_or_default();
+    let mut matches: Vec<String> = std::env::split_paths(&path_var)
+        .filter_map(|dir| std::fs::read_dir(dir).ok())
+        .flatten()
+        .filter_map(|res| res.ok())
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|name| name.starts_with(input))
+        .collect();
+
+    if matches.is_empty() {
+        return None;
+    }
+
+    // Deduplicate (same command can appear in multiple PATH dirs)
+    matches.sort();
+    matches.dedup();
+
+    let chosen = &matches[n % matches.len()];
+    chosen.strip_prefix(input).map(|s| s.to_string())
+}

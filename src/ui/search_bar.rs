@@ -9,8 +9,10 @@ use gpui::{
 };
 
 use crate::{
-    app::theme::ActiveTheme, loader::utils::ExecVariable,
-    ui::search_bar::builder::TextInputBuilder, utils::paths::get_nth_path_completion,
+    app::theme::ActiveTheme,
+    loader::utils::ExecVariable,
+    ui::search_bar::builder::TextInputBuilder,
+    utils::paths::{get_nth_command_completion, get_nth_path_completion},
 };
 
 pub mod actions;
@@ -483,6 +485,13 @@ impl TextInput {
         self.ghost_text = match &self.variable {
             Some(ExecVariable::Path(inner)) => {
                 get_nth_path_completion(self.content.as_str(), inner.index)
+            }
+            Some(ExecVariable::Command(inner)) => {
+                if let Some(last) = self.content.as_str().split(' ').next_back() {
+                    get_nth_command_completion(last, inner.index)
+                } else {
+                    None
+                }
             }
             _ => None,
         };

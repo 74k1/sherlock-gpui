@@ -1,7 +1,8 @@
 use std::{sync::Arc, time::Duration};
 
 use gpui::{
-    AnyElement, App, AppContext, Entity, IntoElement, ParentElement, Styled, Task, div, px,
+    AnyElement, App, AppContext, Entity, IntoElement, ParentElement, SharedString, Styled, Task,
+    div, px,
 };
 use smallvec::SmallVec;
 
@@ -42,7 +43,7 @@ pub struct TimerChild {
 impl TimerChild {
     pub fn new(cx: &mut App) -> Self {
         let update_entity = cx.new(|_| TimerEntity::default());
-        let variable = [ExecVariable::String("command".into())];
+        let variable = [ExecVariable::Command(SharedString::from("command").into())];
         Self {
             update_entity,
             variable,
@@ -56,10 +57,15 @@ impl TimerChild {
             cx.notify();
         });
     }
-    pub fn new_timer<C: AppContext>(&self, duration: Duration, cx: &mut C) {
+    pub fn new_timer<C: AppContext>(
+        &self,
+        duration: Duration,
+        command: Option<SharedString>,
+        cx: &mut C,
+    ) {
         self.update_entity.update(cx, |this, cx| {
             if this.timers.len() < 4 {
-                this.timers.push(Timer::new(duration));
+                this.timers.push(Timer::new(duration, command));
                 cx.notify();
             }
         })
@@ -79,6 +85,16 @@ impl<'a> RenderableChildImpl<'a> for TimerChild {
                 // Will cause cx.notify to run
                 this.start_timer(cx, |_, _| {});
             }
+
+            this.timers.retain_mut(|t| {
+                if t.state.remaining() == Duration::ZERO {
+                    t.on_completion();
+                    false
+                } else {
+                    true
+                }
+            });
+
             this.timers.iter().map(|t| (t.state, t.amount)).collect()
         });
         let intent = self.update_entity.read(cx).intent.clone();

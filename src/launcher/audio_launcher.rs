@@ -1,5 +1,5 @@
 use bytes::Bytes;
-use gpui::{AppContext, Image, ImageFormat};
+use gpui::{AppContext, Image, ImageFormat, SharedString};
 use serde_json::Value;
 use simd_json::prelude::ArrayTrait;
 use std::env;
@@ -67,6 +67,7 @@ impl LauncherProvider for MusicPlayerLauncher {
         &self,
         func: InnerFunction,
         child: &RenderableChild,
+        _variables: &[(SharedString, SharedString)],
         _cx: &mut C,
     ) -> Result<bool, SherlockMessage> {
         let func = ensure_func!(func, InnerFunction::MusicPlayer);

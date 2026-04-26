@@ -232,7 +232,9 @@ pub enum ExecVariable {
     #[serde(rename = "password_input")]
     Password(SharedString),
     #[serde(rename = "path_input")]
-    Path(PathData), // Use a helper struct
+    Path(PathData),
+    #[serde(rename = "command_input")]
+    Command(CommandData),
 }
 
 /// A path placeholder that deserializes from a plain string.
@@ -251,12 +253,31 @@ impl From<SharedString> for PathData {
         Self { path, index: 0 }
     }
 }
+
+/// A command placeholder that deserializes from a plain string.
+/// The `index` field tracks cursor position in the UI and is not persisted.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(from = "SharedString")]
+pub struct CommandData {
+    pub command: SharedString,
+    #[serde(skip)]
+    pub index: usize,
+}
+
+// Implement the conversion logic
+impl From<SharedString> for CommandData {
+    fn from(command: SharedString) -> Self {
+        Self { command, index: 0 }
+    }
+}
+
 impl ExecVariable {
     pub fn placeholder(&self) -> SharedString {
         match self {
             Self::String(s) => s.clone(),
             Self::Path(p) => p.path.clone(),
             Self::Password(s) => s.clone(),
+            Self::Command(c) => c.command.clone(),
         }
     }
 }

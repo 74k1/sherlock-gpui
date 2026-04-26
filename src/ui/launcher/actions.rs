@@ -233,7 +233,9 @@ impl LauncherView {
         match what {
             ExecMode::Inner { func, exit } => {
                 if let Some(item) = self.navigation.selected_item(cx) {
-                    let _was_executed = item.launcher_type().execute_function(func, &item, cx)?;
+                    let _was_executed = item
+                        .launcher_type()
+                        .execute_function(func, &item, variables, cx)?;
                     self.update_async(cx);
                     return Ok(exit);
                 }

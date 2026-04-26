@@ -67,6 +67,7 @@ pub trait LauncherProvider {
         &self,
         func: InnerFunction,
         _child: &RenderableChild,
+        _variables: &[(SharedString, SharedString)],
         _cx: &mut C,
     ) -> Result<bool, SherlockMessage> {
         Err(sherlock_msg!(

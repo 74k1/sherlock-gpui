@@ -1,5 +1,9 @@
 use std::time::{Duration, Instant};
 
+use gpui::SharedString;
+
+use crate::utils::command_launch;
+
 #[derive(Copy, Clone)]
 pub(super) enum TimerState {
     Running { ends_at: Instant },
@@ -37,14 +41,21 @@ impl TimerState {
 pub(super) struct Timer {
     pub(super) amount: f32,
     pub(super) state: TimerState,
+    pub(super) command: Option<SharedString>,
 }
 impl Timer {
-    pub(super) fn new(duration: Duration) -> Self {
+    pub(super) fn new(duration: Duration, command: Option<SharedString>) -> Self {
         Self {
             amount: duration.as_secs_f32(),
             state: TimerState::Running {
                 ends_at: Instant::now() + duration,
             },
+            command,
+        }
+    }
+    pub(super) fn on_completion(&self) {
+        if let Some(cmd) = &self.command {
+            let _ = command_launch::spawn_detached(cmd, "", &[]);
         }
     }
 }
