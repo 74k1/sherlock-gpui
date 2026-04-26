@@ -40,7 +40,7 @@ run `git log main..dev` for all changes
 
 ## [Unreleased]
 
-- as of **ab18ec910a4a6ed60ee68bf4c85e4055e1d283f7** 
+* as of **ab18ec910a4a6ed60ee68bf4c85e4055e1d283f7**
 
 ### improvements
 
