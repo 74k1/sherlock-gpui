@@ -56,7 +56,7 @@ pub(super) fn register_bindings(cx: &mut App) {
     add("ctrl-l", KeyBinding::new("ctrl-l", OpenContext, None));
 
     if let Ok(config) = ConfigGuard::read() {
-        for (key, action_type) in &config.keybinds {
+        for (key, action_type) in &config.keybinds.0 {
             if *action_type == UIFunction::Shortcut && key.contains("<digit>") {
                 // First one to capture modifier key
                 let actual_key = key.replace("<digit>", "1");

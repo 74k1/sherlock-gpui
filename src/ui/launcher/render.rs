@@ -562,6 +562,7 @@ fn get_context_key_parts() -> Vec<String> {
                 .and_then(|config| {
                     config
                         .keybinds
+                        .0
                         .iter()
                         .find(|(_, func)| **func == UIFunction::ToggleContext)
                         .map(|(name, _)| name.clone())

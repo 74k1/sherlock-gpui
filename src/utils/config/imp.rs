@@ -2,9 +2,7 @@ use std::path::{Path, PathBuf};
 
 use crate::utils::{
     config::{
-        ConfigAppearance, ConfigBackdrop, ConfigBehavior, ConfigBinds, ConfigCaching,
-        ConfigDefaultApps, ConfigExpand, ConfigFiles, ConfigUnits, SearchBarIcon, StatusBar,
-        defaults::{BindDefaults, ConstantDefaults, FileDefaults, OtherDefaults},
+        ConfigAppearance, ConfigBackdrop, ConfigBehavior, ConfigCaching, ConfigDefaultApps, ConfigExpand, ConfigFiles, ConfigKeybinds, ConfigUnits, KeybindDefaults, SearchBarIcon, StatusBar, defaults::{AppearanceDefaults, ConstantDefaults, FileDefaults, OtherDefaults}
     },
     files::home_dir,
 };
@@ -40,16 +38,12 @@ impl Default for ConfigAppearance {
             height: 593, // 617 with, 593 without notification bar
             margins: (0, 0, 0, 0),
             anchor: String::from(""),
-            gsk_renderer: String::from("cairo"),
             icon_paths: FileDefaults::icon_paths(),
-            icon_size: OtherDefaults::icon_size(),
-            use_base_css: true,
-            use_system_theme: false,
+            icon_size: AppearanceDefaults::icon_size(),
             opacity: 1.0,
-            mod_key_ascii: BindDefaults::modkey_ascii(),
-            shortcut_mod: BindDefaults::shortcut_mod(),
+            mod_key_ascii: AppearanceDefaults::modkey_ascii(),
             num_shortcuts: 5,
-            placeholder: OtherDefaults::placeholder(),
+            placeholder: AppearanceDefaults::placeholder(),
         }
     }
 }
@@ -68,6 +62,12 @@ impl Default for ConfigBehavior {
     }
 }
 
+impl Default for ConfigKeybinds {
+    fn default() -> Self {
+        KeybindDefaults::binds()
+    }
+}
+
 impl Default for ConfigFiles {
     fn default() -> Self {
         Self {
@@ -76,20 +76,6 @@ impl Default for ConfigFiles {
             alias: FileDefaults::alias(),
             ignore: FileDefaults::ignore(),
             actions: FileDefaults::actions(),
-        }
-    }
-}
-
-impl Default for ConfigBinds {
-    fn default() -> Self {
-        Self {
-            up: BindDefaults::up(),
-            down: BindDefaults::down(),
-            left: BindDefaults::left(),
-            right: BindDefaults::right(),
-            context: BindDefaults::context(),
-            modifier: BindDefaults::modifier(),
-            exec_inplace: BindDefaults::exec_inplace(),
         }
     }
 }
@@ -127,9 +113,9 @@ impl Default for SearchBarIcon {
     fn default() -> Self {
         Self {
             enable: true,
-            icon: OtherDefaults::search_icon(),
-            icon_back: OtherDefaults::search_icon_back(),
-            size: OtherDefaults::icon_size(),
+            icon: AppearanceDefaults::search_icon(),
+            icon_back: AppearanceDefaults::search_icon_back(),
+            size: AppearanceDefaults::icon_size(),
         }
     }
 }

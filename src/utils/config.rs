@@ -4,7 +4,6 @@ use std::{
     path::PathBuf,
 };
 
-use crate::utils::config::defaults::FileDefaults;
 use crate::{loader::utils::deserialize_path_buf, ui::UIFunction};
 
 mod config_impl;
@@ -16,7 +15,9 @@ mod reload;
 mod transformer;
 mod watcher;
 
-pub use defaults::{BindDefaults, ConstantDefaults, OtherDefaults};
+pub use defaults::{
+    AppearanceDefaults, ConstantDefaults, FileDefaults, KeybindDefaults, OtherDefaults,
+};
 pub use flags::SherlockFlags;
 pub use guard::ConfigGuard;
 pub use reload::reload;
@@ -50,12 +51,8 @@ pub struct SherlockConfig {
     pub behavior: ConfigBehavior,
 
     /// Custom key or action bindings (supplementing defaults)
-    #[serde(default)]
-    pub binds: ConfigBinds,
-
-    /// Custom key or action bindings (supplementing defaults)
-    #[serde(default)]
-    pub keybinds: HashMap<String, UIFunction>,
+    #[serde(default = "KeybindDefaults::binds")]
+    pub keybinds: ConfigKeybinds,
 
     /// User-specified overrides for default config file paths
     #[serde(default)]
@@ -133,25 +130,17 @@ pub struct ConfigAppearance {
     pub margins: (i32, i32, i32, i32),
     #[serde(default)]
     pub anchor: String,
-    #[serde(default)]
-    pub gsk_renderer: String,
     #[serde(default = "FileDefaults::icon_paths")]
     pub icon_paths: Vec<PathBuf>,
-    #[serde(default = "OtherDefaults::icon_size")]
+    #[serde(default = "AppearanceDefaults::icon_size")]
     pub icon_size: i32,
-    #[serde(default = "OtherDefaults::bool_true")]
-    pub use_base_css: bool,
-    #[serde(default)]
-    pub use_system_theme: bool,
     #[serde(default = "OtherDefaults::one")]
     pub opacity: f64,
-    #[serde(default = "BindDefaults::modkey_ascii")]
+    #[serde(default = "AppearanceDefaults::modkey_ascii")]
     pub mod_key_ascii: [char; 4],
-    #[serde(default = "BindDefaults::shortcut_mod")]
-    pub shortcut_mod: String,
     #[serde(default = "OtherDefaults::five")]
     pub num_shortcuts: u8,
-    #[serde(default = "OtherDefaults::placeholder")]
+    #[serde(default = "AppearanceDefaults::placeholder")]
     pub placeholder: String,
 }
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -191,23 +180,9 @@ pub struct ConfigFiles {
     pub actions: PathBuf,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct ConfigBinds {
-    #[serde(default)]
-    pub up: Option<String>,
-    #[serde(default)]
-    pub down: Option<String>,
-    #[serde(default)]
-    pub left: Option<String>,
-    #[serde(default)]
-    pub right: Option<String>,
-    #[serde(default = "BindDefaults::context")]
-    pub context: Option<String>,
-    #[serde(default = "BindDefaults::modifier")]
-    pub modifier: Option<String>,
-    #[serde(default)]
-    pub exec_inplace: Option<String>,
-}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct ConfigKeybinds(pub HashMap<String, UIFunction>);
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Runtime {
@@ -263,13 +238,13 @@ pub struct SearchBarIcon {
     #[serde(default = "OtherDefaults::bool_true")]
     pub enable: bool,
 
-    #[serde(default = "OtherDefaults::search_icon")]
+    #[serde(default = "AppearanceDefaults::search_icon")]
     pub icon: String,
 
-    #[serde(default = "OtherDefaults::search_icon_back")]
+    #[serde(default = "AppearanceDefaults::search_icon_back")]
     pub icon_back: String,
 
-    #[serde(default = "OtherDefaults::icon_size")]
+    #[serde(default = "AppearanceDefaults::icon_size")]
     pub size: i32,
 }
 

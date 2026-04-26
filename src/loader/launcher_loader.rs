@@ -162,9 +162,9 @@ fn parse_launcher_configs(path: &PathBuf) -> (Vec<RawLauncher>, Vec<SherlockMess
         Ok(bytes) => bytes,
         Err(e) if e.kind() == ErrorKind::NotFound => {
             warnings.push(sherlock_msg!(
-                Error,
-                SherlockErrorType::FileError(FileAction::Read, path.clone()),
-                e
+                Info,
+                SherlockErrorType::FileError(FileAction::Find, path.clone()),
+                "Using default fallback.json configuration."
             ));
             include_bytes!("../../assets/fallback.json").to_vec()
         }

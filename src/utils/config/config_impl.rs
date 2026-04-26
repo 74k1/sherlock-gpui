@@ -98,8 +98,6 @@ impl SherlockConfig {
         write_file("sherlockignore", "");
         write_file("sherlock_actions.json", "[]");
         write_file("sherlock_alias.json", "{}");
-        write_file("fallback.json", "{}");
-        write_file("main.css", "");
 
         if let Some(loc) = loc.to_str()
             && loc != "~/.config/sherlock/"
