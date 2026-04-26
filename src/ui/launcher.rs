@@ -101,8 +101,9 @@ impl LauncherView {
         self.update_sync(query, cx);
 
         if changed {
-            self.update_vars(cx);
             self.focus_first(cx);
+        } else if self.variable_input.is_empty() {
+            self.update_vars(cx);
         }
 
         cx.notify();

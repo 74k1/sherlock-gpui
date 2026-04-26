@@ -5585,6 +5585,7 @@ name = "sherlock-gpui"
 version = "0.2.1"
 dependencies = [
  "arrayvec",
+ "async-io",
  "bincode",
  "bytes",
  "chrono",

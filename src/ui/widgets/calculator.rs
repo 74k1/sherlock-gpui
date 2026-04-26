@@ -33,7 +33,7 @@ impl<'a> RenderableChildImpl<'a> for CalcData {
         ""
     }
     #[inline(always)]
-    fn build_exec(&self, _launcher: &Arc<Launcher>) -> Option<ExecMode> {
+    fn build_exec(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
         let lock = self.result.read().ok()?;
         let (_, res) = lock.as_ref()?;
         Some(ExecMode::Copy {

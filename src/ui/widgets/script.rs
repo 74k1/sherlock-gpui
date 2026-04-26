@@ -137,6 +137,7 @@ impl<'a> RenderableChildImpl<'a> for ScriptData {
     fn build_exec(
         &self,
         _launcher: &std::sync::Arc<Launcher>,
+        _cx: &mut App,
     ) -> Option<crate::launcher::ExecMode> {
         None
     }

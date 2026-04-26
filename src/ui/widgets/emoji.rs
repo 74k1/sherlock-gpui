@@ -128,7 +128,7 @@ impl<'a> RenderableChildImpl<'a> for EmojiData {
             .into_any_element()
     }
     #[inline(always)]
-    fn build_exec(&self, _launcher: &Arc<Launcher>) -> Option<ExecMode> {
+    fn build_exec(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
         Some(ExecMode::Copy {
             content: get_emoji(self.entry, &get_selected_skin_tones())
                 .as_str()

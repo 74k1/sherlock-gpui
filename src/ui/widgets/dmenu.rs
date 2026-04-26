@@ -47,7 +47,11 @@ impl<'a> RenderableChildImpl<'a> for DmenuData {
             )
             .into_any_element()
     }
-    fn build_exec(&self, _launcher: &Arc<Launcher>) -> Option<crate::launcher::ExecMode> {
+    fn build_exec(
+        &self,
+        _launcher: &Arc<Launcher>,
+        _cx: &mut App,
+    ) -> Option<crate::launcher::ExecMode> {
         None
     }
     fn priority(&self, launcher: &Arc<Launcher>) -> f32 {

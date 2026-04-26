@@ -316,7 +316,7 @@ impl LauncherView {
                 .with_nth_shortcut_item(action.index, cx, |item, _| item.cloned())
         {
             let keyword = self.text_input.read(cx).content.clone();
-            if let Some(what) = ExecMode::from_child(&selected) {
+            if let Some(what) = ExecMode::from_child(&selected, cx) {
                 match self.execute_helper(what, keyword.as_ref(), &[], cx) {
                     Ok(exit) if exit => {
                         self.close_window(win, cx);
@@ -371,7 +371,7 @@ impl LauncherView {
             }
 
             if let Some(selected) = self.navigation.selected_item(cx)
-                && let Some(what) = ExecMode::from_child(&selected)
+                && let Some(what) = ExecMode::from_child(&selected, cx)
             {
                 match self.execute_helper(what, keyword.as_ref(), &variables, cx) {
                     Ok(exit) if exit => {
@@ -475,10 +475,10 @@ impl LauncherView {
 
         let needed_vars: Option<Vec<ExecVariable>> = {
             self.navigation.with_model_mut(cx, |mdl, cx| {
-                let data_guard = mdl.data().read(cx);
+                let data_guard = mdl.data().read(cx).clone();
                 data_guard
                     .get(idx)
-                    .and_then(|data| data.vars().map(|slice| slice.to_vec()))
+                    .and_then(|data| data.vars(cx).map(|slice| slice.to_vec()))
             })
         };
 

@@ -46,7 +46,7 @@ impl<'a> RenderableChildImpl<'a> for TranslationData {
         ""
     }
     #[inline(always)]
-    fn build_exec(&self, _launcher: &Arc<Launcher>) -> Option<ExecMode> {
+    fn build_exec(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
         None
     }
     #[inline(always)]

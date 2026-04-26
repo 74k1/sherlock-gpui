@@ -11,6 +11,7 @@ pub mod file;
 pub mod message;
 pub mod mpris;
 pub mod script;
+pub mod timer;
 pub mod translator;
 pub mod weather;
 
@@ -24,7 +25,7 @@ use crate::{
     ui::{
         launcher::context_menu::ContextMenuAction,
         widgets::{
-            dmenu::DmenuData, message::MessageChild, script::ScriptData,
+            dmenu::DmenuData, message::MessageChild, script::ScriptData, timer::TimerChild,
             translator::TranslationData,
         },
     },
@@ -89,10 +90,10 @@ macro_rules! renderable_enum {
                 ExecMode::from_app_action(action, &self)
             }
 
-            fn build_exec(&self) -> Option<ExecMode> {
+            fn build_exec(&self, cx: &mut App) -> Option<ExecMode> {
                 match self {
                     $(Self::$variant {launcher, inner} => {
-                        inner.build_exec(launcher)
+                        inner.build_exec(launcher, cx)
                     }),*
                 }
             }
@@ -103,10 +104,9 @@ macro_rules! renderable_enum {
                 }
             }
 
-            fn vars(&self) -> Option<&[ExecVariable]> {
+            fn vars(&self, cx: &mut App) -> Option<&[ExecVariable]> {
                 match self {
-                    Self::App { inner, .. } => Some(&inner.vars), // Works for Vec or SmallVec
-                    _ => None,
+                    $(Self::$variant {inner, ..} => inner.vars(cx)),*
                 }
             }
 
@@ -292,6 +292,7 @@ renderable_enum! {
         Message(MessageChild),
         Music(MprisState),
         Script(ScriptData),
+        Timer(TimerChild),
         Translator(TranslationData),
         Weather(WeatherData),
         Dmenu(DmenuData),
@@ -330,13 +331,13 @@ pub trait RenderableChildDelegate<'a> {
     fn build_action_exec(&'a self, action: Arc<ContextMenuAction>) -> ExecMode;
 
     /// Generates an execution path when pressing return on this widget
-    fn build_exec(&self) -> Option<ExecMode>;
+    fn build_exec(&self, cx: &mut App) -> Option<ExecMode>;
 
     /// The string that contains or otherwise matces the user-provided search query
     fn search(&'a self) -> &'a str;
 
     /// The variable fields that should be shown next to the search input
-    fn vars(&self) -> Option<&[ExecVariable]>;
+    fn vars(&self, cx: &mut App) -> Option<&[ExecVariable]>;
 
     /// The context menu actions for this widget. (Gets called on the selected item only if:
     /// self.has_actions == true and the context menu gets opened)
@@ -379,7 +380,7 @@ pub trait RenderableChildImpl<'a> {
         theme: Arc<ThemeData>,
         cx: &mut App,
     ) -> AnyElement;
-    fn build_exec(&self, launcher: &Arc<Launcher>) -> Option<ExecMode>;
+    fn build_exec(&self, launcher: &Arc<Launcher>, cx: &mut App) -> Option<ExecMode>;
     fn priority(&self, launcher: &Arc<Launcher>) -> f32;
     fn search(&'a self, launcher: &Arc<Launcher>) -> &'a str;
     /// Will only get called once the context menu gets opened
@@ -401,6 +402,9 @@ pub trait RenderableChildImpl<'a> {
         None
     }
     fn update_sync(&self, _query: SharedString, _launcher: &Arc<Launcher>, _cx: &mut App) {}
+    fn vars(&self, _cx: &mut App) -> Option<&[ExecVariable]> {
+        None
+    }
 }
 
 #[derive(Clone, Copy, Debug)]

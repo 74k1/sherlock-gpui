@@ -109,7 +109,7 @@ impl<'a> RenderableChildImpl<'a> for ClipData {
         self.content.as_str()
     }
     #[inline(always)]
-    fn build_exec(&self, _launcher: &Arc<Launcher>) -> Option<ExecMode> {
+    fn build_exec(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
         let lock = self.result.read().ok()?;
         let (intent, res) = lock.as_ref()?;
 

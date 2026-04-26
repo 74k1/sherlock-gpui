@@ -1,4 +1,4 @@
-use std::{fmt::Display, iter::Peekable};
+use std::{fmt::Display, iter::Peekable, time::Duration};
 
 use gpui::SharedString;
 use smallvec::{SmallVec, smallvec};
@@ -36,6 +36,9 @@ pub enum Intent {
     Translation {
         text: SharedString,
         target_lang: Language,
+    },
+    Timer {
+        duration: Duration,
     },
     None,
 }
@@ -129,16 +132,39 @@ impl Intent {
             .split([' ', '(', ')', '%', ','])
             .map(|s| s.trim_matches(','))
             .filter(|s| !s.is_empty())
+            .flat_map(|s| {
+                let split_pos = s
+                    .char_indices()
+                    .skip(1)
+                    .find(|(i, c)| {
+                        let prev = s[..*i].chars().last().unwrap();
+                        prev.is_ascii_digit() != c.is_ascii_digit()
+                    })
+                    .map(|(i, _)| i);
+
+                match split_pos {
+                    Some(pos) => Either::Left([&s[..pos], &s[pos..]].into_iter()),
+                    None => Either::Right(std::iter::once(s)),
+                }
+            })
     }
     pub fn tokenize_kill_noise(input: &str) -> impl Iterator<Item = &str> {
         Self::tokenize(input).filter(|word| {
             !matches!(word, w if
+            // unit conversions
             w.eq_ignore_ascii_case("how") ||
             w.eq_ignore_ascii_case("much") ||
             w.eq_ignore_ascii_case("is") ||
             w.eq_ignore_ascii_case("are") ||
             w.eq_ignore_ascii_case("convert") ||
-            w.eq_ignore_ascii_case("what")
+            w.eq_ignore_ascii_case("what") ||
+            // for timer
+            w.eq_ignore_ascii_case("create") ||
+            w.eq_ignore_ascii_case("start") ||
+            w.eq_ignore_ascii_case("a") ||
+            w.eq_ignore_ascii_case("new") ||
+            w.eq_ignore_ascii_case("for") ||
+            w.eq_ignore_ascii_case("set")
             )
         })
     }
@@ -321,6 +347,63 @@ impl Intent {
     fn try_parse_url(input: &str) -> Option<Intent> {
         is_url(input).then_some(Intent::Url {
             url: input.to_string().into(),
+        })
+    }
+
+    /// Tries to parse a `Intent::Timer { duration }` from an iterator over input tokens.
+    /// Allowed patterns are:
+    /// - [number] [unit] timer
+    /// - timer for [number] [unit]
+    pub fn try_parse_timer<'a>(
+        tokens: &mut Peekable<impl Iterator<Item = &'a str>>,
+    ) -> Option<Intent> {
+        let caps = Capabilities(Capabilities::TIME);
+        let mut pending_value: Option<f64> = None;
+        let mut pending_unit: Option<Unit> = None;
+
+        // scan forwart to collecti (value, unit) pair before "timer" token
+        loop {
+            let token = tokens.peek()?;
+
+            if token.eq_ignore_ascii_case("timer") {
+                tokens.next();
+                break;
+            }
+
+            if let Ok(v) = token.parse::<f64>() {
+                pending_value = Some(v);
+                tokens.next();
+            } else if let Some(u) = Unit::parse_with_capabilities(token, &caps) {
+                if u.category() == UnitCategory::Time {
+                    pending_unit = Some(u);
+                    tokens.next();
+                } else {
+                    tokens.next();
+                }
+            } else {
+                tokens.next();
+            }
+        }
+
+        if let (Some(value), Some(unit)) = (pending_value, pending_unit) {
+            let seconds = value * unit.factor();
+            return Some(Intent::Timer {
+                duration: Duration::from_secs_f64(seconds),
+            });
+        }
+
+        if tokens.peek().map(|t| t.eq_ignore_ascii_case("for")) == Some(true) {
+            tokens.next();
+        }
+
+        let value = pending_value.or_else(|| tokens.next()?.parse::<f64>().ok())?;
+        let unit_str = tokens.next()?;
+        let unit = Unit::parse_with_capabilities(unit_str, &caps)
+            .filter(|u| u.category() == UnitCategory::Time)?;
+
+        let seconds = value * unit.factor();
+        Some(Intent::Timer {
+            duration: Duration::from_secs_f64(seconds),
         })
     }
 }
@@ -644,7 +727,7 @@ define_units! {
         cap: 1 << 9,
         Milliseconds: ["ms", "millisecond", "milliseconds"] => 0.001, "ms",
         Seconds: ["s", "sec", "second", "seconds"] => 1.0, "s",
-        Minutes: ["min", "minute", "minutes"] => 60.0, "min",
+        Minutes: ["m", "min", "minute", "minutes"] => 60.0, "min",
         Hours: ["h", "hr", "hour", "hours"] => 3600.0, "h",
         Days: ["d", "day", "days"] => 86400.0, "d",
         Weeks: ["wk", "week", "weeks"] => 604800.0, "wk",
@@ -829,6 +912,22 @@ mod tests {
                 "Failed on input: '{}'\nGot: {:?}\nExpected: {:?}",
                 input, result, expected
             );
+        }
+    }
+}
+
+enum Either<L, R> {
+    Left(L),
+    Right(R),
+}
+
+impl<T, L: Iterator<Item = T>, R: Iterator<Item = T>> Iterator for Either<L, R> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        match self {
+            Either::Left(l) => l.next(),
+            Either::Right(r) => r.next(),
         }
     }
 }

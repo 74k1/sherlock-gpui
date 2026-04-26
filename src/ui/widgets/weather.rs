@@ -69,7 +69,7 @@ impl<'a> RenderableChildImpl<'a> for WeatherData {
             .into_any_element()
     }
     #[inline(always)]
-    fn build_exec(&self, _launcher: &Arc<Launcher>) -> Option<ExecMode> {
+    fn build_exec(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
         None
     }
     #[inline(always)]

@@ -395,7 +395,7 @@ impl<'a> RenderableChildImpl<'a> for FileData {
     }
 
     #[inline(always)]
-    fn build_exec(&self, launcher: &Arc<Launcher>) -> Option<ExecMode> {
+    fn build_exec(&self, launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
         if self.loc.ends_with('/') {
             return Some(ExecMode::CreateView {
                 mode: NavigationViewType::Files {

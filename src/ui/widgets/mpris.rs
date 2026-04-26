@@ -79,7 +79,7 @@ impl<'a> RenderableChildImpl<'a> for MprisState {
             .into_any_element()
     }
     #[inline(always)]
-    fn build_exec(&self, launcher: &Arc<Launcher>) -> Option<ExecMode> {
+    fn build_exec(&self, launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
         Some(ExecMode::Inner {
             func: InnerFunction::MusicPlayer(MusicPlayerFunctions::TogglePlayback),
             exit: launcher.exit,

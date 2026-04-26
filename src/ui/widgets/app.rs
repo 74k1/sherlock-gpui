@@ -71,7 +71,7 @@ impl<'a> RenderableChildImpl<'a> for AppData {
             .into_any_element()
     }
     #[inline(always)]
-    fn build_exec(&self, launcher: &Arc<Launcher>) -> Option<ExecMode> {
+    fn build_exec(&self, launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
         Some(ExecMode::from_appdata(self, launcher))
     }
     #[inline(always)]
@@ -93,5 +93,9 @@ impl<'a> RenderableChildImpl<'a> for AppData {
     #[inline(always)]
     fn has_actions(&self, _cx: &mut App) -> bool {
         !self.actions.is_empty()
+    }
+    #[inline(always)]
+    fn vars(&self, _cx: &mut App) -> Option<&[crate::loader::utils::ExecVariable]> {
+        Some(&self.vars) // Works for Vec or SmallVec
     }
 }

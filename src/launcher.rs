@@ -11,6 +11,7 @@ pub mod event_launcher;
 pub mod file_launcher;
 pub mod message_launcher;
 pub mod system_cmd_launcher;
+pub mod timer_launcher;
 pub mod translator_launcher;
 pub mod utils;
 pub mod variant_type;
@@ -274,7 +275,7 @@ impl ExecMode {
             _ => Self::None,
         }
     }
-    pub fn from_child(data: &RenderableChild) -> Option<Self> {
+    pub fn from_child(data: &RenderableChild, cx: &mut App) -> Option<Self> {
         let launcher_snapshot = data.with_launcher(|l| l.clone());
 
         if let Some(on_return) = launcher_snapshot.on_return.as_ref() {
@@ -314,7 +315,7 @@ impl ExecMode {
             };
         }
 
-        data.build_exec()
+        data.build_exec(cx)
     }
     pub fn from_app_action(action: Arc<ContextMenuAction>, data: &RenderableChild) -> Self {
         match action.as_ref() {
