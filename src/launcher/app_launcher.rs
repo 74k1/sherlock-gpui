@@ -7,6 +7,7 @@ use crate::{
     launcher::{LauncherProvider, LauncherType, LoadContext},
     loader::{Loader, utils::RawLauncher},
     ui::widgets::RenderableChild,
+    utils::errors::SherlockMessage,
 };
 
 #[derive(Clone, Debug, Deserialize)]
@@ -27,6 +28,7 @@ impl LauncherProvider for AppLauncher {
         launcher: Arc<super::Launcher>,
         ctx: &LoadContext,
         _opts: Arc<Value>,
+        _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
         Loader::load_applications(

@@ -9,6 +9,7 @@ use crate::loader::utils::{ApplicationAction, RawLauncher, deserialize_named_app
 use crate::sherlock_msg;
 use crate::ui::launcher::context_menu::ContextMenuAction;
 use crate::ui::widgets::RenderableChild;
+use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::SherlockErrorType;
 
 #[derive(Clone, Debug)]
@@ -23,6 +24,7 @@ impl LauncherProvider for CategoryLauncher {
         launcher: std::sync::Arc<super::Launcher>,
         ctx: &crate::loader::LoadContext,
         opts: std::sync::Arc<serde_json::Value>,
+        _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
         let cmds = opts.get("categories").ok_or_else(|| {

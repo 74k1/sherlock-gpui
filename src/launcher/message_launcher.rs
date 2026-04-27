@@ -9,6 +9,7 @@ use crate::{
         utils::{AppData, RawLauncher},
     },
     ui::widgets::RenderableChild,
+    utils::errors::SherlockMessage,
 };
 
 #[derive(Clone, Debug, Deserialize)]
@@ -22,6 +23,7 @@ impl LauncherProvider for MessageLauncher {
         launcher: Arc<super::Launcher>,
         _ctx: &crate::loader::LoadContext,
         _opts: Arc<serde_json::Value>,
+        _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
         Ok(vec![RenderableChild::App {

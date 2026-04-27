@@ -19,6 +19,7 @@ impl LauncherProvider for DmenuLauncher {
         _launcher: Arc<Launcher>,
         _ctx: &crate::loader::LoadContext,
         _opts: std::sync::Arc<serde_json::Value>,
+        _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, SherlockMessage> {
         // Should never be called! This is only from piped input.

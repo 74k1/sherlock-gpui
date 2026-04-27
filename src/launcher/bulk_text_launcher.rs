@@ -36,6 +36,7 @@ impl LauncherProvider for ScriptLauncher {
         launcher: Arc<super::Launcher>,
         _ctx: &LoadContext,
         opts: Arc<Value>,
+        _messages: &mut Vec<SherlockMessage>,
         cx: &mut App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
         let exec_command: Option<SharedString> = opts

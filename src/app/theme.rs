@@ -1,47 +1,76 @@
 use std::sync::Arc;
 
 use gpui::{Hsla, SharedString, hsla};
+use serde::{Deserialize, Deserializer};
 
 #[derive(Clone)]
 pub struct ActiveTheme(pub Arc<ThemeData>);
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Deserialize)]
 pub struct ThemeData {
     pub font_family: SharedString,
     pub monospace: SharedString,
     // Cursor and Selection
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub cursor: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub selection: Hsla,
     // Backgrounds
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub bg_app: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub bg_selected: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub bg_idle: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub bg_status_bar: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub bg_keybind: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub bg_code: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub bg_muted: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub bg_badge: Hsla,
     // Borders
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub border: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub border_selected: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub border_idle: Hsla,
     // Text
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub primary_text: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub secondary_text: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub tertiary_text: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub text_status_bar: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub text_mode_label: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub text_search_icon: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub text_code: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub text_placeholder: Hsla,
     // Status colors
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub color_warn: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub color_err: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub color_succ: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub color_info: Hsla,
     // Config banner
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub banner_bg: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub banner_border: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub banner_text: Hsla,
 }
 impl gpui::Global for ActiveTheme {}
@@ -215,4 +244,11 @@ impl ThemeData {
             banner_text: hsla(40.0 / 360.0, 0.70, 0.73, 1.0),
         }
     }
+}
+
+fn hsla_from_hex<'de, D: Deserializer<'de>>(d: D) -> Result<Hsla, D::Error> {
+    let hex = String::deserialize(d)?;
+    let hex = hex.trim_start_matches('#');
+    let n = u32::from_str_radix(&hex[..6], 16).map_err(serde::de::Error::custom)?;
+    Ok(gpui::rgb(n).into())
 }

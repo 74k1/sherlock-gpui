@@ -7,6 +7,7 @@ use crate::{
     launcher::{LauncherProvider, LauncherType, LoadContext},
     loader::utils::RawLauncher,
     ui::widgets::{RenderableChild, translator::TranslationData},
+    utils::errors::SherlockMessage,
 };
 
 #[derive(Clone, Debug, Deserialize)]
@@ -21,6 +22,7 @@ impl LauncherProvider for Translator {
         launcher: Arc<super::Launcher>,
         _ctx: &LoadContext,
         _opts: Arc<Value>,
+        _messages: &mut Vec<SherlockMessage>,
         cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
         Ok(vec![RenderableChild::Translator {

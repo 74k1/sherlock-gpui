@@ -44,6 +44,7 @@ impl LauncherProvider for CalculatorLauncher {
         launcher: std::sync::Arc<super::Launcher>,
         _ctx: &crate::loader::LoadContext,
         opts: std::sync::Arc<serde_json::Value>,
+        _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, SherlockMessage> {
         let capabilities: Vec<String> = match opts.get("capabilities") {

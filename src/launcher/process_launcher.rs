@@ -46,6 +46,7 @@ impl LauncherProvider for ProcessLauncher {
         launcher: Arc<super::Launcher>,
         _ctx: &LoadContext,
         opts: Arc<Value>,
+        _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
         if opts

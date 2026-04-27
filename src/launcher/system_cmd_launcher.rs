@@ -11,7 +11,7 @@ use crate::{
     },
     sherlock_msg,
     ui::{launcher::context_menu::ContextMenuAction, widgets::RenderableChild},
-    utils::errors::types::SherlockErrorType,
+    utils::errors::{SherlockMessage, types::SherlockErrorType},
 };
 
 #[derive(Clone, Debug)]
@@ -27,6 +27,7 @@ impl LauncherProvider for CommandLauncher {
         launcher: std::sync::Arc<super::Launcher>,
         ctx: &crate::loader::LoadContext,
         opts: std::sync::Arc<serde_json::Value>,
+        _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
         let cmds = opts.get("commands").ok_or_else(|| {

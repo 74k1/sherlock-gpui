@@ -50,6 +50,7 @@ impl LauncherProvider for WeatherLauncher {
         launcher: Arc<super::Launcher>,
         _ctx: &crate::loader::LoadContext,
         _opts: Arc<serde_json::Value>,
+        _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
         match WeatherData::from_cache(self) {

@@ -95,11 +95,12 @@ macro_rules! create_variants {
                 launcher: std::sync::Arc<crate::launcher::Launcher>,
                 ctx: &crate::loader::LoadContext,
                 opts: std::sync::Arc<serde_json::Value>,
+                messages: &mut Vec<SherlockMessage>,
                 cx: &mut App
             ) -> Result<Vec<RenderableChild>, SherlockMessage> {
                 match self {
                     $(
-                        Self::$variant(inner) => <$inner as LauncherProvider>::objects(inner, launcher, ctx, opts, cx),
+                        Self::$variant(inner) => <$inner as LauncherProvider>::objects(inner, launcher, ctx, opts, messages, cx),
                     )*
                     Self::Empty => Ok(vec![]),
                 }

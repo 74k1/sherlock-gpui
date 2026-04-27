@@ -55,6 +55,7 @@ pub trait LauncherProvider {
         launcher: Arc<Launcher>,
         ctx: &LoadContext,
         opts: Arc<serde_json::Value>,
+        messages: &mut Vec<SherlockMessage>,
         cx: &mut App,
     ) -> Result<Vec<RenderableChild>, SherlockMessage>;
     fn binds(&self) -> Option<Arc<Vec<Bind>>> {

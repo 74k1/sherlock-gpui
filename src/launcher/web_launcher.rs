@@ -5,6 +5,7 @@ use crate::{
         utils::{AppData, RawLauncher},
     },
     ui::widgets::RenderableChild,
+    utils::errors::SherlockMessage,
 };
 use serde::Deserialize;
 use serde_json::Value;
@@ -28,6 +29,7 @@ impl LauncherProvider for WebLauncher {
         launcher: std::sync::Arc<super::Launcher>,
         _ctx: &crate::loader::LoadContext,
         opts: std::sync::Arc<serde_json::Value>,
+        _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
         let mut inner = AppData::new();

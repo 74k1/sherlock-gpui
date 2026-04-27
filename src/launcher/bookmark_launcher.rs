@@ -48,6 +48,7 @@ impl LauncherProvider for BookmarkLauncher {
         launcher: Arc<Launcher>,
         _ctx: &crate::loader::LoadContext,
         _opts: Arc<serde_json::Value>,
+        _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, SherlockMessage> {
         BookmarkLauncher::find_bookmarks(&self.target_browser, Arc::clone(&launcher)).map(|ad| {

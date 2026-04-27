@@ -10,7 +10,7 @@ use crate::{
     loader::utils::RawLauncher,
     sherlock_msg,
     ui::widgets::{RenderableChild, timer::TimerChild},
-    utils::errors::types::SherlockErrorType,
+    utils::errors::{SherlockMessage, types::SherlockErrorType},
 };
 
 #[derive(Clone, Debug, Deserialize)]
@@ -33,6 +33,7 @@ impl LauncherProvider for TimerLauncher {
         launcher: Arc<super::Launcher>,
         _ctx: &LoadContext,
         _opts: Arc<Value>,
+        _messages: &mut Vec<SherlockMessage>,
         cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
         Ok(vec![RenderableChild::Timer {

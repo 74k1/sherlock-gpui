@@ -99,10 +99,13 @@ impl Loader {
                 }
             })
             .filter_map(|(launcher, opts)| {
-                match launcher
-                    .launcher_type
-                    .get_render_obj(Arc::clone(&launcher), &ctx, opts, cx)
-                {
+                match launcher.launcher_type.get_render_obj(
+                    Arc::clone(&launcher),
+                    &ctx,
+                    opts,
+                    &mut messages,
+                    cx,
+                ) {
                     Ok(vec) => (!vec.is_empty()).then_some(vec),
                     Err(e) => {
                         messages.push(e);
