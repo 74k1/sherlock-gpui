@@ -40,12 +40,14 @@ run `git log main..dev` for all changes
 
 ## [Unreleased]
 
-* as of **b877692ff93bbda20a6c282396b40055d9b7a95c**
+* as of **c97d787224e4307a058b38830d2c7a38540b3e6a**
 
 ### Added
 
 * **Timer:** Added timer launcher with up to 4 simultaneous timers
 * **Variable Input:** Added command variable input with auto-completion
+* **Process Launcher:** Added process launcher
+* **Theme Picker:** Added theme picker
 
 ### improvements
 
