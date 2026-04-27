@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use gpui::SharedString;
+use gpui::{App, SharedString, Task};
 
 use crate::utils::command_launch;
 
@@ -23,7 +23,7 @@ impl TimerState {
             Self::Paused { remaining } => *remaining,
         }
     }
-    pub(super) fn toggle(&mut self) {
+    fn toggle(&mut self) {
         *self = match *self {
             Self::Running { ends_at } => Self::Paused {
                 remaining: ends_at.saturating_duration_since(Instant::now()),
@@ -42,20 +42,43 @@ pub(super) struct Timer {
     pub(super) amount: f32,
     pub(super) state: TimerState,
     pub(super) command: Option<SharedString>,
+    pub(super) completion_task: Option<Task<()>>,
 }
 impl Timer {
-    pub(super) fn new(duration: Duration, command: Option<SharedString>) -> Self {
+    pub(super) fn new(duration: Duration, command: Option<SharedString>, cx: &mut App) -> Self {
+        let completion_task = Self::spawn_completion_task(duration, &command, cx);
         Self {
             amount: duration.as_secs_f32(),
             state: TimerState::Running {
                 ends_at: Instant::now() + duration,
             },
             command,
+            completion_task,
         }
     }
-    pub(super) fn on_completion(&self) {
-        if let Some(cmd) = &self.command {
-            let _ = command_launch::spawn_detached(cmd, "", &[]);
+    fn spawn_completion_task(
+        remaining: Duration,
+        command: &Option<SharedString>,
+        cx: &mut App,
+    ) -> Option<Task<()>> {
+        command.as_ref().map(|c| {
+            let cmd = c.clone();
+            cx.spawn(async move |_| {
+                async_io::Timer::after(remaining).await;
+                let _ = command_launch::spawn_detached(&cmd, "", &[]);
+            })
+        })
+    }
+    pub(super) fn toggle(&mut self, cx: &mut App) {
+        self.state.toggle();
+        match self.state {
+            TimerState::Paused { .. } => {
+                self.completion_task.take();
+            }
+            TimerState::Running { .. } => {
+                let remaining = self.state.remaining();
+                self.completion_task = Self::spawn_completion_task(remaining, &self.command, cx);
+            }
         }
     }
 }

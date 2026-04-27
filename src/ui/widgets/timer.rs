@@ -52,9 +52,7 @@ impl TimerChild {
     }
     pub fn toggle<C: AppContext>(&self, cx: &mut C) {
         self.update_entity.update(cx, |this, cx| {
-            this.timers
-                .iter_mut()
-                .for_each(|timer| timer.state.toggle());
+            this.timers.iter_mut().for_each(|timer| timer.toggle(cx));
             cx.notify();
         });
     }
@@ -66,7 +64,7 @@ impl TimerChild {
     ) {
         self.update_entity.update(cx, |this, cx| {
             if this.timers.len() < 4 {
-                this.timers.push(Timer::new(duration, command));
+                this.timers.push(Timer::new(duration, command, cx));
                 cx.notify();
             }
         })
@@ -86,16 +84,7 @@ impl<'a> RenderableChildImpl<'a> for TimerChild {
                 // Will cause cx.notify to run
                 this.start_timer(cx, |_, _| {});
             }
-
-            this.timers.retain_mut(|t| {
-                if t.state.remaining() == Duration::ZERO {
-                    t.on_completion();
-                    false
-                } else {
-                    true
-                }
-            });
-
+            this.timers.retain(|t| t.state.remaining() > Duration::ZERO);
             this.timers.iter().map(|t| (t.state, t.amount)).collect()
         });
         let intent = self.update_entity.read(cx).intent.clone();
