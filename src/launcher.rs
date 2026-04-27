@@ -45,9 +45,6 @@ use gpui::{App, Keystroke, SharedString};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, path::Path, sync::Arc};
 
-// Integrate later: TODO
-// use process_launcher::ProcessLauncher;
-
 pub trait LauncherProvider {
     fn parse(raw: &RawLauncher) -> LauncherType;
     fn objects(
