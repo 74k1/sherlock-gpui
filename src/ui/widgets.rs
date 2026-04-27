@@ -10,6 +10,7 @@ pub mod event;
 pub mod file;
 pub mod message;
 pub mod mpris;
+pub mod process;
 pub mod script;
 pub mod timer;
 pub mod translator;
@@ -25,8 +26,8 @@ use crate::{
     ui::{
         launcher::context_menu::ContextMenuAction,
         widgets::{
-            dmenu::DmenuData, message::MessageChild, script::ScriptData, timer::TimerChild,
-            translator::TranslationData,
+            dmenu::DmenuData, message::MessageChild, process::ProcessData, script::ScriptData,
+            timer::TimerChild, translator::TranslationData,
         },
     },
     utils::config::HomeType,
@@ -291,6 +292,7 @@ renderable_enum! {
         File(FileData),
         Message(MessageChild),
         Music(MprisState),
+        Process(ProcessData),
         Script(ScriptData),
         Timer(TimerChild),
         Translator(TranslationData),

@@ -19,11 +19,20 @@ pub enum ProcessLauncherFunctions {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct ProcessLauncher {}
+pub struct ProcessLauncher {
+    pub max_results: usize,
+}
 
 impl LauncherProvider for ProcessLauncher {
-    fn parse(_raw: &RawLauncher) -> LauncherType {
-        LauncherType::Process(ProcessLauncher {})
+    fn parse(raw: &RawLauncher) -> LauncherType {
+        let max_results = raw
+            .args
+            .get("max_results")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize)
+            .unwrap_or(50);
+
+        LauncherType::Process(ProcessLauncher { max_results })
     }
     fn objects(
         &self,

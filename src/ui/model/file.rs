@@ -2,6 +2,7 @@ use crate::app::RenderableChildWeak;
 use crate::launcher::file_launcher::FileLauncher;
 use crate::launcher::{Launcher, variant_type::LauncherType};
 use crate::ui::launcher::LauncherView;
+use crate::ui::model::utils::CiUtils;
 use crate::ui::widgets::RenderableChild;
 use crate::ui::widgets::file::FileData;
 use crate::utils::files::expand_path;
@@ -173,33 +174,6 @@ impl FileSearchUtility {
         entry.file_name().as_encoded_bytes().first().copied() == Some(b'.')
     }
 
-    #[inline]
-    fn bytes_eq_ci(a: &[u8], b: &[u8]) -> bool {
-        a.len() == b.len() && a.iter().zip(b).all(|(x, y)| x.to_ascii_lowercase() == *y)
-    }
-
-    /// Case-insensitive substring search over raw bytes — no allocation.
-    /// Only handles ASCII correctly!!
-    #[inline]
-    fn bytes_contain_ci(haystack: &[u8], needle: &[u8]) -> bool {
-        if needle.is_empty() {
-            return true;
-        }
-        if needle.len() > haystack.len() {
-            return false;
-        }
-        haystack.windows(needle.len()).any(|w| {
-            w.iter()
-                .zip(needle.iter())
-                .all(|(h, n)| h.to_ascii_lowercase() == *n)
-        })
-    }
-
-    #[inline]
-    fn memrchr_slash(bytes: &[u8]) -> Option<usize> {
-        bytes.iter().rposition(|&b| b == b'/')
-    }
-
     // Comparing with already lower-cased query,
     // using a zero-alloc case-insensitive comparator
     #[inline]
@@ -208,9 +182,9 @@ impl FileSearchUtility {
         let len = name_bytes.len();
         let qlen = q.len();
 
-        let eq = len == qlen && Self::bytes_eq_ci(name_bytes, q);
-        let ends = len > qlen && Self::bytes_eq_ci(&name_bytes[len - qlen..], q);
-        let starts = len > qlen && Self::bytes_eq_ci(&name_bytes[..qlen], q);
+        let eq = len == qlen && CiUtils::bytes_eq_ci(name_bytes, q);
+        let ends = len > qlen && CiUtils::bytes_eq_ci(&name_bytes[len - qlen..], q);
+        let starts = len > qlen && CiUtils::bytes_eq_ci(&name_bytes[..qlen], q);
 
         if eq {
             return 0.0;
@@ -221,7 +195,7 @@ impl FileSearchUtility {
         if starts {
             return 0.1 + 0.1 * (1.0 - qlen as f32 / len as f32);
         }
-        if Self::bytes_contain_ci(name_bytes, q) {
+        if CiUtils::bytes_contain_ci(name_bytes, q) {
             return 0.4;
         }
         0.8
@@ -232,20 +206,20 @@ impl FileSearchUtility {
         let plen = path_bytes.len();
         let qlen = query.len();
 
-        if Self::bytes_eq_ci(path_bytes, query) {
+        if CiUtils::bytes_eq_ci(path_bytes, query) {
             return 0.0;
         }
 
         if plen > qlen {
             let tail = &path_bytes[plen - qlen..];
-            if Self::bytes_eq_ci(tail, query) {
+            if CiUtils::bytes_eq_ci(tail, query) {
                 let prev = path_bytes[plen - qlen - 1];
                 if prev == b'/' || prev == b'\\' {
                     return 0.05;
                 }
             }
         }
-        if Self::bytes_contain_ci(path_bytes, query) {
+        if CiUtils::bytes_contain_ci(path_bytes, query) {
             return 0.3 + 0.1 * (1.0 - qlen as f32 / plen as f32);
         }
         0.8

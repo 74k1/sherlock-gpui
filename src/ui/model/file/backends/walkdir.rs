@@ -1,9 +1,12 @@
 use std::{path::PathBuf, sync::Arc};
 
-use crate::ui::model::file::{
-    FileSearchUtility, MAX_SEARCH_DEPTH,
-    backends::FileSearchProvider,
-    utils::{FileResult, ResultHeap},
+use crate::ui::model::{
+    file::{
+        FileSearchUtility, MAX_SEARCH_DEPTH,
+        backends::FileSearchProvider,
+        utils::{FileResult, ResultHeap},
+    },
+    utils::CiUtils,
 };
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
@@ -46,14 +49,14 @@ impl FileSearchProvider for WalkdirBackend {
 
                 if query.contains('/') || query.contains(std::path::MAIN_SEPARATOR) {
                     let path_bytes = entry.path().as_os_str().as_encoded_bytes();
-                    if !FileSearchUtility::bytes_contain_ci(path_bytes, query.as_bytes()) {
+                    if !CiUtils::bytes_contain_ci(path_bytes, query.as_bytes()) {
                         continue;
                     }
                     score = FileSearchUtility::score_path(path_bytes, query.as_bytes());
                     matched = true;
                 } else {
                     let name_bytes = os_name.as_encoded_bytes();
-                    if !FileSearchUtility::bytes_contain_ci(name_bytes, query.as_bytes()) {
+                    if !CiUtils::bytes_contain_ci(name_bytes, query.as_bytes()) {
                         continue;
                     }
                     score = FileSearchUtility::score_file_ci(name_bytes, &query);

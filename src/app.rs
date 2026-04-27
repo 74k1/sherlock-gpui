@@ -133,7 +133,6 @@ fn spawn_launcher(
                     this.navigation.current_mut().reset_selected_index();
                     this.filter_and_sort(cx);
                 }
-                cx.notify();
             });
 
             text_input.update(cx, |this, _| this._sub = Some(backspace_sub));

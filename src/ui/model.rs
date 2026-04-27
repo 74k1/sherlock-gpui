@@ -1,7 +1,10 @@
 use crate::{
     app::RenderableChildEntity,
     launcher::Launcher,
-    ui::{model::file::FileSearchModel, widgets::RenderableChild},
+    ui::{
+        model::{file::FileSearchModel, process::ProcessModel},
+        widgets::RenderableChild,
+    },
 };
 use gpui::{App, AppContext, SharedString, Task};
 use std::{rc::Rc, sync::Arc};
@@ -10,6 +13,8 @@ pub mod emoji;
 pub mod file;
 pub mod home;
 pub mod message;
+pub mod process;
+mod utils;
 
 pub enum Model {
     Standard {
@@ -23,6 +28,12 @@ pub enum Model {
         filtered_indices: Arc<[usize]>,
         last_query: Option<SharedString>,
         search: FileSearchModel,
+    },
+    Process {
+        data: RenderableChildEntity,
+        filtered_indices: Arc<[usize]>,
+        last_query: Option<SharedString>,
+        search: ProcessModel,
     },
 }
 
@@ -48,6 +59,15 @@ impl Model {
         }
     }
 
+    pub fn process(launcher: Arc<Launcher>, cx: &mut App) -> Self {
+        Self::Process {
+            data: cx.new(|_| Rc::new(Vec::new())),
+            filtered_indices: Arc::from([]),
+            last_query: None,
+            search: ProcessModel::new(launcher),
+        }
+    }
+
     pub fn file_search(launcher: Arc<Launcher>, dir: Option<SharedString>, cx: &mut App) -> Self {
         Self::FileSearch {
             data: cx.new(|_| Rc::new(Vec::new())),
@@ -61,8 +81,11 @@ impl Model {
         match self {
             Self::Standard {
                 filtered_indices, ..
-            } => filtered_indices.len(),
-            Self::FileSearch {
+            }
+            | Self::FileSearch {
+                filtered_indices, ..
+            }
+            | Self::Process {
                 filtered_indices, ..
             } => filtered_indices.len(),
         }
@@ -70,8 +93,9 @@ impl Model {
 
     pub fn data(&self) -> RenderableChildEntity {
         match self {
-            Self::Standard { data, .. } => data.clone(),
-            Self::FileSearch { data, .. } => data.clone(),
+            Self::Standard { data, .. }
+            | Self::FileSearch { data, .. }
+            | Self::Process { data, .. } => data.clone(),
         }
     }
 
@@ -79,8 +103,11 @@ impl Model {
         match self {
             Self::Standard {
                 filtered_indices, ..
-            } => Arc::clone(filtered_indices),
-            Self::FileSearch {
+            }
+            | Self::FileSearch {
+                filtered_indices, ..
+            }
+            | Self::Process {
                 filtered_indices, ..
             } => Arc::clone(filtered_indices),
         }
@@ -88,8 +115,9 @@ impl Model {
 
     pub fn last_query(&self) -> Option<SharedString> {
         match self {
-            Self::Standard { last_query, .. } => last_query.clone(),
-            Self::FileSearch { last_query, .. } => last_query.clone(),
+            Self::Standard { last_query, .. }
+            | Self::FileSearch { last_query, .. }
+            | Self::Process { last_query, .. } => last_query.clone(),
         }
     }
 }

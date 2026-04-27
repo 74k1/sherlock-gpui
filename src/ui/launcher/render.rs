@@ -418,7 +418,6 @@ impl LauncherView {
                     this.text_input.update(cx, |this, _| this.reset());
                     this.navigation.set_messages_active();
                     this.filter_and_sort(cx);
-                    cx.notify();
                 }),
             )
             .when(count > 0, |this| {

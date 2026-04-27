@@ -3,8 +3,9 @@ use std::{borrow::Cow, ffi::OsStr, io::BufRead, path::PathBuf, process::Child, s
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 
-use crate::ui::model::file::{
-    FileResult, FileSearchUtility, ResultHeap, backends::FileSearchProvider,
+use crate::ui::model::{
+    file::{FileResult, FileSearchUtility, ResultHeap, backends::FileSearchProvider},
+    utils::CiUtils,
 };
 
 pub struct ChildGuard(pub Child);
@@ -81,17 +82,17 @@ impl<F: CommandFactory + Default> FileSearchProvider for CommandBackend<F> {
                 if line.ends_with('/') {
                     // Normalize separators on Windows only — avoid alloc on Unix
                     let path_bytes = line.as_bytes();
-                    if !FileSearchUtility::bytes_contain_ci(path_bytes, query.as_bytes()) {
+                    if !CiUtils::bytes_contain_ci(path_bytes, query.as_bytes()) {
                         continue;
                     }
                     FileSearchUtility::score_path(path_bytes, query.as_bytes())
                 } else {
                     let name_bytes = line.as_bytes();
                     // Slice to filename only — don't score against the full path
-                    let name_bytes = FileSearchUtility::memrchr_slash(name_bytes)
+                    let name_bytes = CiUtils::memrchr_slash(name_bytes)
                         .map(|i| &name_bytes[i + 1..])
                         .unwrap_or(name_bytes);
-                    if !FileSearchUtility::bytes_contain_ci(name_bytes, query.as_bytes()) {
+                    if !CiUtils::bytes_contain_ci(name_bytes, query.as_bytes()) {
                         continue;
                     }
                     FileSearchUtility::score_file_ci(name_bytes, &query)

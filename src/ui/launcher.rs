@@ -89,6 +89,11 @@ impl LauncherView {
                 filtered_indices: idx,
                 last_query: q,
                 ..
+            }
+            | Model::Process {
+                filtered_indices: idx,
+                last_query: q,
+                ..
             } => {
                 if idx != &results {
                     changed = true;
@@ -104,9 +109,8 @@ impl LauncherView {
             self.focus_first(cx);
         } else if self.variable_input.is_empty() {
             self.update_vars(cx);
+            cx.notify();
         }
-
-        cx.notify();
     }
     pub fn filter_and_sort(&mut self, cx: &mut Context<Self>) {
         let mut query: SharedString = self.text_input.read(cx).content.to_lowercase().into();
@@ -136,7 +140,7 @@ impl LauncherView {
         }
 
         enum ModelKind {
-            FileSearch {
+            BufferedSearch {
                 weak_data: RenderableChildWeak,
                 last_query: Option<SharedString>,
             },
@@ -148,7 +152,10 @@ impl LauncherView {
         let kind = self.navigation.with_model(cx, |mdl| match mdl {
             Model::FileSearch {
                 data, last_query, ..
-            } => ModelKind::FileSearch {
+            }
+            | Model::Process {
+                data, last_query, ..
+            } => ModelKind::BufferedSearch {
                 weak_data: data.downgrade(),
                 last_query: last_query.clone(),
             },
@@ -156,7 +163,7 @@ impl LauncherView {
         });
 
         match kind {
-            ModelKind::FileSearch {
+            ModelKind::BufferedSearch {
                 weak_data,
                 last_query,
             } => {
@@ -165,10 +172,14 @@ impl LauncherView {
                 }
 
                 let weak_self = cx.entity().downgrade();
-                self.navigation.with_model_mut(cx, |mdl, cx| {
-                    if let Model::FileSearch { search, .. } = mdl {
+                self.navigation.with_model_mut(cx, |mdl, cx| match mdl {
+                    Model::FileSearch { search, .. } => {
                         search.search(query.into(), weak_data, weak_self, cx);
                     }
+                    Model::Process { search, .. } => {
+                        search.search(query.into(), weak_data, weak_self, cx);
+                    }
+                    _ => {}
                 });
             }
             ModelKind::Standard { data } => {

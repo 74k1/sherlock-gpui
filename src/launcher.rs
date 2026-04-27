@@ -265,6 +265,10 @@ impl ExecMode {
                 mode: NavigationViewType::Files { dir: None },
                 launcher: Arc::clone(launcher),
             },
+            LauncherType::Process(_) => Self::CreateView {
+                mode: NavigationViewType::Process,
+                launcher: Arc::clone(launcher),
+            },
             LauncherType::Message(_) => Self::SwitchView { idx: 0 },
             LauncherType::Web(web) => Self::Web {
                 engine: Some(web.engine.clone()),

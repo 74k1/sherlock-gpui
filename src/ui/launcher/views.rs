@@ -12,6 +12,7 @@ use crate::{
         launcher::context_menu::ContextMenuAction,
         model::{
             Model, emoji::EmojiView, file::view::FileView, home::HomeView, message::MessageView,
+            process::view::ProcessView,
         },
         widgets::{LauncherValues, RenderableChild, RenderableChildDelegate},
     },
@@ -161,6 +162,11 @@ impl NavigationStack {
                 f(&view.read(cx).model)
             }
 
+            NavigationViewType::Process => {
+                let view = current.view.clone().downcast::<ProcessView>().unwrap();
+                f(&view.read(cx).model)
+            }
+
             NavigationViewType::Home | NavigationViewType::Dmenu { .. } => {
                 let view = current.view.clone().downcast::<HomeView>().unwrap();
                 f(&view.read(cx).model)
@@ -186,6 +192,11 @@ impl NavigationStack {
         match current.kind {
             NavigationViewType::Files { .. } => {
                 let view = current.view.clone().downcast::<FileView>().unwrap();
+                view.update(cx, |this, cx| f(&mut this.model, cx))
+            }
+
+            NavigationViewType::Process => {
+                let view = current.view.clone().downcast::<ProcessView>().unwrap();
                 view.update(cx, |this, cx| f(&mut this.model, cx))
             }
 
@@ -394,6 +405,7 @@ impl EntityStyle {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NavigationViewType {
     Emoji,
+    Process,
     Message,
     Home,
     Dmenu { entity: RenderableChildEntity },
@@ -419,6 +431,17 @@ impl NavigationViewType {
             }
             Self::Files { dir } => {
                 let view = cx.new(|cx| FileView::new(launcher, dir.clone(), cx));
+                NavigationView {
+                    view: view.into(),
+                    style: EntityStyle::Row {
+                        state: ListState::new(0, gpui::ListAlignment::Top, px(50.)),
+                        selected_index: 0,
+                    },
+                    kind: self.clone(),
+                }
+            }
+            Self::Process => {
+                let view = cx.new(|cx| ProcessView::new(launcher, cx));
                 NavigationView {
                     view: view.into(),
                     style: EntityStyle::Row {

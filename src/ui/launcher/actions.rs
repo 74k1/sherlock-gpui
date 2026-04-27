@@ -256,7 +256,6 @@ impl LauncherView {
                     this.reset();
                 });
                 self.filter_and_sort(cx);
-                cx.notify();
                 return Ok(false);
             }
             ExecMode::Command { exec } => {
@@ -555,7 +554,6 @@ impl LauncherView {
                         });
 
                         this.filter_and_sort(cx);
-                        cx.notify();
                     });
                 } else {
                     break;
