@@ -133,6 +133,7 @@ impl LauncherView {
             ModeTransition::PushStack(launcher) => {
                 let view = match &launcher.launcher_type {
                     LauncherType::Emoji(_) => NavigationViewType::Emoji,
+                    LauncherType::Process(_) => NavigationViewType::Process,
                     LauncherType::Files(files) => NavigationViewType::Files {
                         dir: Some(files.loc.clone()),
                     },
@@ -349,7 +350,9 @@ impl LauncherMode {
                         if let Self::Alias { launcher, .. } = new_mode
                             && matches!(
                                 &launcher.launcher_type,
-                                LauncherType::Files(_) | LauncherType::Emoji(_)
+                                LauncherType::Files(_)
+                                    | LauncherType::Emoji(_)
+                                    | LauncherType::Process(_)
                             )
                         {
                             return ModeTransition::PushStack(launcher.clone());

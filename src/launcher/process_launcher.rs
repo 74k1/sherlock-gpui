@@ -44,17 +44,27 @@ impl LauncherProvider for ProcessLauncher {
         &self,
         launcher: Arc<super::Launcher>,
         _ctx: &LoadContext,
-        _opts: Arc<Value>,
+        opts: Arc<Value>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
-        Ok(vec![RenderableChild::App {
-            inner: AppData {
-                name: launcher.name.clone(),
-                icon: resolve_icon_path("sherlock-process"),
-                ..AppData::new()
-            },
-            launcher,
-        }])
+        if opts
+            .get("show_tile")
+            .is_some_and(|s| s.as_bool().unwrap_or_default())
+        {
+            Ok(vec![RenderableChild::App {
+                inner: AppData {
+                    name: launcher.name.clone(),
+                    icon: launcher
+                        .icon
+                        .clone()
+                        .or(resolve_icon_path("sherlock-process")),
+                    ..AppData::new()
+                },
+                launcher,
+            }])
+        } else {
+            Ok(vec![])
+        }
     }
     fn execute_function<C: gpui::AppContext>(
         &self,
