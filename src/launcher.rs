@@ -19,7 +19,6 @@ pub mod weather_launcher;
 pub mod web_launcher;
 // Integrate later: TODO
 // pub mod pipe_launcher;
-// pub mod pomodoro_launcher;
 // pub mod process_launcher;
 // pub mod theme_picker;
 
@@ -47,7 +46,6 @@ use serde::{Deserialize, Serialize};
 use std::{fmt::Display, path::Path, sync::Arc};
 
 // Integrate later: TODO
-// use pomodoro_launcher::Pomodoro;
 // use process_launcher::ProcessLauncher;
 // use theme_picker::ThemePicker;
 
