@@ -197,6 +197,9 @@ impl<'a> RenderableChildImpl<'a> for TimerChild {
         _launcher: &Arc<Launcher>,
         cx: &mut App,
     ) -> Option<Arc<[Arc<crate::ui::launcher::context_menu::ContextMenuAction>]>> {
+        // TODO: idea: make a context_menu action type parameter that allows for a binary option
+        // like toggle or remove? this would allow a neater design rather than a remove and a
+        // toggle option. could look like emoji column based action: |[option 1][option 2] Timer n|
         Some(
             (0..self.update_entity.read(cx).timers.len())
                 .map(|i| {
