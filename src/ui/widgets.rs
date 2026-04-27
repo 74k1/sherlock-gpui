@@ -12,6 +12,7 @@ pub mod message;
 pub mod mpris;
 pub mod process;
 pub mod script;
+pub mod theme;
 pub mod timer;
 pub mod translator;
 pub mod weather;
@@ -37,6 +38,7 @@ use calculator::CalcData;
 use clipboard::ClipData;
 use event::EventData;
 use file::FileData;
+use theme::ThemeWidget;
 
 /// Creates enum RenderableChild,
 /// ## Example:
@@ -294,6 +296,7 @@ renderable_enum! {
         Music(MprisState),
         Process(ProcessData),
         Script(ScriptData),
+        Theme(ThemeWidget),
         Timer(TimerChild),
         Translator(TranslationData),
         Weather(WeatherData),

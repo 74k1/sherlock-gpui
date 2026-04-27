@@ -1,6 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
-use gpui::SharedString;
+use gpui::{App, SharedString};
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -40,12 +40,12 @@ impl LauncherProvider for TimerLauncher {
             inner: TimerChild::new(cx),
         }])
     }
-    fn execute_function<C: gpui::AppContext>(
+    fn execute_function(
         &self,
         func: super::variant_type::InnerFunction,
         child: &RenderableChild,
         variables: &[(SharedString, SharedString)],
-        cx: &mut C,
+        cx: &mut App,
     ) -> Result<bool, crate::utils::errors::SherlockMessage> {
         let func = ensure_func!(func, InnerFunction::Timer);
 

@@ -68,12 +68,12 @@ impl LauncherProvider for ScriptLauncher {
             },
         }])
     }
-    fn execute_function<C: AppContext>(
+    fn execute_function(
         &self,
         func: super::variant_type::InnerFunction,
         child: &RenderableChild,
         _variables: &[(SharedString, SharedString)],
-        cx: &mut C,
+        cx: &mut App,
     ) -> Result<bool, SherlockMessage> {
         let func = ensure_func!(func, InnerFunction::Script);
         match func {

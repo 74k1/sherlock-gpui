@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use gpui::{AppContext, SharedString};
+use gpui::{App, SharedString};
 use serde::Deserialize;
 
 use crate::{
@@ -58,12 +58,12 @@ impl LauncherProvider for EventLauncher {
             inner: Box::new(EventData::new(look_back, look_ahead)),
         }])
     }
-    fn execute_function<C: AppContext>(
+    fn execute_function(
         &self,
         func: super::variant_type::InnerFunction,
         child: &RenderableChild,
         _variables: &[(SharedString, SharedString)],
-        _cx: &mut C,
+        _cx: &mut App,
     ) -> Result<bool, SherlockMessage> {
         let func = ensure_func!(func, InnerFunction::Event);
 

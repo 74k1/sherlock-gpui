@@ -41,13 +41,12 @@ use crate::{
         errors::{SherlockMessage, types::SherlockErrorType},
     },
 };
-use gpui::{App, AppContext, Keystroke, SharedString};
+use gpui::{App, Keystroke, SharedString};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, path::Path, sync::Arc};
 
 // Integrate later: TODO
 // use process_launcher::ProcessLauncher;
-// use theme_picker::ThemePicker;
 
 pub trait LauncherProvider {
     fn parse(raw: &RawLauncher) -> LauncherType;
@@ -61,12 +60,12 @@ pub trait LauncherProvider {
     fn binds(&self) -> Option<Arc<Vec<Bind>>> {
         None
     }
-    fn execute_function<C: AppContext>(
+    fn execute_function(
         &self,
         func: InnerFunction,
         _child: &RenderableChild,
         _variables: &[(SharedString, SharedString)],
-        _cx: &mut C,
+        _cx: &mut App,
     ) -> Result<bool, SherlockMessage> {
         Err(sherlock_msg!(
             Warning,
@@ -88,7 +87,7 @@ impl Bind {
     }
     pub fn get_exec(&self) -> ExecMode {
         ExecMode::Inner {
-            func: self.callback,
+            func: self.callback.clone(),
             exit: self.exit,
         }
     }

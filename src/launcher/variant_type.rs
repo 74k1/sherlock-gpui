@@ -1,4 +1,4 @@
-use gpui::{App, AppContext, SharedString};
+use gpui::{App, SharedString};
 use std::mem;
 use std::sync::Arc;
 
@@ -22,7 +22,7 @@ use crate::{
         message_launcher::MessageLauncher,
         process_launcher::{ProcessLauncher, ProcessLauncherFunctions},
         system_cmd_launcher::CommandLauncher,
-        theme_launcher::ThemePicker,
+        theme_launcher::{ThemePicker, ThemePickerFunctions},
         timer_launcher::{TimerLauncher, TimerLauncherFunctions},
         translator_launcher::Translator,
         weather_launcher::WeatherLauncher,
@@ -55,7 +55,7 @@ macro_rules! create_variants {
             Empty,
         }
 
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Debug, PartialEq)]
         pub enum InnerFunction {
             $(
                 $( $variant($extra), )?
@@ -112,12 +112,12 @@ macro_rules! create_variants {
                     Self::Empty => None
                 }
             }
-            pub fn execute_function<C: AppContext>(
+            pub fn execute_function(
                 &self,
                 func: InnerFunction,
                 child: &RenderableChild,
                 variables: &[(SharedString, SharedString)],
-                cx: &mut C
+                cx: &mut App
             ) -> Result<bool, SherlockMessage> {
                 match self {
                     $(
@@ -157,7 +157,7 @@ create_variants! {
         MusicPlayer(MusicPlayerLauncher, MusicPlayerFunctions),
         Process(ProcessLauncher, ProcessLauncherFunctions),
         Script(ScriptLauncher, ScriptFunctions),
-        Theme(ThemePicker),
+        Theme(ThemePicker, ThemePickerFunctions),
         Timer(TimerLauncher, TimerLauncherFunctions),
         Translator(Translator),
         Weather(WeatherLauncher),

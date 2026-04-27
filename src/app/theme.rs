@@ -5,6 +5,7 @@ use gpui::{Hsla, SharedString, hsla};
 #[derive(Clone)]
 pub struct ActiveTheme(pub Arc<ThemeData>);
 
+#[derive(Debug, PartialEq)]
 pub struct ThemeData {
     pub font_family: SharedString,
     pub monospace: SharedString,

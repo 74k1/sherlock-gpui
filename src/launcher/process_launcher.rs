@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use gpui::App;
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -66,12 +67,12 @@ impl LauncherProvider for ProcessLauncher {
             Ok(vec![])
         }
     }
-    fn execute_function<C: gpui::AppContext>(
+    fn execute_function(
         &self,
         func: super::variant_type::InnerFunction,
         _child: &RenderableChild,
         _variables: &[(gpui::SharedString, gpui::SharedString)],
-        _cx: &mut C,
+        _cx: &mut App,
     ) -> Result<bool, SherlockMessage> {
         let func = ensure_func!(func, InnerFunction::Process);
 

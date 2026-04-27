@@ -1,5 +1,5 @@
 use bytes::Bytes;
-use gpui::{AppContext, Image, ImageFormat, SharedString};
+use gpui::{App, Image, ImageFormat, SharedString};
 use serde_json::Value;
 use simd_json::prelude::ArrayTrait;
 use std::env;
@@ -63,12 +63,12 @@ impl LauncherProvider for MusicPlayerLauncher {
     fn binds(&self) -> Option<Arc<Vec<Bind>>> {
         self.binds.clone()
     }
-    fn execute_function<C: AppContext>(
+    fn execute_function(
         &self,
         func: InnerFunction,
         child: &RenderableChild,
         _variables: &[(SharedString, SharedString)],
-        _cx: &mut C,
+        _cx: &mut App,
     ) -> Result<bool, SherlockMessage> {
         let func = ensure_func!(func, InnerFunction::MusicPlayer);
 

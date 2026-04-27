@@ -15,7 +15,7 @@ use crate::{
     ui::{
         UIFunction,
         launcher::{LauncherView, context_menu::ContextMenuAction, views::EntityStyle},
-        utils::ease::Ease,
+        utils::{ease::Ease, render::ListItemBorder},
         widgets::{LauncherValues, RenderableChild, RenderableChildDelegate, Selection},
     },
     utils::config::ConfigGuard,
@@ -476,18 +476,12 @@ impl LauncherView {
             .child(
                 div()
                     .group("")
-                    .rounded_md()
                     .relative()
                     .mb(px(5.0))
                     .w_full()
                     .cursor_pointer()
                     .when(!ad.handles_borders(), |this| {
-                        this.bg(theme.bg_idle)
-                            .border_1()
-                            .when(selection.is_selected, |this| {
-                                this.bg(theme.bg_selected)
-                                    .border_color(theme.border_selected)
-                            })
+                        this.list_item_border(&theme, &selection)
                     })
                     .child(ad.render(selection, theme.clone(), cx))
                     .when_some(shortcut_idx, |this, shortcut_idx| {
