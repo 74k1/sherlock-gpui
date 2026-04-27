@@ -13,6 +13,7 @@ use crate::{
     },
     loader::utils::ExecVariable,
     ui::{
+        launcher::context_menu::{ContextMenuAction, DynamicFunctionAction},
         utils::{search::SherlockSearch, timeout::Timeout},
         widgets::{
             RenderableChildImpl, Selection,
@@ -186,6 +187,38 @@ impl<'a> RenderableChildImpl<'a> for TimerChild {
             return Some(&self.variable);
         }
         None
+    }
+    #[inline(always)]
+    fn has_actions(&self, cx: &mut App) -> bool {
+        !self.update_entity.read(cx).timers.is_empty()
+    }
+    fn actions(
+        &self,
+        _launcher: &Arc<Launcher>,
+        cx: &mut App,
+    ) -> Option<Arc<[Arc<crate::ui::launcher::context_menu::ContextMenuAction>]>> {
+        Some(
+            (0..self.update_entity.read(cx).timers.len())
+                .map(|i| {
+                    Arc::new(ContextMenuAction::Fn(
+                        DynamicFunctionAction::new(format!("Remove timer {}", i + 1))
+                            .exit(false)
+                            .on_exec({
+                                let weak_self = self.update_entity.downgrade();
+                                move |cx| {
+                                    if let Some(this) = weak_self.upgrade() {
+                                        this.update(cx, |this, _| {
+                                            if i < this.timers.len() {
+                                                this.timers.remove(i);
+                                            }
+                                        });
+                                    }
+                                }
+                            }),
+                    ))
+                })
+                .collect::<Arc<[_]>>(),
+        )
     }
 }
 

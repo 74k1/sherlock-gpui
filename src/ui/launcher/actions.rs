@@ -283,6 +283,9 @@ impl LauncherView {
                 if let Some(func) = opts.func.as_ref() {
                     func(cx)
                 }
+
+                cx.notify();
+                return Ok(opts.exit);
             }
             ExecMode::SwitchView { idx } if self.navigation.set_active_idx(idx) => {
                 self.text_input.update(cx, |this, _| this.reset());
@@ -348,6 +351,17 @@ impl LauncherView {
                     Err(e) => self.navigation.push_message(e, cx),
                     _ => {}
                 }
+
+                // update context menu actions in case of no-exit action and changed actions
+                if selected.has_actions(cx) {
+                    self.context_actions = self.navigation.current_actions(cx).unwrap_or_default();
+                    self.context_idx = self
+                        .context_idx
+                        .map(|idx| idx.min(self.context_actions.len().saturating_sub(1)));
+                } else {
+                    self.context_actions = Default::default();
+                    self.close_context(cx);
+                }
             }
         } else {
             let keyword = self.text_input.read(cx).content.clone();
@@ -383,6 +397,11 @@ impl LauncherView {
                         self.navigation.push_message(e, cx);
                     }
                     _ => {}
+                }
+
+                if selected.has_actions(cx) {
+                    self.has_actions = true;
+                    self.context_actions = self.navigation.current_actions(cx).unwrap_or_default();
                 }
             }
         }

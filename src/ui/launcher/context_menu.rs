@@ -55,7 +55,11 @@ impl<'de> Deserialize<'de> for ContextMenuAction {
 
 impl ContextMenuAction {
     pub fn render_row(&self, is_selected: bool, theme: Arc<ThemeData>) -> impl IntoElement {
-        let Self::App(this) = self else { return div() };
+        let (name, icon) = match self {
+            Self::Fn(this) => (this.name.clone(), this.icon.as_ref()),
+            Self::App(this) => (this.name.as_ref().unwrap().clone(), this.icon.as_ref()),
+            _ => return div(),
+        };
 
         div()
             .group("")
@@ -87,14 +91,14 @@ impl ContextMenuAction {
                     s.bg(theme.bg_selected)
                 }
             })
-            .child(if let Some(icon) = this.icon.as_ref() {
+            .child(if let Some(icon) = icon {
                 img(Arc::clone(icon)).size(px(16.)).into_any_element()
             } else {
                 img(ImageSource::Image(Arc::new(gpui::Image::empty())))
                     .size(px(16.))
                     .into_any_element()
             })
-            .child(this.name.as_ref().unwrap().clone())
+            .child(name)
     }
     pub fn render_emoji_col(
         &self,
