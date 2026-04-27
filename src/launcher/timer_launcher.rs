@@ -58,7 +58,7 @@ impl LauncherProvider for TimerLauncher {
         };
 
         let command = match variables.first() {
-            Some(v) if v.0.as_str() == "command" => Some(v.1.clone()),
+            Some(v) if v.0.as_str() == "command" && !v.1.is_empty() => Some(v.1.clone()),
             _ => self.command.clone(),
         };
 

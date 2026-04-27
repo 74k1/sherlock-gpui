@@ -42,7 +42,7 @@ run `git log main..dev` for all changes
 
 * as of **b877692ff93bbda20a6c282396b40055d9b7a95c**
 
-### Added 
+### Added
 
 * **Timer:** Added timer launcher with up to 4 simultaneous timers
 * **Variable Input:** Added command variable input with auto-completion
