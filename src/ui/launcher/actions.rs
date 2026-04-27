@@ -402,6 +402,7 @@ impl LauncherView {
                     self.has_actions = true;
                     self.context_actions = self.navigation.current_actions(cx).unwrap_or_default();
                 }
+                self.force_filter_and_sort(cx);
             }
         }
     }

@@ -113,6 +113,12 @@ impl LauncherView {
         }
     }
     pub fn filter_and_sort(&mut self, cx: &mut Context<Self>) {
+        self.filter_and_sort_internal(false, cx);
+    }
+    pub fn force_filter_and_sort(&mut self, cx: &mut Context<Self>) {
+        self.filter_and_sort_internal(true, cx);
+    }
+    fn filter_and_sort_internal(&mut self, force: bool, cx: &mut Context<Self>) {
         let mut query: SharedString = self.text_input.read(cx).content.to_lowercase().into();
 
         // handle mode change
@@ -167,7 +173,7 @@ impl LauncherView {
                 weak_data,
                 last_query,
             } => {
-                if last_query.is_some_and(|s| s == query) {
+                if !force && last_query.is_some_and(|s| s == query) {
                     return;
                 }
 

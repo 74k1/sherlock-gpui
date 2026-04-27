@@ -1,6 +1,8 @@
 use crate::{
     app::theme::{ActiveTheme, ThemeData},
-    launcher::{ExecMode, Launcher},
+    launcher::{
+        ExecMode, Launcher, process_launcher::ProcessLauncherFunctions, variant_type::InnerFunction,
+    },
     loader::resolve_icon_path,
     ui::widgets::{RenderableChildImpl, Selection},
 };
@@ -144,8 +146,11 @@ impl<'a> RenderableChildImpl<'a> for ProcessData {
     }
 
     #[inline(always)]
-    fn build_exec(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
-        None
+    fn build_exec(&self, launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
+        Some(ExecMode::Inner {
+            func: InnerFunction::Process(ProcessLauncherFunctions::Quit { pid: self.pid }),
+            exit: launcher.exit,
+        })
     }
 
     #[inline(always)]

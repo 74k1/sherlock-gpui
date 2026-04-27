@@ -4,18 +4,24 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
-    launcher::{LauncherProvider, LauncherType, LoadContext},
+    ensure_func,
+    launcher::{LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction},
     loader::{
         resolve_icon_path,
         utils::{AppData, RawLauncher},
     },
+    sherlock_msg,
     ui::widgets::RenderableChild,
+    utils::errors::{SherlockMessage, types::SherlockErrorType},
 };
+
+use nix::sys::signal::{Signal, kill};
+use nix::unistd::Pid;
 
 #[derive(Debug, Clone, Copy, PartialEq, strum::VariantNames, strum::EnumString)]
 #[strum(serialize_all = "snake_case")]
 pub enum ProcessLauncherFunctions {
-    Quit,
+    Quit { pid: i32 },
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -50,4 +56,24 @@ impl LauncherProvider for ProcessLauncher {
             launcher,
         }])
     }
+    fn execute_function<C: gpui::AppContext>(
+        &self,
+        func: super::variant_type::InnerFunction,
+        _child: &RenderableChild,
+        _variables: &[(gpui::SharedString, gpui::SharedString)],
+        _cx: &mut C,
+    ) -> Result<bool, SherlockMessage> {
+        let func = ensure_func!(func, InnerFunction::Process);
+
+        match func {
+            ProcessLauncherFunctions::Quit { pid } => kill_process(pid)?,
+        }
+
+        Ok(true)
+    }
+}
+
+fn kill_process(pid: i32) -> Result<(), SherlockMessage> {
+    let child = Pid::from_raw(pid);
+    kill(child, Signal::SIGKILL).map_err(|e| sherlock_msg!(Warning, SherlockErrorType::IO, e))
 }
