@@ -22,6 +22,7 @@ use crate::{
         message_launcher::MessageLauncher,
         process_launcher::{ProcessLauncher, ProcessLauncherFunctions},
         system_cmd_launcher::CommandLauncher,
+        theme_launcher::ThemePicker,
         timer_launcher::{TimerLauncher, TimerLauncherFunctions},
         translator_launcher::Translator,
         weather_launcher::WeatherLauncher,
@@ -156,13 +157,13 @@ create_variants! {
         MusicPlayer(MusicPlayerLauncher, MusicPlayerFunctions),
         Process(ProcessLauncher, ProcessLauncherFunctions),
         Script(ScriptLauncher, ScriptFunctions),
+        Theme(ThemePicker),
         Timer(TimerLauncher, TimerLauncherFunctions),
         Translator(Translator),
         Weather(WeatherLauncher),
         Web(WebLauncher),
         // Integrate later: TODO
         // Pipe(PipeLauncher),
-        // Theme(ThemePicker),
     }
 }
 

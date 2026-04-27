@@ -12,6 +12,7 @@ pub mod file_launcher;
 pub mod message_launcher;
 pub mod process_launcher;
 pub mod system_cmd_launcher;
+pub mod theme_launcher;
 pub mod timer_launcher;
 pub mod translator_launcher;
 pub mod utils;
@@ -20,7 +21,6 @@ pub mod weather_launcher;
 pub mod web_launcher;
 // Integrate later: TODO
 // pub mod pipe_launcher;
-// pub mod theme_picker;
 
 use crate::{
     launcher::variant_type::{InnerFunction, LauncherType},
