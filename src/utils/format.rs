@@ -77,18 +77,22 @@ pub fn make_ascii_title_case(s: &mut String) -> Result<(), SherlockMessage> {
 pub fn make_title_case(s: &mut String) {
     if s.is_ascii() {
         make_ascii_title_case(s).ok();
-        return
+        return;
     }
 
     let mut capitalize_next = true;
     let chars: Vec<(usize, char)> = s.char_indices().collect();
     for (i, c) in chars.into_iter().rev() {
         if c == '-' || c == '_' || c == ' ' {
-            unsafe { s.as_bytes_mut()[i] = b' '; }
+            unsafe {
+                s.as_bytes_mut()[i] = b' ';
+            }
             capitalize_next = true;
         } else if capitalize_next {
             if c.is_ascii() {
-                unsafe { s.as_bytes_mut()[i].make_ascii_uppercase(); }
+                unsafe {
+                    s.as_bytes_mut()[i].make_ascii_uppercase();
+                }
             } else {
                 let upper: String = c.to_uppercase().collect();
                 s.replace_range(i..i + c.len_utf8(), &upper);
@@ -97,5 +101,3 @@ pub fn make_title_case(s: &mut String) {
         }
     }
 }
-
-
