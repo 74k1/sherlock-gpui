@@ -40,7 +40,9 @@ run `git log main..dev` for all changes
 
 ## [Unreleased]
 
-* as of **c97d787224e4307a058b38830d2c7a38540b3e6a**
+* as of ****
+
+## [0.2.2-dev] - 28.04.26
 
 ### Added
 

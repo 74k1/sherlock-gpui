@@ -31,7 +31,7 @@
         default = sherlock-gpui;
         sherlock-gpui = pkgs.rustPlatform.buildRustPackage {
           pname = "sherlock-gpui";
-          version = "0.2.0";
+          version = "0.2.2";
           src = ./.;
 
           cargoLock.lockFile = ./Cargo.lock;
