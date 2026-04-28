@@ -1,6 +1,6 @@
 #!/bin/bash
 
-tasks=("Updated Cargo.toml version" "Updated CHANGELOG.md header" "Updated README.md version" "Merged into 'main'")
+tasks=("Updated Cargo.toml version" "Update flake.nix version" "Updated CHANGELOG.md header" "Updated README.md version" "Merged into 'main'")
 status=()
 for _ in "${tasks[@]}"; do status+=(" "); done
 
