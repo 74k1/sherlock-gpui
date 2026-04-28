@@ -4,6 +4,7 @@ pub mod command_launch;
 pub mod config;
 pub mod errors;
 pub mod files;
+pub mod format;
 pub mod intent;
 pub mod logging;
 pub mod networking;

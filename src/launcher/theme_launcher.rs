@@ -11,6 +11,7 @@ use crate::ui::widgets::theme::ThemeWidget;
 use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::{DirAction, FileAction, SherlockErrorType};
 use crate::utils::files::{expand_path, home_dir};
+use crate::utils::format::make_title_case;
 use crate::{ensure_func, sherlock_msg};
 
 #[derive(Debug, Clone, PartialEq, strum::VariantNames, strum::EnumString)]
@@ -83,7 +84,10 @@ impl LauncherProvider for ThemePicker {
                             ))
                         })
                         .ok()?;
-                    let name = file.path().file_stem()?.to_string_lossy().to_string();
+
+                    let mut name = file.path().file_stem()?.to_string_lossy().to_string();
+                    make_title_case(&mut name);
+
                     Some(RenderableChild::Theme {
                         launcher: launcher.clone(),
                         inner: ThemeWidget::new(name, Arc::new(data), false),
