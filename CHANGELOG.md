@@ -54,6 +54,7 @@ run `git log main..dev` for all changes
 ### improvements
 
 * **Errors/Warnings:** Improved design for `info` tiles
+* **Intents:** Improved intent parsing and fixed errors
 
 ### Fixed
 
