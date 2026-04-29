@@ -105,6 +105,16 @@ impl NavigationStack {
         }
         self.current_mut().reset_selected_index();
     }
+
+    pub fn clear_messages(&mut self, cx: &mut App) {
+        if let Some(view) = self.get_message_view() {
+            let _ = view
+                .view
+                .clone()
+                .downcast::<MessageView>()
+                .map(|mv| mv.update(cx, |this, cx| this.clear_messages(cx)));
+        }
+    }
 }
 
 impl NavigationStack {

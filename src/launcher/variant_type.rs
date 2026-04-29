@@ -7,7 +7,7 @@ use strum::Display;
 
 use crate::{
     launcher::{
-        Bind, LauncherProvider,
+        Bind, ExecEffect, LauncherProvider,
         app_launcher::AppLauncher,
         audio_launcher::{MusicPlayerFunctions, MusicPlayerLauncher},
         bookmark_launcher::BookmarkLauncher,
@@ -15,6 +15,7 @@ use crate::{
         calc_launcher::CalculatorLauncher,
         category_launcher::CategoryLauncher,
         clipboard_launcher::ClipboardLauncher,
+        debug_launcher::{DebugFunctions, DebugLauncher},
         dmenu_launcher::DmenuLauncher,
         emoji_launcher::EmojiPicker,
         event_launcher::{EventLauncher, EventLauncherFunctions},
@@ -118,8 +119,8 @@ macro_rules! create_variants {
                 func: InnerFunction,
                 child: &RenderableChild,
                 variables: &[(SharedString, SharedString)],
-                cx: &mut App
-            ) -> Result<bool, SherlockMessage> {
+                cx: &mut App,
+            ) -> Result<ExecEffect, SherlockMessage> {
                 match self {
                     $(
                         Self::$variant(inner) => <$inner as LauncherProvider>::execute_function(inner, func, child, variables, cx),
@@ -173,6 +174,7 @@ create_variants! {
         Categories(CategoryLauncher),
         Clipboard(ClipboardLauncher),
         Commands(CommandLauncher),
+        Debug(DebugLauncher, DebugFunctions),
         Dmenu(DmenuLauncher),
         Emoji(EmojiPicker),
         Event(EventLauncher, EventLauncherFunctions),

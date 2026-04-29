@@ -10,7 +10,7 @@ use smallvec::SmallVec;
 
 use crate::{
     app::reset_generation,
-    launcher::ExecMode,
+    launcher::{ExecEffect, ExecMode},
     loader::utils::{CounterReader, ExecVariable},
     sherlock_msg,
     ui::{
@@ -234,9 +234,21 @@ impl LauncherView {
         match what {
             ExecMode::Inner { func, exit } => {
                 if let Some(item) = self.navigation.selected_item(cx) {
-                    let _was_executed = item
+                    let effect = item
                         .launcher_type()
                         .execute_function(func, &item, variables, cx)?;
+
+                    match effect {
+                        ExecEffect::InsertMessages(msgs) => {
+                            for msg in msgs {
+                                self.navigation.push_message(msg, cx);
+                            }
+                        }
+                        ExecEffect::ClearMessages => {
+                            self.navigation.clear_messages(cx);
+                        }
+                        ExecEffect::None => {}
+                    }
                     self.update_async(cx);
                     return Ok(exit);
                 }

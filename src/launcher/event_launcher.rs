@@ -6,7 +6,7 @@ use serde::Deserialize;
 use crate::{
     ensure_func,
     launcher::{
-        LauncherProvider,
+        ExecEffect, LauncherProvider,
         variant_type::{InnerFunction, LauncherType},
     },
     loader::utils::RawLauncher,
@@ -65,7 +65,7 @@ impl LauncherProvider for EventLauncher {
         child: &RenderableChild,
         _variables: &[(SharedString, SharedString)],
         _cx: &mut App,
-    ) -> Result<bool, SherlockMessage> {
+    ) -> Result<ExecEffect, SherlockMessage> {
         let func = ensure_func!(func, InnerFunction::Event);
 
         let RenderableChild::Event { inner, .. } = child else {
@@ -86,7 +86,7 @@ impl LauncherProvider for EventLauncher {
                         let url = meeting.https_url();
                         websearch("plain", &url, None, &[])?;
                     }
-                    return Ok(true);
+                    return Ok(ExecEffect::None);
                 }
             }
             EventLauncherFunctions::HardRefresh => {
@@ -94,7 +94,7 @@ impl LauncherProvider for EventLauncher {
             }
         }
 
-        Ok(false)
+        Ok(ExecEffect::None)
     }
 }
 

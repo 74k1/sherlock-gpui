@@ -19,7 +19,7 @@ use crate::{ensure_func, sherlock_msg};
 
 use super::utils::MprisData;
 
-use crate::launcher::{Bind, LauncherProvider, LauncherType};
+use crate::launcher::{Bind, ExecEffect, LauncherProvider, LauncherType};
 use crate::loader::utils::RawLauncher;
 
 #[derive(Debug, Clone, Default)]
@@ -63,7 +63,7 @@ impl LauncherProvider for MusicPlayerLauncher {
         child: &RenderableChild,
         _variables: &[(SharedString, SharedString)],
         _cx: &mut App,
-    ) -> Result<bool, SherlockMessage> {
+    ) -> Result<ExecEffect, SherlockMessage> {
         let func = ensure_func!(func, InnerFunction::MusicPlayer);
 
         let RenderableChild::Music { inner, .. } = child else {
@@ -75,7 +75,7 @@ impl LauncherProvider for MusicPlayerLauncher {
         };
 
         let Some(player) = &inner.player else {
-            return Ok(false);
+            return Ok(ExecEffect::None);
         };
 
         match func {
@@ -84,7 +84,7 @@ impl LauncherProvider for MusicPlayerLauncher {
             MusicPlayerFunctions::TogglePlayback => MprisData::playpause(player)?,
         }
 
-        Ok(true)
+        Ok(ExecEffect::None)
     }
 }
 

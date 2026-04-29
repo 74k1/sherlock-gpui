@@ -5,6 +5,7 @@ pub mod bulk_text_launcher;
 pub mod calc_launcher;
 pub mod category_launcher;
 pub mod clipboard_launcher;
+pub mod debug_launcher;
 pub mod dmenu_launcher;
 pub mod emoji_launcher;
 pub mod event_launcher;
@@ -64,7 +65,7 @@ pub trait LauncherProvider {
         _child: &RenderableChild,
         _variables: &[(SharedString, SharedString)],
         _cx: &mut App,
-    ) -> Result<bool, SherlockMessage> {
+    ) -> Result<ExecEffect, SherlockMessage> {
         Err(sherlock_msg!(
             Warning,
             SherlockErrorType::InvalidFunction,
@@ -197,6 +198,12 @@ impl Display for Launcher {
 
         f.write_str(&format!("{:?}", self.launcher_type))
     }
+}
+
+pub enum ExecEffect {
+    InsertMessages(Vec<SherlockMessage>),
+    ClearMessages,
+    None,
 }
 
 #[derive(Default)]
@@ -361,4 +368,19 @@ impl ExecMode {
 
         data.build_exec(cx)
     }
+}
+
+#[macro_export]
+macro_rules! define_inner_functions {
+    (
+        $vis:vis enum $name:ident {
+            $( $variant:ident $( { $($field_name:ident : $field_type:ty),* $(,)? } )? ),* $(,)?
+        }
+    ) => {
+        #[derive(Debug, Clone, PartialEq, strum::VariantNames, strum::EnumString)]
+        #[strum(serialize_all = "snake_case")]
+        $vis enum $name {
+            $( $variant $( { $($field_name : $field_type),* } )? ),*
+        }
+    };
 }

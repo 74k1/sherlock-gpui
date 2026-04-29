@@ -6,7 +6,9 @@ use serde_json::Value;
 
 use crate::{
     ensure_func,
-    launcher::{LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction},
+    launcher::{
+        ExecEffect, LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction,
+    },
     loader::utils::RawLauncher,
     sherlock_msg,
     ui::widgets::{RenderableChild, timer::TimerChild},
@@ -47,7 +49,7 @@ impl LauncherProvider for TimerLauncher {
         child: &RenderableChild,
         variables: &[(SharedString, SharedString)],
         cx: &mut App,
-    ) -> Result<bool, crate::utils::errors::SherlockMessage> {
+    ) -> Result<ExecEffect, crate::utils::errors::SherlockMessage> {
         let func = ensure_func!(func, InnerFunction::Timer);
 
         let RenderableChild::Timer { inner, .. } = child else {
@@ -71,7 +73,7 @@ impl LauncherProvider for TimerLauncher {
             }
         }
 
-        Ok(true)
+        Ok(ExecEffect::None)
     }
 }
 

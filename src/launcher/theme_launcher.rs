@@ -4,7 +4,7 @@ use gpui::App;
 
 use crate::app::theme::{ActiveTheme, ThemeData};
 use crate::launcher::variant_type::InnerFunction;
-use crate::launcher::{LauncherProvider, LauncherType};
+use crate::launcher::{ExecEffect, LauncherProvider, LauncherType};
 use crate::loader::utils::RawLauncher;
 use crate::ui::widgets::RenderableChild;
 use crate::ui::widgets::theme::ThemeWidget;
@@ -106,7 +106,7 @@ impl LauncherProvider for ThemePicker {
         _child: &RenderableChild,
         _variables: &[(gpui::SharedString, gpui::SharedString)],
         cx: &mut App,
-    ) -> Result<bool, crate::utils::errors::SherlockMessage> {
+    ) -> Result<ExecEffect, crate::utils::errors::SherlockMessage> {
         let func = ensure_func!(func, InnerFunction::Theme);
 
         match func {
@@ -115,6 +115,6 @@ impl LauncherProvider for ThemePicker {
             }
         }
 
-        Ok(true)
+        Ok(ExecEffect::None)
     }
 }

@@ -30,7 +30,7 @@ use crate::{
     },
 };
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 pub struct ApplicationAction {
     pub name: Option<SharedString>,
     pub exec: Option<String>,

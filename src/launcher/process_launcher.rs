@@ -6,7 +6,9 @@ use serde_json::Value;
 
 use crate::{
     ensure_func,
-    launcher::{LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction},
+    launcher::{
+        ExecEffect, LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction,
+    },
     loader::{
         resolve_icon_path,
         utils::{AppData, RawLauncher},
@@ -74,14 +76,14 @@ impl LauncherProvider for ProcessLauncher {
         _child: &RenderableChild,
         _variables: &[(gpui::SharedString, gpui::SharedString)],
         _cx: &mut App,
-    ) -> Result<bool, SherlockMessage> {
+    ) -> Result<ExecEffect, SherlockMessage> {
         let func = ensure_func!(func, InnerFunction::Process);
 
         match func {
             ProcessLauncherFunctions::Quit { pid } => kill_process(pid)?,
         }
 
-        Ok(true)
+        Ok(ExecEffect::None)
     }
 }
 

@@ -25,6 +25,8 @@ pub enum SherlockErrorType {
     BorrowCongestion,
     /// A placeholder for "no error" (null object pattern).
     None,
+    /// A placeholder debug launcher to preview errors
+    Preview,
 
     // --- Variants with Data ---
     /// File-specific issues (read/write/permissions) at the given path.

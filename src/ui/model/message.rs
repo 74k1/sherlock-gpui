@@ -117,4 +117,19 @@ impl MessageView {
             self.count.update(|i| i.saturating_sub(1));
         }
     }
+    pub fn clear_messages(&mut self, cx: &mut App) {
+        let Model::Standard {
+            data,
+            filtered_indices,
+            ..
+        } = &mut self.model
+        else {
+            return;
+        };
+
+        data.update(cx, |this, _| *this = Rc::new(Vec::new()));
+        *filtered_indices = Arc::from([]);
+
+        self.count.set(0);
+    }
 }

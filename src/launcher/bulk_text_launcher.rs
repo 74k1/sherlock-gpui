@@ -5,7 +5,9 @@ use std::sync::Arc;
 
 use crate::{
     ensure_func,
-    launcher::{LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction},
+    launcher::{
+        ExecEffect, LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction,
+    },
     loader::utils::RawLauncher,
     sherlock_msg,
     ui::widgets::{
@@ -75,7 +77,7 @@ impl LauncherProvider for ScriptLauncher {
         child: &RenderableChild,
         _variables: &[(SharedString, SharedString)],
         cx: &mut App,
-    ) -> Result<bool, SherlockMessage> {
+    ) -> Result<ExecEffect, SherlockMessage> {
         let func = ensure_func!(func, InnerFunction::Script);
         match func {
             ScriptFunctions::Run => {
@@ -84,6 +86,6 @@ impl LauncherProvider for ScriptLauncher {
                 }
             }
         }
-        Ok(false)
+        Ok(ExecEffect::None)
     }
 }
