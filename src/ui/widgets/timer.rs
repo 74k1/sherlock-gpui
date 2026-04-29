@@ -11,7 +11,7 @@ use crate::{
     launcher::{
         ExecMode, Launcher, timer_launcher::TimerLauncherFunctions, variant_type::InnerFunction,
     },
-    loader::{resolve_icon_path, utils::ExecVariable},
+    loader::utils::ExecVariable,
     ui::{
         launcher::context_menu::{ContextMenuAction, DynamicFunctionAction},
         utils::{search::SherlockSearch, timeout::Timeout},
