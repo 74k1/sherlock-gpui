@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use gpui::{Styled, prelude::FluentBuilder};
+use gpui::{SharedString, Styled, prelude::FluentBuilder};
 
 use crate::{app::theme::ThemeData, ui::widgets::Selection};
 
@@ -17,3 +17,87 @@ pub trait ListItemBorder: Styled + FluentBuilder + Sized {
 }
 
 impl<T: Styled + FluentBuilder + Sized> ListItemBorder for T {}
+
+
+/// Replaces all occurrences of `{name}` in `to` with `value`.
+///
+/// Returns the original `SharedString` unchanged if no match is found,
+/// avoiding any allocation. Only allocates on a successful match.
+pub fn substitute(to: SharedString, name: &str, value: &str) -> SharedString {
+    let s = to.as_ref();
+
+    let mut i = 0;
+    let found = loop {
+        let Some(open) = s[i..].find('{') else {
+            break false;
+        };
+        let start = i + open + 1;
+        if s[start..].starts_with(name)
+            && s.get(start + name.len()..)
+                .map_or(false, |r| r.starts_with('}'))
+        {
+            break true;
+        }
+        i = start;
+    };
+
+    if found {
+        let pattern = format!("{{{}}}", name);
+        SharedString::from(s.replace(&pattern, value))
+    } else {
+        to
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn replaces_single_occurrence() {
+        let result = substitute("nordvpn -c {location}".into(), "location", "Germany");
+        assert_eq!(result.as_ref(), "nordvpn -c Germany");
+    }
+
+    #[test]
+    fn replaces_multiple_occurrences() {
+        let result = substitute("echo {x} and {x}".into(), "x", "hello");
+        assert_eq!(result.as_ref(), "echo hello and hello");
+    }
+
+    #[test]
+    fn no_match_returns_original() {
+        let original: SharedString = "nordvpn -c {location}".into();
+        let result = substitute(original.clone(), "country", "Germany");
+        assert_eq!(result, original);
+    }
+
+    #[test]
+    fn partial_match_no_closing_brace() {
+        // malformed `{location` — no `}`, should not match
+        let original: SharedString = "nordvpn -c {location".into();
+        let result = substitute(original.clone(), "location", "Germany");
+        assert_eq!(result, original);
+    }
+
+    #[test]
+    fn partial_match_wrong_name() {
+        // `{locations}` should not match `location`
+        let original: SharedString = "nordvpn -c {locations}".into();
+        let result = substitute(original.clone(), "location", "Germany");
+        assert_eq!(result, original);
+    }
+
+    #[test]
+    fn empty_value() {
+        let result = substitute("nordvpn -c {location}".into(), "location", "");
+        assert_eq!(result.as_ref(), "nordvpn -c ");
+    }
+
+    #[test]
+    fn empty_string() {
+        let original: SharedString = "".into();
+        let result = substitute(original.clone(), "location", "Germany");
+        assert_eq!(result, original);
+    }
+}

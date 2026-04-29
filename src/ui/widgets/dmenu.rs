@@ -20,6 +20,7 @@ impl<'a> RenderableChildImpl<'a> for DmenuData {
         &self,
         _launcher: &Arc<Launcher>,
         selection: Selection,
+        _query: &str,
         theme: Arc<ThemeData>,
         _cx: &mut App,
     ) -> AnyElement {

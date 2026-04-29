@@ -11,6 +11,7 @@ use crate::{
     loader::utils::AppData,
     ui::{
         launcher::context_menu::ContextMenuAction,
+        utils::render::substitute,
         widgets::{RenderableChildImpl, Selection},
     },
 };
@@ -20,6 +21,7 @@ impl<'a> RenderableChildImpl<'a> for AppData {
         &self,
         launcher: &Arc<Launcher>,
         selection: Selection,
+        query: &str,
         theme: Arc<ThemeData>,
         _cx: &mut App,
     ) -> AnyElement {
@@ -53,14 +55,18 @@ impl<'a> RenderableChildImpl<'a> for AppData {
                             .overflow_hidden()
                             .text_ellipsis()
                             .whitespace_nowrap()
-                            .children(self.name.as_ref().map(|name| div().child(name.clone()))),
+                            .when_some(self.name.as_ref(), |this, name| {
+                                this.child(substitute(name.clone(), "keyword", query))
+                            }),
                     )
                     .child(
                         div()
                             .text_xs()
                             .font_family(theme.font_family.clone())
                             .text_color(theme.secondary_text)
-                            .children(launcher.name.as_ref().map(|name| div().child(name.clone()))),
+                            .when_some(launcher.name.as_ref(), |this, name| {
+                                this.child(name.clone())
+                            }),
                     ),
             )
             .into_any_element()

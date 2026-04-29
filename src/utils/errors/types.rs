@@ -28,6 +28,10 @@ pub enum SherlockErrorType {
     /// A placeholder debug launcher to preview errors
     Preview,
 
+    // --- Launchers ---
+    /// A concurrency error where a resource is already mutably borrowed.
+    Weather,
+
     // --- Variants with Data ---
     /// File-specific issues (read/write/permissions) at the given path.
     FileError(FileAction, PathBuf),

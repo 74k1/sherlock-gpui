@@ -32,7 +32,7 @@ use crate::{
         launcher::context_menu::ContextMenuAction,
         widgets::{
             dmenu::DmenuData, message::MessageChild, process::ProcessData, script::ScriptData,
-            timer::TimerChild, translator::TranslationData,
+            timer::TimerChild, translator::TranslationData, weather::WeatherWidget,
         },
     },
     utils::config::HomeType,
@@ -87,9 +87,9 @@ macro_rules! renderable_enum {
                 }
             }
 
-            fn render(&self, selection: Selection, theme: Arc<ThemeData>, cx: &mut App) -> AnyElement {
+            fn render(&self, selection: Selection, query: &str, theme: Arc<ThemeData>, cx: &mut App) -> AnyElement {
                 match self {
-                    $(Self::$variant {inner, launcher} => inner.render(launcher, selection, theme, cx)),*
+                    $(Self::$variant {inner, launcher} => inner.render(launcher, selection, query, theme, cx)),*
                 }
             }
 
@@ -277,7 +277,7 @@ impl RenderableChild {
                 };
 
                 if changed {
-                    *inner = new_weather_data;
+                    inner.data = new_weather_data;
                 } else {
                     return None;
                 }
@@ -303,7 +303,7 @@ renderable_enum! {
         Theme(ThemeWidget),
         Timer(TimerChild),
         Translator(TranslationData),
-        Weather(WeatherData),
+        Weather(WeatherWidget),
         Dmenu(DmenuData),
     }
 }
@@ -334,7 +334,7 @@ pub trait RenderableChildDelegate<'a> {
     fn handles_borders(&self) -> bool;
 
     /// The logic to render the widget
-    fn render(&self, selection: Selection, theme: Arc<ThemeData>, cx: &mut App) -> AnyElement;
+    fn render(&self, selection: Selection, query: &str, theme: Arc<ThemeData>, cx: &mut App) -> AnyElement;
 
     /// Generates an execution path based on the child and the context menu action
     fn build_action_exec(&'a self, action: Arc<ContextMenuAction>) -> ExecMode;
@@ -386,6 +386,7 @@ pub trait RenderableChildImpl<'a> {
         &self,
         launcher: &Arc<Launcher>,
         selection: Selection,
+        query: &str,
         theme: Arc<ThemeData>,
         cx: &mut App,
     ) -> AnyElement;

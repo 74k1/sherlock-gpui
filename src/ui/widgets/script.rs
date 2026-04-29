@@ -56,6 +56,7 @@ impl<'a> RenderableChildImpl<'a> for ScriptData {
         &self,
         _launcher: &std::sync::Arc<crate::launcher::Launcher>,
         _selection: super::Selection,
+        _query: &str,
         theme: std::sync::Arc<crate::app::theme::ThemeData>,
         cx: &mut App,
     ) -> gpui::AnyElement {

@@ -7,6 +7,7 @@ use crate::{
     ui::widgets::RenderableChild,
     utils::errors::SherlockMessage,
 };
+use gpui::SharedString;
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -32,11 +33,22 @@ impl LauncherProvider for WebLauncher {
         _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
-        let mut inner = AppData::new();
-        inner.icon = opts
+        let icon = opts
             .get("icon")
             .and_then(Value::as_str)
             .and_then(resolve_icon_path);
+
+        let name: Option<SharedString> = opts
+            .get("display_name")
+            .and_then(Value::as_str)
+            .map(String::from)
+            .map(SharedString::from);
+
+        let inner = AppData {
+            name,
+            icon,
+            ..AppData::new()
+        };
 
         Ok(vec![RenderableChild::App { launcher, inner }])
     }

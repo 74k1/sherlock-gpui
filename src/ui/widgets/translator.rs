@@ -59,6 +59,7 @@ impl<'a> RenderableChildImpl<'a> for TranslationData {
         &self,
         _launcher: &std::sync::Arc<crate::launcher::Launcher>,
         selection: Selection,
+        _query: &str,
         theme: Arc<ThemeData>,
         cx: &mut App,
     ) -> gpui::AnyElement {

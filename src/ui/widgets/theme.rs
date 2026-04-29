@@ -58,6 +58,7 @@ impl<'a> RenderableChildImpl<'a> for ThemeWidget {
         &self,
         _launcher: &Arc<Launcher>,
         selection: Selection,
+        _query: &str,
         global_theme: Arc<ThemeData>,
         _cx: &mut App,
     ) -> AnyElement {

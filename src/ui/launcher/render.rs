@@ -146,6 +146,7 @@ impl LauncherView {
         else {
             return div().id("results-container");
         };
+        let query = self.text_input.read(cx).content.clone();
 
         let theme = cx.global::<ActiveTheme>().0.clone();
         let max_shortcuts = ConfigGuard::read().map_or(5, |c| c.appearance.num_shortcuts) as usize;
@@ -197,6 +198,7 @@ impl LauncherView {
                                     child,
                                     shortcut_idx,
                                     Selection::new(data_idx, idx == selected_idx),
+                                    &query,
                                     theme.clone(),
                                     cx,
                                 )
@@ -262,6 +264,8 @@ impl LauncherView {
         let selected_idx = *selected_index;
         let col_count = *columns;
 
+        let query = self.text_input.read(cx).content.clone();
+
         div()
             .id("results-container")
             .relative()
@@ -302,6 +306,7 @@ impl LauncherView {
                                                                     data_idx,
                                                                     item_idx == selected_idx,
                                                                 ),
+                                                                &query,
                                                                 theme.clone(),
                                                                 cx,
                                                             ))
@@ -455,6 +460,7 @@ impl LauncherView {
         ad: &RenderableChild,
         shortcut_idx: Option<usize>,
         selection: Selection,
+        query: &str,
         theme: Arc<ThemeData>,
         cx: &mut App,
     ) -> AnyElement {
@@ -473,7 +479,7 @@ impl LauncherView {
                     .when(!ad.handles_borders(), |this| {
                         this.list_item_border(&theme, &selection)
                     })
-                    .child(ad.render(selection, theme.clone(), cx))
+                    .child(ad.render(selection, query, theme.clone(), cx))
                     .when_some(shortcut_idx, |this, shortcut_idx| {
                         this.child(
                             div()

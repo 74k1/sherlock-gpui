@@ -1,5 +1,5 @@
 use chrono::NaiveTime;
-use gpui::{Hsla, LinearColorStop, linear_color_stop, rgb};
+use gpui::{Hsla, LinearColorStop, SharedString, linear_color_stop, rgb};
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
@@ -12,6 +12,7 @@ use crate::launcher::weather_launcher::wttr_serde::WttrResponse;
 use crate::loader::resolve_icon_path;
 use crate::sherlock_msg;
 use crate::ui::widgets::RenderableChild;
+use crate::ui::widgets::weather::WeatherWidget;
 use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::{NetworkAction, SherlockErrorType};
 use crate::utils::files::home_dir;
@@ -51,45 +52,37 @@ impl LauncherProvider for WeatherLauncher {
         _ctx: &crate::loader::LoadContext,
         _opts: Arc<serde_json::Value>,
         _messages: &mut Vec<SherlockMessage>,
-        _cx: &mut gpui::App,
+        cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
         match WeatherData::from_cache(self) {
-            Some(inner) => Ok(vec![RenderableChild::Weather { launcher, inner }]),
+            Some(data) => Ok(vec![RenderableChild::Weather {
+                launcher,
+                inner: WeatherWidget::new(data, cx),
+            }]),
             None => {
                 // Return None or a "Loading" placeholder for now
                 Ok(vec![RenderableChild::Weather {
                     launcher: Arc::clone(&launcher),
-                    inner: WeatherData::uninitialized(),
+                    inner: WeatherWidget::new(WeatherData::default(), cx),
                 }])
             }
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct WeatherData {
-    pub temperature: String,
+    pub temperature: SharedString,
     pub icon: Option<Arc<Path>>,
-    pub format_str: String,
-    pub location: String,
+    pub format_str: SharedString,
+    pub condition: SharedString,
+    pub location: SharedString,
     pub css: WeatherClass,
     pub sunset: chrono::NaiveTime,
     pub sunrise: chrono::NaiveTime,
     pub init: bool,
 }
 impl WeatherData {
-    pub fn uninitialized() -> Self {
-        Self {
-            temperature: String::new(),
-            icon: None,
-            format_str: String::new(),
-            location: String::new(),
-            css: WeatherClass::None,
-            sunset: chrono::NaiveTime::default(),
-            sunrise: chrono::NaiveTime::default(),
-            init: false,
-        }
-    }
     pub fn from_cache(launcher: &WeatherLauncher) -> Option<Self> {
         let mut path = home_dir().ok()?;
         path.push(format!(
@@ -161,11 +154,9 @@ impl WeatherData {
             .await
             .map_err(|e| sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e))?;
 
-        // 3. Deserialize (Using Serde + simd-json)
         let raw: WttrResponse = simd_json::from_slice(&mut bytes.to_vec())
             .map_err(|e| sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e))?;
 
-        // 4. Transform
         let data = transform_weather(raw, launcher)?;
         data.cache();
 

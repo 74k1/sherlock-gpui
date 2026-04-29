@@ -58,13 +58,23 @@ pub(super) fn transform_weather(
     raw: WttrResponse,
     launcher: &WeatherLauncher,
 ) -> Result<WeatherData, SherlockMessage> {
-    let current = &raw.current_condition[0];
-    let astro = &raw.weather[0].astronomy[0];
+    let WttrResponse {
+        current_condition,
+        weather,
+    } = raw;
+    let current = current_condition.into_iter().next().ok_or_else(|| {
+        sherlock_msg!(
+            Warning,
+            SherlockErrorType::Weather,
+            "No current condition found"
+        )
+    })?;
+    let astro = &weather[0].astronomy[0];
     let config = ConfigGuard::read()?;
 
-    let temperature = format_temp(current, &config.units.temperatures);
+    let temperature = format_temp(&current, &config.units.temperatures);
     let icon = resolve_icon(&launcher.icon_theme, &current.weather_code);
-    let wind = format_wind(current, &config.units.lengths);
+    let wind = format_wind(&current, &config.units.lengths);
 
     let sunset = parse_time(&astro.sunset).ok_or_else(|| {
         sherlock_msg!(
@@ -82,10 +92,11 @@ pub(super) fn transform_weather(
     })?;
 
     Ok(WeatherData {
-        temperature,
+        temperature: temperature.into(),
         icon,
-        format_str: format!("{}  {}", to_title_case(&launcher.location), wind),
-        location: launcher.location.clone(),
+        format_str: format!("{}  {}", to_title_case(&launcher.location), wind).into(),
+        condition: current.weather_desc,
+        location: launcher.location.clone().into(),
         css: match_weather_code(&current.weather_code),
         sunset,
         sunrise,

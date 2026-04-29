@@ -48,6 +48,7 @@ impl<'a> RenderableChildImpl<'a> for CalcData {
         &self,
         _launcher: &std::sync::Arc<crate::launcher::Launcher>,
         selection: Selection,
+        _query: &str,
         theme: Arc<ThemeData>,
         _cx: &mut App,
     ) -> gpui::AnyElement {

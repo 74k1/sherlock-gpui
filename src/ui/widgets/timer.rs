@@ -76,13 +76,14 @@ impl<'a> RenderableChildImpl<'a> for TimerChild {
         &self,
         _launcher: &Arc<Launcher>,
         _selection: Selection,
+        _query: &str,
         theme: Arc<ThemeData>,
         cx: &mut App,
     ) -> AnyElement {
         let timers: SmallVec<[(TimerState, f32); 4]> = self.update_entity.update(cx, |this, cx| {
             if this.timers.iter().any(|t| t.state.is_running()) {
                 // Will cause cx.notify to run
-                this.start_timer(cx, |_, _| {});
+                this.start_timer(Duration::from_secs(1), cx, |_, _| {});
             }
             this.timers.retain(|t| t.state.remaining() > Duration::ZERO);
             this.timers.iter().map(|t| (t.state, t.amount)).collect()
@@ -218,7 +219,6 @@ impl<'a> RenderableChildImpl<'a> for TimerChild {
 }
 
 impl Timeout for TimerEntity {
-    const DURATION: Duration = Duration::from_secs(1);
     fn update_task(&self) -> &Option<Task<()>> {
         &self.update_task
     }
