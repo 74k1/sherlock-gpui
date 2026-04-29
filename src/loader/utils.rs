@@ -148,7 +148,7 @@ impl AppData {
                 .name
                 .as_ref()
                 .map(|s| s.as_str())
-                .or(launcher.display_name.as_ref().map(|s| s.as_str()));
+                .or(launcher.name.as_ref().map(|s| s.as_str()));
             if let Some(alias_keywords) = alias.keywords.as_ref() {
                 self.search_string = construct_search(name, alias_keywords, use_keywords);
             } else {
@@ -194,7 +194,7 @@ impl AppData {
                 .name
                 .as_ref()
                 .map(|s| s.as_str())
-                .or(launcher.display_name.as_ref().map(|s| s.as_str()));
+                .or(launcher.name.as_ref().map(|s| s.as_str()));
             self.search_string = construct_search(name, &self.search_string, use_keywords);
             self.actions = buffer.into_iter().map(|a| (*a).clone().into()).collect();
         }
@@ -290,7 +290,6 @@ fn default_true() -> bool {
 pub struct RawLauncher {
     pub name: Option<String>,
     pub alias: Option<String>,
-    pub display_name: Option<String>,
     pub on_return: Option<String>,
     pub next_content: Option<String>,
     pub r#type: LauncherVariant,

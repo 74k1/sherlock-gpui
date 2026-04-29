@@ -108,50 +108,53 @@ impl BindSerde {
     }
 }
 
-// // Async tiles
-// LauncherType::BulkText(bulk_text) => Tile::bulk_text_tile(launcher, &bulk_text).await,
-// LauncherType::MusicPlayer(mpris) => Tile::mpris_tile(launcher, &mpris).await,
-// LauncherType::Weather(_) => Tile::weather_tile_loader(launcher).await,
-/// # Launcher
-/// ### Fields:
-/// - **name:** Specifies the name of the launcher – such as a category e.g. `App Launcher`
-/// - **alias:** Also referred to as `mode` – specifies the mode in which the launcher children should
-///   be active in
-/// - **tag_start:** Specifies the text displayed in a custom UI Label
-/// - **tag_end:** Specifies the text displayed in a custom UI Label
-/// - **method:** Specifies the action that should be executed on `row-should-activate` action
-/// - **next_content:** Specifies the content to be displayed whenever method is `next`
-/// - **priority:** Base priority all children inherit from. Children priority will be a combination
-///   of this together with their execution counts and levenshtein similarity
-/// - **r#async:** Specifies whether the tile should be loaded/executed asynchronously
-/// - **home:** Specifies whether the children should show on the `home` mode (empty
-///   search entry & mode == `all`)
-/// - **launcher_type:** Used to specify the kind of launcher and subsequently its children
-/// - **shortcut:** Specifies whether the child tile should show `modekey + number` shortcuts
-/// - **spawn_focus:** Specifies whether the tile should have focus whenever Sherlock launches
-///   search entry & mode == `all`)
 #[derive(Debug, Default, PartialEq)]
 pub struct Launcher {
+    /// The name of the launcher. Might get displayed in the widget
     pub name: Option<SharedString>,
-    pub display_name: Option<SharedString>,
+
+    /// May not apply to all widgets
     pub icon: Option<Arc<Path>>,
+
+    /// A short alias like `app` to launcher launcher-specific search (`alias` => only show items
+    /// belonging to that launcher)
     pub alias: Option<String>,
-    pub on_return: Option<String>, // nu
+
+    /// The action to be executed when the user executes a widget
+    pub on_return: Option<String>,
+
+    /// If true, Sherlock will close after the widget was exectued
     pub exit: bool,
+
+    /// Sorting weight for display order. Lower values appear first, 0 appears only in alias mode
     pub priority: u32,
+
+    /// If true, this item will receive async updates
     pub r#async: bool,
+
+    /// Determines when to show the widgets
     pub home: HomeType,
+
+    /// The category and functional variant for the launcher
     pub launcher_type: LauncherType,
+
+    /// If true, enables UI shortcut for this widgets
     pub shortcut: bool,
+
+    /// If true, this widget can spawn focus
     pub spawn_focus: bool,
+
+    /// The list of primary actions. This will overwrite actions defined in possible desktop files
     pub actions: Option<Arc<[Arc<ContextMenuAction>]>>,
+
+    /// The list of supplementary actions that extend the primary actions
     pub add_actions: Option<Arc<[Arc<ContextMenuAction>]>>,
 }
+
 impl Launcher {
     pub fn from_raw(raw: RawLauncher, launcher_type: LauncherType, icon: Option<String>) -> Self {
         Self {
             name: raw.name.map(|n| n.into()),
-            display_name: raw.display_name.map(SharedString::from),
             icon: icon.as_deref().and_then(resolve_icon_path),
             alias: raw.alias,
             on_return: raw.on_return,
@@ -177,10 +180,6 @@ impl Launcher {
 }
 impl Display for Launcher {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Some(name) = self.display_name.as_ref() {
-            return f.write_str(name);
-        }
-
         if let Some(name) = self.name.as_ref() {
             return f.write_str(name);
         }

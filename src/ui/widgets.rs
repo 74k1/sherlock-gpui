@@ -157,10 +157,6 @@ macro_rules! renderable_enum {
                 self.launcher().name.as_ref().map(|s| s.as_str())
             }
 
-            fn display_name(&self) -> Option<SharedString> {
-                self.launcher().display_name.clone()
-            }
-
             fn home(&self) -> HomeType {
                 self.launcher().home
             }
@@ -365,7 +361,6 @@ pub trait RenderableChildDelegate<'a> {
 #[allow(dead_code)]
 pub trait LauncherValues<'a> {
     fn name(&'a self) -> Option<&'a str>;
-    fn display_name(&self) -> Option<SharedString>;
     fn alias(&'a self) -> Option<&'a str>;
     fn priority(&self) -> f32;
     fn is_async(&self) -> bool;

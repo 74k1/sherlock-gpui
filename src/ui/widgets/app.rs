@@ -56,7 +56,6 @@ impl<'a> RenderableChildImpl<'a> for AppData {
                             .children(
                                 self.name
                                     .as_ref()
-                                    .or(launcher.display_name.as_ref())
                                     .map(|name| div().child(name.clone())),
                             ),
                     )

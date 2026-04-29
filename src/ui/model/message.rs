@@ -20,8 +20,7 @@ pub struct MessageView {
 impl MessageView {
     pub fn new(data: Vec<SherlockMessage>, cx: &mut Context<Self>) -> Self {
         let launcher = Arc::new(Launcher {
-            name: None,
-            display_name: Some("Errors".into()),
+            name: Some("Errors".into()),
             icon: None,
             alias: None,
             on_return: None,

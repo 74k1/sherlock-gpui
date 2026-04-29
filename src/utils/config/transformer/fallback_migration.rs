@@ -193,7 +193,6 @@ impl LegacyRawLauncher {
         let launcher = RawLauncher {
             name: self.name,
             alias: self.alias,
-            display_name: self.display_name,
             on_return: self.on_return,
             next_content: self.next_content,
             r#type: new_type.unwrap_or_default(),
