@@ -2,7 +2,8 @@ use std::{path::PathBuf, rc::Rc, sync::Arc};
 
 use futures::{FutureExt, StreamExt, stream::FuturesUnordered};
 use gpui::{
-    AppContext, AsyncApp, ClipboardItem, Context, Focusable, SharedString, Window, actions,
+    App, AppContext, AsyncApp, ClipboardItem, Context, Focusable, KeyUpEvent, SharedString, Window,
+    actions,
 };
 use simd_json::prelude::{ArrayTrait, Indexed};
 use smallvec::SmallVec;
@@ -223,13 +224,13 @@ impl LauncherView {
             cx.notify();
         }
     }
-    pub(self) fn execute_helper(
+    pub(super) fn execute_helper(
         &mut self,
         what: ExecMode,
         keyword: &str,
-        variables: &[(SharedString, SharedString)],
         cx: &mut Context<Self>,
     ) -> Result<bool, SherlockMessage> {
+        let variables = &self.get_variables(cx);
         match what {
             ExecMode::Inner { func, exit } => {
                 if let Some(item) = self.navigation.selected_item(cx) {
@@ -261,9 +262,6 @@ impl LauncherView {
             ExecMode::Command { exec } => {
                 spawn_detached(&exec, keyword, variables)?;
                 increment(&exec);
-            }
-            ExecMode::CreateBookmark { url, name } => {
-                println!("TODO: {url} {name}");
             }
             ExecMode::Copy { content } => {
                 cx.write_to_clipboard(ClipboardItem::new_string(content.to_string()));
@@ -321,7 +319,7 @@ impl LauncherView {
         {
             let keyword = self.text_input.read(cx).content.clone();
             if let Some(what) = ExecMode::from_child(&selected, cx) {
-                match self.execute_helper(what, keyword.as_ref(), &[], cx) {
+                match self.execute_helper(what, keyword.as_ref(), cx) {
                     Ok(exit) if exit => {
                         self.close_window(win, cx);
                     }
@@ -332,6 +330,57 @@ impl LauncherView {
                 }
             }
         }
+    }
+    pub(super) fn inner_bind_listener(
+        &mut self,
+        ev: &KeyUpEvent,
+        win: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let selected_binds = self
+            .navigation
+            .with_selected_item(cx, |item, _| item.and_then(|i| i.launcher_type().binds()));
+
+        if let Some(binds) = &selected_binds
+            && let Some(pressed) = binds.iter().find(|bind| bind.matches(&ev.keystroke))
+        {
+            let what = self.navigation.with_selected_item(cx, move |child, _| {
+                child.and_then(|item| ExecMode::from_bind(pressed, item))
+            });
+
+            let query = self.text_input.read(cx).content.clone();
+
+            if let Some(what) = what {
+                match self.execute_helper(what, query.as_str(), cx) {
+                    Ok(exit) if exit => self.close_window(win, cx),
+                    Err(e) => self.navigation.push_message(e, cx),
+                    _ => {}
+                }
+            }
+            cx.notify();
+        }
+    }
+    fn get_variables(&self, cx: &mut App) -> SmallVec<[(SharedString, SharedString); 4]> {
+        let mut variables: SmallVec<[(SharedString, SharedString); 4]> = SmallVec::new();
+        for s in &self.variable_input {
+            let guard = s.read(cx);
+            let mut content = guard.content.to_string();
+
+            // Only transform if it's a PathInput
+            if let Some(ExecVariable::Path(_)) = &guard.variable {
+                let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
+                if content.starts_with('~') {
+                    content = content.replacen('~', &home, 1);
+                } else if !content.starts_with('/') {
+                    let mut p = PathBuf::from(home);
+                    p.push(&content);
+                    content = p.to_string_lossy().to_string();
+                }
+            }
+
+            variables.push((guard.placeholder.clone(), SharedString::from(content)));
+        }
+        variables
     }
     pub(super) fn execute_listener(
         &mut self,
@@ -345,7 +394,7 @@ impl LauncherView {
             {
                 let what = selected.build_action_exec(Arc::clone(action));
 
-                match self.execute_helper(what, "", &[], cx) {
+                match self.execute_helper(what, "", cx) {
                     Ok(exit) if exit => self.close_window(win, cx),
                     Err(e) => self.navigation.push_message(e, cx),
                     _ => {}
@@ -364,31 +413,10 @@ impl LauncherView {
             }
         } else {
             let keyword = self.text_input.read(cx).content.clone();
-            // collect variables
-            let mut variables: SmallVec<[(SharedString, SharedString); 4]> = SmallVec::new();
-            for s in &self.variable_input {
-                let guard = s.read(cx);
-                let mut content = guard.content.to_string();
-
-                // Only transform if it's a PathInput
-                if let Some(ExecVariable::Path(_)) = &guard.variable {
-                    let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
-                    if content.starts_with('~') {
-                        content = content.replacen('~', &home, 1);
-                    } else if !content.starts_with('/') {
-                        let mut p = PathBuf::from(home);
-                        p.push(&content);
-                        content = p.to_string_lossy().to_string();
-                    }
-                }
-
-                variables.push((guard.placeholder.clone(), SharedString::from(content)));
-            }
-
             if let Some(selected) = self.navigation.selected_item(cx)
                 && let Some(what) = ExecMode::from_child(&selected, cx)
             {
-                match self.execute_helper(what, keyword.as_ref(), &variables, cx) {
+                match self.execute_helper(what, keyword.as_ref(), cx) {
                     Ok(exit) if exit => {
                         self.close_window(win, cx);
                     }
@@ -405,25 +433,6 @@ impl LauncherView {
                 self.force_filter_and_sort(cx);
             }
         }
-    }
-    pub(super) fn execute_inner_function(
-        &mut self,
-        what: ExecMode,
-        win: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        match self.execute_helper(what, "", &[], cx) {
-            Ok(exit) if exit => {
-                self.close_window(win, cx);
-                return;
-            }
-            Err(e) => {
-                self.navigation.push_message(e, cx);
-                return;
-            }
-            _ => {}
-        }
-        cx.notify();
     }
     pub(super) fn open_context(
         &mut self,

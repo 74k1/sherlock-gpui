@@ -23,10 +23,6 @@ use crate::{
 
 impl Render for LauncherView {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let selected_binds = self
-            .navigation
-            .selected_item(cx)
-            .and_then(|i| i.launcher_type().binds());
         let theme = cx.global::<ActiveTheme>().0.clone();
 
         div()
@@ -49,13 +45,7 @@ impl Render for LauncherView {
             .on_action(cx.listener(Self::shortcut_listener))
             .on_action(cx.listener(Self::quit))
             .on_action(cx.listener(Self::open_context))
-            .on_key_up(cx.listener(move |this, ev: &gpui::KeyUpEvent, win, cx| {
-                if let Some(binds) = &selected_binds
-                    && let Some(pressed) = binds.iter().find(|bind| bind.matches(&ev.keystroke))
-                {
-                    this.execute_inner_function(pressed.get_exec(), win, cx);
-                }
-            }))
+            .on_key_up(cx.listener(Self::inner_bind_listener))
             .child(self.render_search_bar(theme.clone()))
             .when(!self.config_initialized, |this| {
                 this.child(self.render_config_banner(theme.clone()))

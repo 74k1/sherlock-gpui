@@ -20,8 +20,12 @@ pub mod weather;
 use crate::{
     app::theme::ThemeData,
     launcher::{
-        ExecMode, Launcher, audio_launcher::AudioLauncherFunctions, emoji_launcher::EmojiData,
-        utils::MprisState, variant_type::LauncherType, weather_launcher::WeatherData,
+        ExecMode, Launcher,
+        audio_launcher::AudioLauncherFunctions,
+        emoji_launcher::EmojiData,
+        utils::MprisState,
+        variant_type::{LauncherType, LauncherVariant},
+        weather_launcher::WeatherData,
     },
     loader::utils::{AppData, ExecVariable},
     ui::{
@@ -183,6 +187,10 @@ macro_rules! renderable_enum {
 
             fn launcher_type(&self) -> &LauncherType {
                 &self.launcher().launcher_type
+            }
+
+            fn launcher_variant(&self) -> LauncherVariant {
+                self.launcher().launcher_type.as_ref().into()
             }
 
             fn shortcut(&self) -> bool {
@@ -367,6 +375,7 @@ pub trait LauncherValues<'a> {
     fn home(&self) -> HomeType;
     fn spawn_focus(&self) -> bool;
     fn launcher_type(&'a self) -> &'a LauncherType;
+    fn launcher_variant(&'a self) -> LauncherVariant;
     fn shortcut(&self) -> bool;
 }
 

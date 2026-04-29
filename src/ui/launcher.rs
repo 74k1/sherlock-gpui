@@ -131,7 +131,7 @@ impl LauncherView {
             }
             ModeTransition::PushStack(launcher) => {
                 let Ok(view) = NavigationViewType::try_from(&launcher.launcher_type) else {
-                    return
+                    return;
                 };
                 self.text_input.update(cx, |this, _| this.reset());
                 self.navigation.push(view.create_view(launcher, cx));

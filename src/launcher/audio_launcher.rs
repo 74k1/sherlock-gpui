@@ -6,7 +6,6 @@ use std::env;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::PathBuf;
-use std::str::FromStr;
 use std::sync::Arc;
 use zbus::blocking::{Connection, Proxy};
 
@@ -38,16 +37,10 @@ pub enum MusicPlayerFunctions {
 
 impl LauncherProvider for MusicPlayerLauncher {
     fn parse(raw: &RawLauncher) -> LauncherType {
-        let binds = raw.binds.as_ref().map(|vec| {
-            Arc::new(
-                vec.iter()
-                    .filter_map(|b| {
-                        let func = MusicPlayerFunctions::from_str(&b.callback).ok()?;
-                        b.get_bind(InnerFunction::MusicPlayer(func))
-                    })
-                    .collect(),
-            )
-        });
+        let binds = raw
+            .binds
+            .as_ref()
+            .map(|vec| Arc::new(vec.iter().filter_map(|b| Bind::try_from(b).ok()).collect()));
         LauncherType::MusicPlayer(MusicPlayerLauncher { binds })
     }
     fn objects(

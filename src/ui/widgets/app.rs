@@ -53,11 +53,7 @@ impl<'a> RenderableChildImpl<'a> for AppData {
                             .overflow_hidden()
                             .text_ellipsis()
                             .whitespace_nowrap()
-                            .children(
-                                self.name
-                                    .as_ref()
-                                    .map(|name| div().child(name.clone())),
-                            ),
+                            .children(self.name.as_ref().map(|name| div().child(name.clone()))),
                     )
                     .child(
                         div()

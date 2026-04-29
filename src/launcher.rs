@@ -41,7 +41,7 @@ use crate::{
         errors::{SherlockMessage, types::SherlockErrorType},
     },
 };
-use gpui::{App, Keystroke, SharedString};
+use gpui::{App, InvalidKeystrokeError, Keystroke, SharedString};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, path::Path, sync::Arc};
 
@@ -77,17 +77,11 @@ pub trait LauncherProvider {
 pub struct Bind {
     pub exit: bool,
     bind: Keystroke,
-    callback: InnerFunction,
+    callback: String,
 }
 impl Bind {
     pub fn matches(&self, stroke: &Keystroke) -> bool {
         &self.bind == stroke
-    }
-    pub fn get_exec(&self) -> ExecMode {
-        ExecMode::Inner {
-            func: self.callback.clone(),
-            exit: self.exit,
-        }
     }
 }
 
@@ -95,15 +89,26 @@ impl Bind {
 pub struct BindSerde {
     bind: String,
     callback: String,
-    exit: bool,
+    pub exit: bool,
 }
 
-impl BindSerde {
-    pub fn get_bind(&self, func: InnerFunction) -> Option<Bind> {
-        Some(Bind {
-            bind: Keystroke::parse(&self.bind).ok()?,
-            callback: func,
-            exit: self.exit,
+impl TryFrom<BindSerde> for Bind {
+    type Error = InvalidKeystrokeError;
+    fn try_from(value: BindSerde) -> Result<Self, Self::Error> {
+        Ok(Bind {
+            bind: Keystroke::parse(&value.bind)?,
+            callback: value.callback,
+            exit: value.exit,
+        })
+    }
+}
+impl TryFrom<&BindSerde> for Bind {
+    type Error = InvalidKeystrokeError;
+    fn try_from(value: &BindSerde) -> Result<Self, Self::Error> {
+        Ok(Bind {
+            bind: Keystroke::parse(&value.bind)?,
+            callback: value.callback.clone(),
+            exit: value.exit,
         })
     }
 }
@@ -194,6 +199,7 @@ impl Display for Launcher {
     }
 }
 
+#[derive(Default)]
 pub enum ExecMode {
     Inner {
         func: InnerFunction,
@@ -219,10 +225,6 @@ pub enum ExecMode {
     SwitchView {
         idx: usize,
     },
-    CreateBookmark {
-        url: String,
-        name: String,
-    },
     Web {
         engine: Option<String>,
         browser: Option<String>,
@@ -231,9 +233,73 @@ pub enum ExecMode {
     Copy {
         content: String,
     },
+    #[default]
     None,
 }
+
 impl ExecMode {
+    /// Parse a method string + context into an ExecMode.
+    /// This is the single source of truth for string-based dispatch.
+    fn from_method(
+        method: &str,
+        exec: Option<impl Into<String>>,
+        launcher_type: &LauncherType,
+        exit: bool,
+    ) -> Option<Self> {
+        let exec = exec.map(Into::into);
+
+        match method {
+            "app_launcher" | "command" | "app" => Some(Self::Command {
+                exec: exec.unwrap_or_default(),
+            }),
+
+            "web_launcher" | "web" | "web_search" => Some(Self::Web {
+                engine: None,
+                browser: None,
+                exec,
+            }),
+
+            k if k.starts_with("inner.") => {
+                let func = InnerFunction::from_str(launcher_type, k.trim_start_matches("inner."));
+                (func != InnerFunction::Empty).then_some(Self::Inner { func, exit })
+            }
+
+            _ => None,
+        }
+    }
+
+    pub fn from_bind(bind: &Bind, child: &RenderableChild) -> Option<Self> {
+        Self::from_method(
+            &bind.callback,
+            child.get_exec(),
+            child.launcher_type(),
+            bind.exit,
+        )
+    }
+
+    pub fn from_app_action(action: Arc<ContextMenuAction>, data: &RenderableChild) -> Self {
+        match action.as_ref() {
+            ContextMenuAction::App(action) => Self::from_method(
+                &action.method,
+                action.exec.clone(),
+                data.launcher_type(),
+                action.exit,
+            )
+            .unwrap_or_default(),
+
+            ContextMenuAction::Fn(_) => Self::DynamicContextMenuFunc { action },
+            ContextMenuAction::Emoji(emj) => emj
+                .entry()
+                .map(|entry| {
+                    let content = get_emoji(entry, &get_selected_skin_tones())
+                        .as_str()
+                        .to_string();
+                    Self::Copy { content }
+                })
+                .unwrap_or_default(),
+        }
+    }
+
     pub fn from_appdata(app_data: &AppData, launcher: &Arc<Launcher>) -> Self {
         match &launcher.launcher_type {
             LauncherType::Apps(_) => Self::App {
@@ -281,98 +347,18 @@ impl ExecMode {
         }
     }
     pub fn from_child(data: &RenderableChild, cx: &mut App) -> Option<Self> {
-        let launcher_snapshot = data.with_launcher(|l| l.clone());
-
-        if let Some(on_return) = launcher_snapshot.on_return.as_ref() {
-            match on_return.as_str() {
-                "app_launcher" | "command" => {
-                    if let Some(exec) = data.get_exec() {
-                        return Some(Self::Command {
-                            exec: exec.to_string(),
-                        });
-                    }
-                }
-                "create_bookmark" => {
-                    if let RenderableChild::App { launcher, inner } = data
-                        && matches!(launcher.launcher_type, LauncherType::Clipboard(_))
-                        && let (Some(exec), Some(name)) = (&inner.exec, &inner.name)
-                    {
-                        return Some(Self::CreateBookmark {
-                            url: exec.to_string(),
-                            name: name.to_string(),
-                        });
-                    }
-                }
-
-                k if k.starts_with("inner.") => {
-                    let inner = InnerFunction::from_str(
-                        data.launcher_type(),
-                        k.trim_start_matches("inner."),
-                    );
-                    if inner != InnerFunction::Empty {
-                        return Some(Self::Inner {
-                            func: inner,
-                            exit: launcher_snapshot.exit,
-                        });
-                    }
-                }
-                _ => {}
-            };
+        let launcher = data.with_launcher(|l| l.clone());
+        if let Some(on_return) = &launcher.on_return
+            && let Some(result) = Self::from_method(
+                on_return,
+                data.get_exec(),
+                data.launcher_type(),
+                launcher.exit,
+            )
+        {
+            return Some(result);
         }
 
         data.build_exec(cx)
-    }
-    pub fn from_app_action(action: Arc<ContextMenuAction>, data: &RenderableChild) -> Self {
-        match action.as_ref() {
-            ContextMenuAction::App(action) => match action.method.as_str() {
-                "app_launcher" | "command" => Self::Command {
-                    exec: action.exec.clone().unwrap_or_default(),
-                },
-
-                "create_bookmark" => {
-                    if let (Some(exec), Some(name)) = (&action.exec, &action.name) {
-                        Self::CreateBookmark {
-                            url: exec.to_string(),
-                            name: name.to_string(),
-                        }
-                    } else {
-                        Self::None
-                    }
-                }
-
-                "web_launcher" => Self::Web {
-                    engine: None,
-                    browser: None,
-                    exec: action.exec.clone(),
-                },
-
-                k if k.starts_with("inner.") => {
-                    let inner = InnerFunction::from_str(
-                        data.launcher_type(),
-                        k.trim_start_matches("inner."),
-                    );
-                    if inner == InnerFunction::Empty {
-                        Self::None
-                    } else {
-                        Self::Inner {
-                            func: inner,
-                            exit: action.exit,
-                        }
-                    }
-                }
-                _ => Self::None,
-            },
-            ContextMenuAction::Fn(_) => Self::DynamicContextMenuFunc { action },
-            ContextMenuAction::Emoji(emj) => {
-                if let Some(entry) = emj.entry() {
-                    let content = get_emoji(entry, &get_selected_skin_tones())
-                        .as_str()
-                        .to_string();
-                    Self::Copy { content }
-                } else {
-                    Self::None
-                }
-            }
-        }
     }
 }
