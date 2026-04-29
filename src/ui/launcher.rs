@@ -360,8 +360,6 @@ impl LauncherMode {
                         // should clear search bar
                         return ModeTransition::ClearInput;
                     }
-                } else {
-                    *m = Self::Search;
                 }
             }
             _ => {}
