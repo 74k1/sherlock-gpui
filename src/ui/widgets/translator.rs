@@ -24,7 +24,9 @@ use crate::{
             SherlockMessage,
             types::{NetworkAction, SherlockErrorType},
         },
-        intent::{Intent, IntentResult, translation::Language},
+        intent::{
+            Intent, IntentResult, parsers::translation::TranslationParser, translation::Language,
+        },
     },
 };
 
@@ -228,7 +230,7 @@ impl<'a> RenderableChildImpl<'a> for TranslationData {
             return Some(false);
         }
 
-        let intent = Intent::try_parse_translation(keyword)?;
+        let intent = TranslationParser::parse_intent(keyword)?;
 
         if let Intent::Translation { text, target_lang } = intent {
             self.update_entity.update(cx, |ent, cx| {

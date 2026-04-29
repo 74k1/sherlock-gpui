@@ -23,7 +23,7 @@ use crate::{
             },
         },
     },
-    utils::intent::Intent,
+    utils::intent::{Intent, cursor::Cursor, parsers::timer::TimerParser},
 };
 
 mod model;
@@ -152,8 +152,10 @@ impl<'a> RenderableChildImpl<'a> for TimerChild {
     }
     #[inline(always)]
     fn based_show<C: AppContext>(&self, keyword: &str, cx: &mut C) -> Option<bool> {
-        let mut tokens = Intent::tokenize_kill_noise(keyword).peekable();
-        let intent = Intent::try_parse_timer(&mut tokens);
+        let clean: SmallVec<[&str; 16]> = Intent::tokenize_kill_noise(keyword).collect();
+        let cur = Cursor::new(&clean);
+        let intent = TimerParser::parse_intent(cur);
+
         let show = matches!(&intent, Some(Intent::Timer { .. }));
 
         self.update_entity.update(cx, |this, _| {

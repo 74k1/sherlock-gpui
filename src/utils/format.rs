@@ -28,7 +28,7 @@ use crate::{
 /// - Only writing ASCII bytes (`b' '`, results of `make_ascii_uppercase/lowercase`),
 ///   all of which are valid single-byte UTF-8 sequences
 /// - Never changing the length or capacity of the string
-pub fn make_ascii_title_case(s: &mut String) -> Result<(), SherlockMessage> {
+pub fn make_ascii_title_case(s: &mut str) -> Result<(), SherlockMessage> {
     if !s.is_ascii() {
         return Err(sherlock_msg!(
             Warning,
