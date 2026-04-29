@@ -140,14 +140,26 @@ macro_rules! create_variants {
             }
         }
 
-        impl From<$name> for LauncherVariant {
-            fn from(t: $name) -> Self {
+        impl From<&$name> for LauncherVariant {
+            fn from(t: &$name) -> Self {
                 match t {
                     $(
                         $name::$variant(_) => Self::$variant,
                     )*
                     $name::Empty => Self::Empty,
                 }
+            }
+        }
+
+        impl From<$name> for LauncherVariant {
+            fn from(t: $name) -> Self {
+                From::from(&t)
+            }
+        }
+
+        impl AsRef<$name> for $name {
+            fn as_ref(&self) -> &$name {
+                self
             }
         }
     };

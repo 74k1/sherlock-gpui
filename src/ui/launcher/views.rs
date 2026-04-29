@@ -480,6 +480,7 @@ impl TryFrom<&LauncherType> for NavigationViewType {
             LauncherType::Files(fs) => Ok(NavigationViewType::Files {
                 dir: Some(fs.loc.clone()),
             }),
+            LauncherType::Process(_) => Ok(NavigationViewType::Process),
             _ => Err(Self::Error {}),
         }
     }

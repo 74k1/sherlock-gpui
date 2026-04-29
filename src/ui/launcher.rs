@@ -1,6 +1,5 @@
 use crate::app::{RenderableChildEntity, RenderableChildWeak};
 use crate::launcher::Launcher;
-use crate::launcher::variant_type::LauncherType;
 use crate::ui::launcher::context_menu::ContextMenuAction;
 use crate::ui::launcher::views::{NavigationStack, NavigationViewType};
 use crate::ui::model::Model;
@@ -131,15 +130,9 @@ impl LauncherView {
                 query = "".into();
             }
             ModeTransition::PushStack(launcher) => {
-                let view = match &launcher.launcher_type {
-                    LauncherType::Emoji(_) => NavigationViewType::Emoji,
-                    LauncherType::Process(_) => NavigationViewType::Process,
-                    LauncherType::Files(files) => NavigationViewType::Files {
-                        dir: Some(files.loc.clone()),
-                    },
-                    _ => return,
+                let Ok(view) = NavigationViewType::try_from(&launcher.launcher_type) else {
+                    return
                 };
-
                 self.text_input.update(cx, |this, _| this.reset());
                 self.navigation.push(view.create_view(launcher, cx));
                 query = "".into();
@@ -348,12 +341,7 @@ impl LauncherMode {
                     if let Some(new_mode) = found_mode {
                         *m = new_mode.clone();
                         if let Self::Alias { launcher, .. } = new_mode
-                            && matches!(
-                                &launcher.launcher_type,
-                                LauncherType::Files(_)
-                                    | LauncherType::Emoji(_)
-                                    | LauncherType::Process(_)
-                            )
+                            && launcher.needs_stack_push()
                         {
                             return ModeTransition::PushStack(launcher.clone());
                         }

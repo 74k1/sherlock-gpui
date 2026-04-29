@@ -23,7 +23,7 @@ pub mod web_launcher;
 // pub mod pipe_launcher;
 
 use crate::{
-    launcher::variant_type::{InnerFunction, LauncherType},
+    launcher::variant_type::{InnerFunction, LauncherType, LauncherVariant},
     loader::{
         LoadContext, resolve_icon_path,
         utils::{AppData, RawLauncher},
@@ -176,6 +176,12 @@ impl Launcher {
             launcher_type: LauncherType::Dmenu(dmenu_launcher::DmenuLauncher::default()),
             ..Default::default()
         }
+    }
+    pub fn needs_stack_push(&self) -> bool {
+        matches!(
+            (&self.launcher_type).into(),
+            LauncherVariant::Emoji | LauncherVariant::Process | LauncherVariant::Files
+        )
     }
 }
 impl Display for Launcher {
