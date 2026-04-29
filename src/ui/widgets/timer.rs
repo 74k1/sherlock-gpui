@@ -11,7 +11,7 @@ use crate::{
     launcher::{
         ExecMode, Launcher, timer_launcher::TimerLauncherFunctions, variant_type::InnerFunction,
     },
-    loader::utils::ExecVariable,
+    loader::{resolve_icon_path, utils::ExecVariable},
     ui::{
         launcher::context_menu::{ContextMenuAction, DynamicFunctionAction},
         utils::{search::SherlockSearch, timeout::Timeout},
@@ -197,6 +197,7 @@ impl<'a> RenderableChildImpl<'a> for TimerChild {
                     Arc::new(ContextMenuAction::Fn(
                         DynamicFunctionAction::new(format!("Remove timer {}", i + 1))
                             .exit(false)
+                            .icon_name("sherlock-process")
                             .on_exec({
                                 let weak_self = self.update_entity.downgrade();
                                 move |cx| {
