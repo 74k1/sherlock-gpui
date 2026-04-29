@@ -51,30 +51,28 @@ impl<'a> RenderableChildImpl<'a> for MprisState {
                     .flex_col()
                     .justify_between()
                     .items_center()
-                    .child(
-                        div()
-                            .text_sm()
-                            .font_family(theme.font_family.clone())
-                            .overflow_hidden()
-                            .text_ellipsis()
-                            .whitespace_nowrap()
-                            .children(
-                                self.raw
-                                    .as_ref()
-                                    .and_then(|s| s.metadata.title.as_ref())
-                                    .map(|name| div().child(name.clone())),
-                            ),
+                    .when_some(
+                        self.raw.as_ref().and_then(|s| s.metadata.title.as_ref()),
+                        |this, name| {
+                            this.child(
+                                div()
+                                    .text_sm()
+                                    .font_family(theme.font_family.clone())
+                                    .overflow_hidden()
+                                    .text_ellipsis()
+                                    .whitespace_nowrap()
+                                    .child(div().child(name.to_string())),
+                            )
+                        },
                     )
-                    .child(
-                        div()
-                            .text_xs()
-                            .font_family(theme.font_family.clone())
-                            .children(
-                                self.raw
-                                    .as_ref()
-                                    .and_then(|s| s.metadata.artists.as_ref())
-                                    .map(|arts| arts.join(", ").to_string()),
-                            ),
+                    .when_some(
+                        self.raw.as_ref().and_then(|s| {
+                            s.metadata
+                                .artists
+                                .as_ref()
+                                .filter(|artists| artists.iter().any(|a| !a.is_empty()))
+                        }),
+                        |this, st| this.text_xs().child(st.join(", ").to_string()),
                     ),
             )
             .into_any_element()
