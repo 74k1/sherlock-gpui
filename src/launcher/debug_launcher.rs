@@ -19,7 +19,6 @@ define_inner_functions! {
     pub enum DebugFunctions {
         ClearCache,
         ClearAppCounts,
-        ClearIcons,
         ClearErrors,
         InsertTestErrors,
     }
@@ -47,13 +46,6 @@ impl LauncherProvider for DebugLauncher {
                 search_string: "clear cache;debug;app count".into(),
                 icon: resolve_icon_path("sherlock-devtools"),
                 actions: Arc::from([
-                    Arc::new(ContextMenuAction::App(ApplicationAction {
-                        name: Some("Clear Icon Cache".into()),
-                        method: "inner.clear_icons".into(),
-                        icon: resolve_icon_path("sherlock-process"),
-                        exit: launcher.exit,
-                        ..Default::default()
-                    })),
                     Arc::new(ContextMenuAction::App(ApplicationAction {
                         name: Some("Clear Cache".into()),
                         method: "inner.clear_cache".into(),
@@ -99,7 +91,6 @@ impl LauncherProvider for DebugLauncher {
         match func {
             DebugFunctions::ClearCache => DebugFunctions::clear_cache()?,
             DebugFunctions::ClearAppCounts => DebugFunctions::clear_app_counts()?,
-            DebugFunctions::ClearIcons => DebugFunctions::clear_icons()?,
             DebugFunctions::ClearErrors => return Ok(ExecEffect::ClearMessages),
             DebugFunctions::InsertTestErrors => {
                 return Ok(ExecEffect::InsertMessages(vec![
@@ -135,10 +126,6 @@ impl DebugFunctions {
         Self::remove_file_safe(app_cache)?;
 
         Ok(())
-    }
-    fn clear_icons() -> Result<(), SherlockMessage> {
-        let icon_cache = paths::get_cache_dir()?.join("icons");
-        Self::remove_dir_safe(icon_cache)
     }
     fn clear_app_counts() -> Result<(), SherlockMessage> {
         let counts = paths::get_data_dir()?.join("counts.bin");
