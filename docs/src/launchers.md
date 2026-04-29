@@ -1,34 +1,133 @@
 # Launchers
 
-Launchers are the backbone of Sherlock. Each item — applications, custom commands, widgets — is backed by a launcher. The `fallback.json` file controls which launchers are active and how they behave.
+Launchers are the backbone for Sherlock's widget engine. Each displayed widget
+is owned by a launcher. For example:
 
-The default location is `~/.config/sherlock/fallback.json`.
+```
+[Weather Launcher]
+    [Widget] Weather Display
+[App Launcher] 
+    [Widget] App 1
+    [Widget] App 2
+    [Widget] App 3
+```
+
+A launcher's widgets will share the same behavious based on the shared launcher configuration.
+
+## Shared Launcher Configuration
+
+### Fields
+
+| Field        | Type              | Description                                              |
+| ------------ | ----------------- | -------------------------------------------------------- |
+| `name`       | `string?`         | Label shown in the UI                                    |
+| `alias`      | `string?`         | Keyword that activates focused/alias mode                |
+| `home`       | `HomeType`        | Controls home screen visibility                          |
+| `priority`   | `integer`         | Sort weight — lower appears first                        |
+| `type`       | `LauncherVariant` | Launcher kind (e.g. `app`, `weather`)                   |
+| `args`       | `{}` | Launcher-specific configuration options.                   |
+| `async`      | `bool`            | Enable async widget updates                              |
+| `exit`       | `bool`            | Close Sherlock after execution                           |
+| `spawn_focus`| `bool`            | Allow item to receive automatic focus                    |
+| `shortcut`   | `bool`            | Show a keybind shortcut for this launcher                |
+| `binds`      | `Bind[]?`         | Keyboard shortcuts                                       |
+| `actions`    | `Action[]?`       | Context menu actions (overwrites `.desktop` file actions)|
+| `add_actions`| `Action[]?`       | Extra actions appended to the context menu               |
+| `variables`  | `ExecVariable[]?` | Variables injected into spawned commands                 |
 
 ---
 
-## Shared Attributes
+### Bind
 
-### Required
+A keyboard shortcut attached to a launcher's widgets.
 
-| Attribute | Description |
-|---|---|
-| `type` | The launcher type string (e.g. `app_launcher`, `command`) |
-| `args` | Arguments specific to the launcher type. Can be empty (`{}`) |
-| `priority` | Display order at startup. `0` means the launcher only appears when its `alias` is active |
+| Field      | Type      | Description                                              |
+| ---------- | --------- | -------------------------------------------------------- |
+| `key`      | `string`  | Key to bind (e.g. `ctrl+c`)                             |
+| `callback` | `string`  | Action to invoke (e.g. `inner.copy`, `app_launcher`)    |
+| `exit`     | `bool`    | Close Sherlock after this bind executes                  |
 
-### Optional
+---
 
-| Attribute | Description |
-|---|---|
-| `name` | Category label shown under the tile's name |
-| `alias` | Prefix used to search within this launcher specifically |
-| `home` | When to show this launcher. One of `Home`, `OnlyHome`, `Persist`, `Search` (default) |
-| `async` | Run the launcher asynchronously |
-| `on_return` | What happens when return is pressed |
-| `spawn_focus` | Whether the tile auto-focuses when it appears first in the list |
-| `shortcut` | Whether to show the shortcut indicator |
-| `actions` | Custom context menu entries — see [Actions](#actions) |
-| `variables` | Runtime input fields in the search bar — see [Variable Inputs](variable-inputs.md) |
+### Action
+
+A context menu entry attached to a launcher's widgets.
+
+| Field    | Type      | Description                                              |
+| -------- | --------- | -------------------------------------------------------- |
+| `name`   | `string`  | Label shown in the context menu                         |
+| `icon`   | `string?`  | The icon name for the application action                         |
+| `method` | `string`  | Action to invoke (e.g. `app_launcher`, `web_launcher`)  |
+| `exec`   | `string?` | Command or URL to execute                               |
+| `exit`   | `bool`    | Close Sherlock after this action executes, (default = `true`)               |
+
+---
+
+## ExecVariable
+
+A variable injected into a command at spawn time. Defined as a tagged variant.
+
+| Variant          | Value Type    | Description                                              |
+| ---------------- | ------------- | -------------------------------------------------------- |
+| `string_input`   | `string`      | Prompts the user for a plain text input                  |
+| `password_input` | `string`      | Prompts the user for a masked/hidden input               |
+| `path_input`     | `PathData`    | Prompts the user to select a file or directory path      |
+| `command_input`  | `CommandData` | Prompts the user for input passed to a shell command     |
+
+> [!TIP]
+> `path_input` and `command_input` have autocompletion. The `path_input` will
+> assume to search in the home directory if the search query does not start
+> with `/`
+
+**Example:**
+
+```json
+variables = [
+    { "string_input": "location" },
+    { "password_input": "token" },
+]
+```
+
+### Example Usage
+
+```json
+{
+    "name": "Spotify",
+    "type": "music_player",
+    "args": {},
+    "async": true,
+    "priority": 2,
+    "home": "OnlyHome",
+    "spawn_focus": false,
+    "exit": false,
+    "binds": [
+        {
+            "bind": "ctrl-l",
+            "callback": "next",
+            "exit": false
+        },
+        {
+            "bind": "ctrl-h",
+            "callback": "previous",
+            "exit": false
+        }
+    ],
+    "actions": [
+        {
+            "name": "Skip",
+            "icon": "media-seek-forward",
+            "method": "inner.next",
+            "exit": false
+        },
+        {
+            "name": "Previous",
+            "icon": "media-seek-backward",
+            "method": "inner.previous",
+            "exit": false
+        }
+    ]
+}
+```
 
 ---
 
@@ -40,7 +139,7 @@ Searches and launches installed applications from `.desktop` files.
 {
     "name": "App Launcher",
     "alias": "app",
-    "type": "app_launcher",
+    "type": "apps",
     "args": {
         "use_keywords": true
     },
@@ -109,23 +208,32 @@ Evaluates math expressions and unit conversions. On return, copies the result to
 |---|---|---|
 | `capabilities` | no | List of enabled features. Defaults to `calc.math` and `calc.units` |
 
-### Capabilities
+### **Supported Unit Conversions**
 
-| Value | Enables |
-|---|---|
-| `calc.math` | Mathematical expression evaluation |
-| `calc.units` | All unit conversions |
-| `calc.length` | Length only |
-| `calc.weight` | Weight only |
-| `calc.volume` | Volume only |
-| `calc.temperature` | Temperature only |
-| `calc.pressure` | Pressure only |
-| `calc.digital` | Digital storage only |
-| `calc.time` | Time only |
-| `calc.area` | Area only |
-| `calc.speed` | Speed only |
-| `calc.currencies` | Currency conversion (fetched from TradingView, cached) |
-| `colors` | Color space conversion (`rgb`, `hex`, `hsl`, `hsv`, `lab`) |
+Sherlock supports natural language conversions across the following categories:
+
+| Category | Supported Units & Aliases |
+| --- | --- |
+| `calc.math` | Basic and advanced mathematical expressions. |
+| `colors` | Conversion between Hex, RGB, HSL, and other color formats. |
+| `calc.currencies` | USD ($), EUR (€), JPY (¥), GBP (£), AUD (A$), CAD (C$),
+CHF, CNY (¥), NZD, SEK (kr), NOK, MXN, SGD, HKD, KRW (₩), PLN (zł), PEN (S/). |
+| `calc.length` | mm, cm, m, km, inch ("), feet ('), yard, mile, nautical mile. |
+| `calc.volume` | ml, cl, l, kl, cubic meter, tsp, tbsp, fl oz, cup, pint, quart, gallon, imperial gallon. |
+| `calc.weight` | mg, g, kg, metric ton, oz, lb, stone, US ton, imperial ton, troy ounce. |
+| `calc.temperature` | Celsius (°C), Fahrenheit (°F). |
+| `calc.pressure` | Pascal, kPa, bar, atmosphere, psi, Torr (mmHg). |
+| `calc.digital` | bit, kb, Mb, Gb, Byte, KB, MB, GB, TB, PB. |
+| `calc.time` | ms, seconds, minutes, hours, days, weeks, months, years. |
+| `calc.area` | square meter, square kilometer, square foot, square inch, acre, hectare. |
+| `calc.speed` | m/s, km/h, mph, knots. |
+
+### Usage Tips
+
+* **Group Activation:** You can use `calc.units` to enable all physical measurement units at once.
+* **Case Insensitive:** You can type `KG`, `Kg`, or `kg` interchangeably.
+* **Natural Language:** Supports full names (`kilograms`) as well as shorthand (`kg`).
+* **Symbols:** Recognizes standard symbols like `$` for currency, `'` for feet, and `"` for inches.
 
 ---
 
@@ -161,12 +269,13 @@ Groups launchers or commands under a single tile. Activating the tile switches i
 
 **`categories`** (required) — a map of named entries:
 
-| Field | Required | Description |
-|---|---|---|
-| `icon` | no | Icon name to display |
-| `icon_class` | no | CSS class applied to the icon |
-| `exec` | no | Alias of the launcher to activate on return |
-| `search_string` | no | String used for fuzzy matching |
+| Field | Description |
+|---|---|
+| `icon` |  Icon name to display |
+| `exec` |  Alias of the launcher to activate on return |
+| `search_string` |  String used for fuzzy matching |
+| `actions` |  The actions to be displayed in the context menu. |
+
 
 ---
 
@@ -178,7 +287,7 @@ Runs custom shell commands. Supports variable inputs and replacement variables.
 {
     "name": "Utilities",
     "alias": "ex",
-    "type": "command",
+    "type": "commands",
     "args": {
         "commands": {
             "NordVPN": {
@@ -203,11 +312,8 @@ Runs custom shell commands. Supports variable inputs and replacement variables.
 |---|---|---|
 | `exec` | yes | The command to run |
 | `icon` | no | Icon name to display |
-| `icon_class` | no | CSS class applied to the icon |
 | `search_string` | no | String used for fuzzy matching |
 | `variables` | no | Variable input fields — see [Variable Inputs](variable-inputs.md) |
-| `tag_start` | no | Content shown in the left tag |
-| `tag_end` | no | Content shown in the right tag |
 
 ---
 
@@ -218,7 +324,7 @@ Shows the currently playing track and controls playback via MPRIS over D-Bus.
 ```json
 {
     "name": "Spotify",
-    "type": "audio_sink",
+    "type": "music_player",
     "args": {},
     "async": true,
     "priority": 1,
@@ -233,9 +339,9 @@ Shows the currently playing track and controls playback via MPRIS over D-Bus.
         }
     ],
     "binds": [
-        { "bind": "control+p", "callback": "playpause", "exit": false },
-        { "bind": "control+l", "callback": "next", "exit": false },
-        { "bind": "control+h", "callback": "previous", "exit": false }
+        { "bind": "ctrl-p", "callback": "inner.playpause", "exit": false },
+        { "bind": "ctrl-l", "callback": "inner.next", "exit": false },
+        { "bind": "ctrl-h", "callback": "inner.previous", "exit": false }
     ]
 }
 ```
