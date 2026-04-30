@@ -131,7 +131,7 @@ impl Intent {
             return Intent::None;
         }
 
-        let clean: SmallVec<[&str; 16]> = Self::tokenize_kill_noise(raw).collect();
+        let clean: SmallVec<[&str; 16]> = Self::tokenize_kill_noise(raw).take(16).collect();
         let cur = Cursor::new(&clean);
 
         if caps.allows(Capabilities::COLORS)
