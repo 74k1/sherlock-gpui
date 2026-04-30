@@ -100,4 +100,7 @@ impl<'a> RenderableChildImpl<'a> for MprisState {
             Some(false)
         }
     }
+    fn binds(&self, launcher: &Arc<Launcher>, _cx: &mut App) -> Option<Arc<Vec<crate::launcher::Bind>>> {
+        launcher.launcher_type.binds()
+    }
 }

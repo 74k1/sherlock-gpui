@@ -4,19 +4,14 @@ use gpui::{App, SharedString};
 use serde::Deserialize;
 
 use crate::{
-    ensure_func,
-    launcher::{
+    ensure_func, launcher::{
         ExecEffect, LauncherProvider,
         variant_type::{InnerFunction, LauncherType},
-    },
-    loader::utils::RawLauncher,
-    sherlock_msg,
-    ui::widgets::{RenderableChild, event::EventData},
-    utils::{
+    }, loader::utils::RawLauncher, sherlock_msg, skip_func_if_nav, ui::widgets::{RenderableChild, event::EventData}, utils::{
         command_launch::{mime_lookup, spawn_detached},
         errors::{SherlockMessage, types::SherlockErrorType},
         websearch::websearch,
-    },
+    }
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, strum::VariantNames, strum::EnumString)]
@@ -66,6 +61,7 @@ impl LauncherProvider for EventLauncher {
         _variables: &[(SharedString, SharedString)],
         _cx: &mut App,
     ) -> Result<ExecEffect, SherlockMessage> {
+        skip_func_if_nav!(func);
         let func = ensure_func!(func, InnerFunction::Event);
 
         let RenderableChild::Event { inner, .. } = child else {

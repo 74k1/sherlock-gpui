@@ -12,10 +12,18 @@ use crate::{
     utils::intent::{Capabilities, Intent, IntentResult},
 };
 
-#[derive(Clone)]
 pub struct CalcData {
     capabilities: Capabilities,
     result: Arc<RwLock<Option<(SharedString, IntentResult)>>>,
+}
+impl Clone for CalcData {
+    fn clone(&self) -> Self {
+        println!("calc cloned");
+        Self {
+            capabilities: self.capabilities.clone(),
+            result: self.result.clone(),
+        }
+    }
 }
 
 impl CalcData {

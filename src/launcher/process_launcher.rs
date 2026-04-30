@@ -5,17 +5,12 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
-    ensure_func,
-    launcher::{
+    ensure_func, launcher::{
         ExecEffect, LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction,
-    },
-    loader::{
+    }, loader::{
         resolve_icon_path,
         utils::{AppData, RawLauncher},
-    },
-    sherlock_msg,
-    ui::widgets::RenderableChild,
-    utils::errors::{SherlockMessage, types::SherlockErrorType},
+    }, sherlock_msg, skip_func_if_nav, ui::widgets::RenderableChild, utils::errors::{SherlockMessage, types::SherlockErrorType}
 };
 
 use nix::sys::signal::{Signal, kill};
@@ -77,6 +72,7 @@ impl LauncherProvider for ProcessLauncher {
         _variables: &[(gpui::SharedString, gpui::SharedString)],
         _cx: &mut App,
     ) -> Result<ExecEffect, SherlockMessage> {
+        skip_func_if_nav!(func);
         let func = ensure_func!(func, InnerFunction::Process);
 
         match func {

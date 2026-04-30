@@ -15,7 +15,7 @@ use crate::ui::widgets::RenderableChild;
 use crate::utils::config::ConfigGuard;
 use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::{DBusAction, DirAction, FileAction, SherlockErrorType};
-use crate::{ensure_func, sherlock_msg};
+use crate::{ensure_func, sherlock_msg, skip_func_if_nav};
 
 use super::utils::MprisData;
 
@@ -64,6 +64,7 @@ impl LauncherProvider for MusicPlayerLauncher {
         _variables: &[(SharedString, SharedString)],
         _cx: &mut App,
     ) -> Result<ExecEffect, SherlockMessage> {
+        skip_func_if_nav!(func);
         let func = ensure_func!(func, InnerFunction::MusicPlayer);
 
         let RenderableChild::Music { inner, .. } = child else {
@@ -84,7 +85,7 @@ impl LauncherProvider for MusicPlayerLauncher {
             MusicPlayerFunctions::TogglePlayback => MprisData::playpause(player)?,
         }
 
-        Ok(ExecEffect::None)
+        Ok(ExecEffect::UpdateAsync)
     }
 }
 

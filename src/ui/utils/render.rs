@@ -14,10 +14,20 @@ pub trait ListItemBorder: Styled + FluentBuilder + Sized {
                     .border_color(theme.border_selected)
             })
     }
+    fn selected_text(self, theme: &Arc<ThemeData>, selection: &Selection) -> Self {
+        self.text_color(theme.secondary_text)
+            .when(selection.is_selected, |this| {
+                this.text_color(theme.primary_text)
+            })
+    }
+    fn tile_bg(self, theme: &Arc<ThemeData>, selection: &Selection) -> Self {
+        self.bg(theme.bg_idle).when(selection.is_selected, |this| {
+            this.bg(theme.bg_selected)
+        })
+    }
 }
 
 impl<T: Styled + FluentBuilder + Sized> ListItemBorder for T {}
-
 
 /// Replaces all occurrences of `{name}` in `to` with `value`.
 ///

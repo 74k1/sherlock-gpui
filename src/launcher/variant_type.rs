@@ -61,12 +61,23 @@ macro_rules! create_variants {
             $(
                 $( $variant($extra), )?
             )*
+
+            #[allow(dead_code)]
+            SelectionUp,
+            #[allow(dead_code)]
+            SelectionDown,
             #[allow(dead_code)]
             Empty
         }
 
         impl InnerFunction {
             pub fn from_str(variant: &$name, func_name: &str) -> Self {
+                match func_name {
+                    "selection_up" => return Self::SelectionUp,
+                    "selection_down" => return Self::SelectionDown,
+                    _ => {}
+                }
+
                 match variant {
                     $(
                         $name::$variant(_) => {
@@ -204,6 +215,14 @@ macro_rules! ensure_func {
                 SherlockErrorType::InvalidFunction,
                 format!("Invalid function {:?} for this launcher", $val)
             ));
+        }
+    };
+}
+#[macro_export]
+macro_rules! skip_func_if_nav {
+    ($val:expr) => {
+        if matches!($val, InnerFunction::SelectionUp | InnerFunction::SelectionDown ) {
+            return Ok(ExecEffect::None)
         }
     };
 }

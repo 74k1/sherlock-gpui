@@ -114,7 +114,7 @@ impl TryFrom<&BindSerde> for Bind {
     }
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub struct Launcher {
     /// The name of the launcher. Might get displayed in the widget
     pub name: Option<SharedString>,
@@ -203,6 +203,7 @@ impl Display for Launcher {
 pub enum ExecEffect {
     InsertMessages(Vec<SherlockMessage>),
     ClearMessages,
+    UpdateAsync,
     None,
 }
 

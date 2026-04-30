@@ -20,11 +20,11 @@ pub mod weather;
 use crate::{
     app::theme::ThemeData,
     launcher::{
-        ExecMode, Launcher,
+        Bind, ExecEffect, ExecMode, Launcher,
         audio_launcher::AudioLauncherFunctions,
         emoji_launcher::EmojiData,
         utils::MprisState,
-        variant_type::{LauncherType, LauncherVariant},
+        variant_type::{InnerFunction, LauncherType, LauncherVariant},
         weather_launcher::WeatherData,
     },
     loader::utils::{AppData, ExecVariable},
@@ -35,7 +35,7 @@ use crate::{
             timer::TimerChild, translator::TranslationData, weather::WeatherWidget,
         },
     },
-    utils::config::HomeType,
+    utils::{config::HomeType, errors::SherlockMessage},
 };
 
 use calculator::CalcData;
@@ -134,6 +134,25 @@ macro_rules! renderable_enum {
                         }
                         inner.has_actions(cx)
                     }),*
+                }
+            }
+
+            fn binds(&self, cx: &mut App) -> Option<Arc<Vec<Bind>>> {
+                match self {
+                    $(Self::$variant {inner, launcher} => inner.binds(launcher, cx)),*
+                }
+            }
+
+            fn execute_function(&self, func: InnerFunction, variables: &[(SharedString, SharedString)], cx: &mut App) -> Result<ExecEffect, SherlockMessage> {
+                match self {
+                    $(
+                        Self::$variant {inner, launcher} => {
+                            if let Some(first) = inner.execute_function(&func, launcher, variables, cx) {
+                                return Ok(first)
+                            }
+                            launcher.launcher_type.execute_function(func, self, variables, cx)
+                        }
+                    ),*
                 }
             }
 
@@ -334,7 +353,13 @@ pub trait RenderableChildDelegate<'a> {
     fn handles_borders(&self) -> bool;
 
     /// The logic to render the widget
-    fn render(&self, selection: Selection, query: &str, theme: Arc<ThemeData>, cx: &mut App) -> AnyElement;
+    fn render(
+        &self,
+        selection: Selection,
+        query: &str,
+        theme: Arc<ThemeData>,
+        cx: &mut App,
+    ) -> AnyElement;
 
     /// Generates an execution path based on the child and the context menu action
     fn build_action_exec(&'a self, action: Arc<ContextMenuAction>) -> ExecMode;
@@ -354,6 +379,12 @@ pub trait RenderableChildDelegate<'a> {
 
     /// Whether this widget owns any context menu actions. (This gets called only on the selected
     /// item)
+    fn binds(&self, _cx: &mut App) -> Option<Arc<Vec<Bind>>>;
+
+    /// Execute inner functions
+    fn execute_function(&self, func: InnerFunction, variables: &[(SharedString, SharedString)], cx: &mut App) -> Result<ExecEffect, SherlockMessage>;
+
+    /// Get inner binds for a launcher and its children
     fn has_actions(&self, cx: &mut App) -> bool;
 
     /// Boolean logic for conditional display (e.g., calculator)
@@ -404,6 +435,12 @@ pub trait RenderableChildImpl<'a> {
     /// Whether the `additional actions` indicator should show in the status bar
     fn has_actions(&self, _cx: &mut App) -> bool {
         false
+    }
+    fn binds(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<Arc<Vec<Bind>>> {
+        None
+    }
+    fn execute_function(&self, _func: &InnerFunction, _launcher: &Arc<Launcher>, _variables: &[(SharedString, SharedString)], _cx: &mut App) -> Option<ExecEffect> {
+        None
     }
     fn based_show<C: AppContext>(&self, _keyword: &str, _cx: &mut C) -> Option<bool> {
         None

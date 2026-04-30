@@ -234,9 +234,7 @@ impl LauncherView {
         match what {
             ExecMode::Inner { func, exit } => {
                 if let Some(item) = self.navigation.selected_item(cx) {
-                    let effect = item
-                        .launcher_type()
-                        .execute_function(func, &item, variables, cx)?;
+                    let effect = item.execute_function(func, variables, cx)?;
 
                     match effect {
                         ExecEffect::InsertMessages(msgs) => {
@@ -247,9 +245,12 @@ impl LauncherView {
                         ExecEffect::ClearMessages => {
                             self.navigation.clear_messages(cx);
                         }
+                        ExecEffect::UpdateAsync => {
+                            self.update_async(cx);
+                        }
                         ExecEffect::None => {}
                     }
-                    self.update_async(cx);
+
                     return Ok(exit);
                 }
             }
@@ -325,21 +326,21 @@ impl LauncherView {
         win: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        if let Some(selected) =
+        if let Some(what) =
             self.navigation
-                .with_nth_shortcut_item(action.index, cx, |item, _| item.cloned())
+                .with_nth_shortcut_item(action.index, cx, |item_opt, cx| {
+                    item_opt.and_then(|item| ExecMode::from_child(item, cx))
+                })
         {
             let keyword = self.text_input.read(cx).content.clone();
-            if let Some(what) = ExecMode::from_child(&selected, cx) {
-                match self.execute_helper(what, keyword.as_ref(), cx) {
-                    Ok(exit) if exit => {
-                        self.close_window(win, cx);
-                    }
-                    Err(e) => {
-                        self.navigation.push_message(e, cx);
-                    }
-                    _ => {}
+            match self.execute_helper(what, keyword.as_ref(), cx) {
+                Ok(exit) if exit => {
+                    self.close_window(win, cx);
                 }
+                Err(e) => {
+                    self.navigation.push_message(e, cx);
+                }
+                _ => {}
             }
         }
     }
@@ -351,7 +352,7 @@ impl LauncherView {
     ) {
         let selected_binds = self
             .navigation
-            .with_selected_item(cx, |item, _| item.and_then(|i| i.launcher_type().binds()));
+            .with_selected_item(cx, |item, cx| item.and_then(|i| i.binds(cx)));
 
         if let Some(binds) = &selected_binds
             && let Some(pressed) = binds.iter().find(|bind| bind.matches(&ev.keystroke))

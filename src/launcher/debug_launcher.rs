@@ -12,7 +12,7 @@ use crate::utils::config::ConfigGuard;
 use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::{DirAction, FileAction, SherlockErrorType};
 use crate::utils::paths;
-use crate::{define_inner_functions, ensure_func, sherlock_msg};
+use crate::{define_inner_functions, ensure_func, sherlock_msg, skip_func_if_nav};
 use gpui::App;
 
 define_inner_functions! {
@@ -86,6 +86,7 @@ impl LauncherProvider for DebugLauncher {
         _variables: &[(gpui::SharedString, gpui::SharedString)],
         _cx: &mut App,
     ) -> Result<ExecEffect, crate::utils::errors::SherlockMessage> {
+        skip_func_if_nav!(func);
         let func = ensure_func!(func, InnerFunction::Debug);
 
         match func {
