@@ -44,35 +44,13 @@ impl<'a> RenderableChildImpl<'a> for MessageChild {
         theme: Arc<ThemeData>,
         _cx: &mut App,
     ) -> AnyElement {
-        let (bg, border, text) = match self.message.level {
-            SherlockMessageLevel::Error => (
-                theme
-                    .color_err
-                    .alpha(if selection.is_selected { 0.15 } else { 0.08 }),
-                theme
-                    .color_err
-                    .alpha(if selection.is_selected { 0.8 } else { 0.4 }),
-                theme.color_err,
-            ),
-            SherlockMessageLevel::Warning => (
-                theme
-                    .color_warn
-                    .alpha(if selection.is_selected { 0.15 } else { 0.08 }),
-                theme
-                    .color_warn
-                    .alpha(if selection.is_selected { 0.8 } else { 0.4 }),
-                theme.color_warn,
-            ),
-            SherlockMessageLevel::Info => (
-                theme
-                    .color_info
-                    .alpha(if selection.is_selected { 0.15 } else { 0.08 }),
-                theme
-                    .color_info
-                    .alpha(if selection.is_selected { 0.8 } else { 0.4 }),
-                theme.color_info,
-            ),
+        let text = match self.message.level {
+            SherlockMessageLevel::Error => theme.color_err,
+            SherlockMessageLevel::Warning => theme.color_warn,
+            SherlockMessageLevel::Info => theme.color_info,
         };
+        let bg = text.alpha(if selection.is_selected { 0.15 } else { 0.08 });
+        let border = text.alpha(if selection.is_selected { 0.8 } else { 0.4 });
 
         let dismiss_btn = self.on_dismiss.as_ref().map(|f| {
             let f = f.clone();
@@ -138,9 +116,9 @@ impl<'a> RenderableChildImpl<'a> for MessageChild {
                                     .font_weight(FontWeight::BOLD)
                                     .text_color(text)
                                     .child(self.message.error_type.to_string())
-                                    .when_some(count_badge, |this, badge| this.child(badge))
+                                    .when_some(count_badge, ParentElement::child),
                             )
-                            .children(dismiss_btn),
+                            .when_some(dismiss_btn, ParentElement::child),
                     )
                     .child(
                         div()
