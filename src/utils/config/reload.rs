@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
 use gpui::AsyncApp;
 
@@ -12,7 +12,7 @@ pub fn reload(
     cx: &AsyncApp,
     data: &RenderableChildEntity,
     initial_messages: &mut Vec<SherlockMessage>,
-    changes: Vec<ConfigFileChange>,
+    changes: HashSet<ConfigFileChange>,
 ) -> Option<Arc<[LauncherMode]>> {
     let needs = ReloadNeeds::from_changes(&changes);
     let mut messages: Vec<SherlockMessage> = Vec::new();
@@ -56,27 +56,26 @@ pub fn reload(
     modes
 }
 
+#[derive(Default)]
 struct ReloadNeeds {
     config: bool,
     launchers: bool,
+    apps: bool,
 }
 
 impl ReloadNeeds {
-    fn from_changes(changes: &[ConfigFileChange]) -> Self {
-        let mut needs = Self {
-            config: false,
-            launchers: false,
-        };
-        for change in changes {
+    fn from_changes(changes: &HashSet<ConfigFileChange>) -> Self {
+        changes.iter().fold(Self::default(), |mut needs, change| {
             match change {
                 ConfigFileChange::Config => needs.config = true,
                 ConfigFileChange::Fallback
                 | ConfigFileChange::Alias
                 | ConfigFileChange::Actions
                 | ConfigFileChange::Ignore => needs.launchers = true,
+                ConfigFileChange::Apps => needs.apps = true,
                 ConfigFileChange::Other => {}
             }
-        }
-        needs
+            needs
+        })
     }
 }
