@@ -12,13 +12,16 @@ use crate::{
     app::theme::ThemeData,
     launcher::{Launcher, utils::exec_mode::ExecMode},
     sherlock_msg,
-    ui::{traits::RenderableChildImpl, widgets::{
-        Selection,
-        translator::{
-            mymemory::MyMemoryResponse,
-            utils::{ApiStatus, TranslationResult},
+    ui::{
+        traits::RenderableChildImpl,
+        widgets::{
+            Selection,
+            translator::{
+                mymemory::MyMemoryResponse,
+                utils::{ApiStatus, TranslationResult},
+            },
         },
-    }},
+    },
     utils::{
         errors::{
             SherlockMessage,

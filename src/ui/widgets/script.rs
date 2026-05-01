@@ -136,11 +136,7 @@ impl<'a> RenderableChildImpl<'a> for ScriptData {
     fn search(&'a self, _launcher: &std::sync::Arc<Launcher>) -> &'a str {
         ""
     }
-    fn build_exec(
-        &self,
-        _launcher: &std::sync::Arc<Launcher>,
-        _cx: &mut App,
-    ) -> Option<ExecMode> {
+    fn build_exec(&self, _launcher: &std::sync::Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
         None
     }
     fn based_show<C: AppContext>(&self, _keyword: &str, _cx: &mut C) -> Option<bool> {

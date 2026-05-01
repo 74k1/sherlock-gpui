@@ -10,10 +10,12 @@ use crate::{
     },
     loader::utils::AppData,
     ui::{
-        launcher::{LauncherMode, context_menu::ContextMenuAction, views::NavigationViewType}, traits::RenderableChildDelegate, widgets::{
+        launcher::{LauncherMode, context_menu::ContextMenuAction, views::NavigationViewType},
+        traits::RenderableChildDelegate,
+        widgets::{
             RenderableChild,
             emoji::{get_emoji, get_selected_skin_tones},
-        }
+        },
     },
 };
 

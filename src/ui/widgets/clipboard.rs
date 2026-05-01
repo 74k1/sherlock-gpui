@@ -12,7 +12,10 @@ use crate::{
     ui::{
         launcher::context_menu::ContextMenuAction,
         traits::RenderableChildImpl,
-        utils::{async_update::{AsyncUpdate, AsyncUpdateEntity, Fetchable}, selection::Selection},
+        utils::{
+            async_update::{AsyncUpdate, AsyncUpdateEntity, Fetchable},
+            selection::Selection,
+        },
     },
     utils::{
         clipboard::get_clipboard,

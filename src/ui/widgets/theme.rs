@@ -1,7 +1,8 @@
 use crate::{
     app::theme::ThemeData,
     launcher::{
-        Launcher, theme_launcher::ThemePickerFunctions, utils::exec_mode::ExecMode, variant_type::InnerFunction
+        Launcher, theme_launcher::ThemePickerFunctions, utils::exec_mode::ExecMode,
+        variant_type::InnerFunction,
     },
     ui::{
         utils::render::ListItemBorder,

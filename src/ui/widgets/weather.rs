@@ -8,7 +8,10 @@ use std::{rc::Rc, sync::Arc, time::Duration};
 
 use crate::{
     app::theme::ThemeData,
-    launcher::{Launcher, utils::exec_mode::ExecMode, variant_type::LauncherType, weather_launcher::WeatherData},
+    launcher::{
+        Launcher, utils::exec_mode::ExecMode, variant_type::LauncherType,
+        weather_launcher::WeatherData,
+    },
     sherlock_msg,
     ui::{
         utils::{

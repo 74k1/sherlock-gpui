@@ -9,7 +9,8 @@ use smallvec::SmallVec;
 use crate::{
     app::theme::ThemeData,
     launcher::{
-        Launcher, timer_launcher::TimerLauncherFunctions, utils::exec_mode::ExecMode, variant_type::InnerFunction
+        Launcher, timer_launcher::TimerLauncherFunctions, utils::exec_mode::ExecMode,
+        variant_type::InnerFunction,
     },
     loader::utils::ExecVariable,
     ui::{

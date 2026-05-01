@@ -2,6 +2,7 @@ use gpui::{AnyElement, App, AppContext, SharedString};
 use std::sync::Arc;
 
 pub mod app;
+pub mod audio;
 pub mod calculator;
 pub mod clipboard;
 pub mod dmenu;
@@ -9,7 +10,6 @@ pub mod emoji;
 pub mod event;
 pub mod file;
 pub mod message;
-pub mod audio;
 pub mod process;
 pub mod script;
 pub mod theme;
@@ -31,8 +31,8 @@ use crate::{
         traits::{RenderableChildDelegate, RenderableChildImpl},
         utils::selection::Selection,
         widgets::{
-            clipboard::ClipWidget, dmenu::DmenuData, event::EventWidget, message::MessageChild,
-            audio::MusicPlayerWidget, process::ProcessData, script::ScriptData, timer::TimerChild,
+            audio::MusicPlayerWidget, clipboard::ClipWidget, dmenu::DmenuData, event::EventWidget,
+            message::MessageChild, process::ProcessData, script::ScriptData, timer::TimerChild,
             translator::TranslationData, weather::WeatherWidget,
         },
     },
