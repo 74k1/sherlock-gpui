@@ -70,11 +70,11 @@ impl MessageView {
 
             // increment existing error
             for item in data.iter_mut() {
-                if let RenderableChild::Message { inner, .. } = item {
-                    if inner.message == message {
-                        inner.count += 1;
-                        return;
-                    }
+                if let RenderableChild::Message { inner, .. } = item
+                    && inner.message == message
+                {
+                    inner.count += 1;
+                    return;
                 }
             }
 
