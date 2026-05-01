@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
 use gpui::{
-    AnyElement, App, FontWeight, InteractiveElement, IntoElement, MouseButton, ParentElement,
-    Styled, div, px,
+    AnyElement, App, FontWeight, InteractiveElement, IntoElement, MouseButton, ParentElement, Styled, div, prelude::FluentBuilder, px, relative
 };
 
 use crate::{
@@ -18,6 +17,7 @@ type DismissFunction = Arc<dyn Fn(&mut gpui::App, usize) + Send + Sync + 'static
 pub struct MessageChild {
     pub message: SherlockMessage,
     pub on_dismiss: Option<DismissFunction>,
+    pub count: usize,
 }
 
 impl MessageChild {
@@ -25,6 +25,7 @@ impl MessageChild {
         Self {
             message,
             on_dismiss: None,
+            count: 1,
         }
     }
     pub fn on_dismiss(mut self, f: impl Fn(&mut gpui::App, usize) + Send + Sync + 'static) -> Self {
@@ -87,10 +88,24 @@ impl<'a> RenderableChildImpl<'a> for MessageChild {
                 .font_family(theme.font_family.clone())
                 .text_color(text)
                 .cursor_pointer()
-                .group_hover("error-box", |s| s.text_color(text))
-                .hover(|s| s.bg(border))
                 .on_mouse_down(MouseButton::Left, move |_, _, cx| f(cx, selection.data_idx))
                 .child("✕")
+        });
+
+        let count_badge = (self.count > 1).then(|| {
+            div()
+                .flex()
+                .p_0p5()
+                .items_center()
+                .justify_center()
+                .rounded_sm()
+                .border_1()
+                .text_color(text)
+                .bg(border.opacity(0.5))
+                .text_size(px(8.))
+                .line_height(relative(1.))
+                .font_weight(FontWeight::BOLD)
+                .child(self.count.to_string())
         });
 
         div()
@@ -116,14 +131,14 @@ impl<'a> RenderableChildImpl<'a> for MessageChild {
                             .items_center()
                             .child(
                                 div()
+                                    .flex()
+                                    .items_center()
+                                    .gap_2()
                                     .text_size(px(13.))
                                     .font_weight(FontWeight::BOLD)
-                                    .text_color(if selection.is_selected {
-                                        theme.primary_text
-                                    } else {
-                                        text
-                                    })
-                                    .child(self.message.error_type.to_string()),
+                                    .text_color(text)
+                                    .child(self.message.error_type.to_string())
+                                    .when_some(count_badge, |this, badge| this.child(badge))
                             )
                             .children(dismiss_btn),
                     )

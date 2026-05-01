@@ -67,6 +67,18 @@ impl MessageView {
     ) {
         self.model.data().update(cx, |this, _| {
             let data = Rc::make_mut(this);
+
+            // increment existing error
+            for item in data.iter_mut() {
+                if let RenderableChild::Message { inner, .. } = item {
+                    if inner.message == message {
+                        inner.count += 1;
+                        return;
+                    }
+                }
+            }
+
+            // no duplicates
             data.push(RenderableChild::Message {
                 launcher: self.launcher.clone(),
                 inner: MessageChild::new(message).on_dismiss(move |cx, idx| {
@@ -94,14 +106,13 @@ impl MessageView {
         let removed = data.update(cx, |this, _| {
             if idx < this.len() {
                 let data = Rc::make_mut(this);
-                data.remove(idx);
-                true
+                Some(data.remove(idx))
             } else {
-                false
+                None
             }
         });
 
-        if removed {
+        if let Some(RenderableChild::Message { inner, .. }) = removed {
             let mut vec = filtered_indices.to_vec();
             if let Some(pos) = vec.iter().position(|&x| x == idx) {
                 vec.remove(pos);
@@ -114,7 +125,7 @@ impl MessageView {
             }
 
             *filtered_indices = Arc::from(vec);
-            self.count.update(|i| i.saturating_sub(1));
+            self.count.update(|i| i.saturating_sub(inner.count));
         }
     }
     pub fn clear_messages(&mut self, cx: &mut App) {
