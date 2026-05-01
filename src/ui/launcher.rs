@@ -116,6 +116,19 @@ impl LauncherView {
     pub fn force_filter_and_sort(&mut self, cx: &mut Context<Self>) {
         self.filter_and_sort_internal(true, cx);
     }
+    /// The main reactive entry point for query processing.
+    ///
+    /// 1. **Mode Detection**: Checks for prefix triggers to push new views or clear input.
+    /// 2. **Dispatch**: Selects a search strategy based on the current `ModelKind`.
+    ///    - `BufferedSearch`: Delegates to the specific model's async search.
+    ///    - `Standard`: Spawns a background task to filter and sort local data.
+    /// 3. **Processing**: Applies the 6-rule filtering engine and calculates priority
+    ///    scores via `make_prio`.
+    /// 4. **Concurrency**: Uses a `deferred_render_task` to debounce typing and release
+    ///    data locks early, preventing UI stutters.
+    ///
+    /// # Arguments
+    /// * `force` - Bypasses query-change optimization to re-run the search.
     fn filter_and_sort_internal(&mut self, force: bool, cx: &mut Context<Self>) {
         let mut query: SharedString = self.text_input.read(cx).content.to_lowercase().into();
 
