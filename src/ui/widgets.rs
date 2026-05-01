@@ -9,7 +9,7 @@ pub mod emoji;
 pub mod event;
 pub mod file;
 pub mod message;
-pub mod mpris;
+pub mod audio;
 pub mod process;
 pub mod script;
 pub mod theme;
@@ -20,16 +20,19 @@ pub mod weather;
 use crate::{
     app::theme::ThemeData,
     launcher::{
-        Bind, ExecEffect, ExecMode, Launcher,
+        ExecEffect, Launcher, LauncherValues,
         emoji_launcher::EmojiData,
+        utils::{binds::Bind, exec_mode::ExecMode},
         variant_type::{InnerFunction, LauncherType, LauncherVariant},
     },
     loader::utils::{AppData, ExecVariable},
     ui::{
         launcher::context_menu::ContextMenuAction,
+        traits::{RenderableChildDelegate, RenderableChildImpl},
+        utils::selection::Selection,
         widgets::{
             clipboard::ClipWidget, dmenu::DmenuData, event::EventWidget, message::MessageChild,
-            mpris::MusicPlayerWidget, process::ProcessData, script::ScriptData, timer::TimerChild,
+            audio::MusicPlayerWidget, process::ProcessData, script::ScriptData, timer::TimerChild,
             translator::TranslationData, weather::WeatherWidget,
         },
     },
@@ -201,9 +204,7 @@ macro_rules! renderable_enum {
             }
 
             fn spawn_focus(&self) -> bool {
-                match self {
-                    $(Self::$variant {launcher, ..} => launcher.spawn_focus),*
-                }
+                self.launcher().spawn_focus
             }
 
             fn launcher_type(&self) -> &LauncherType {
@@ -215,9 +216,7 @@ macro_rules! renderable_enum {
             }
 
             fn shortcut(&self) -> bool {
-                match self {
-                    $(Self::$variant {launcher, ..} => launcher.shortcut),*
-                }
+                self.launcher().shortcut
             }
         }
 
@@ -241,6 +240,7 @@ macro_rules! renderable_enum {
 
     };
 }
+
 renderable_enum! {
     enum RenderableChild {
         App(AppData),
@@ -266,162 +266,6 @@ impl RenderableChild {
         match self {
             Self::App { inner, launcher } => inner.get_exec(launcher),
             _ => None,
-        }
-    }
-}
-
-// To make compatible with Boxed data
-#[allow(dead_code)]
-pub trait HandlesBorders {
-    const HANDLES_BORDERS: bool;
-}
-
-impl<T> HandlesBorders for Box<T>
-where
-    for<'a> T: RenderableChildImpl<'a>,
-{
-    const HANDLES_BORDERS: bool = <T as RenderableChildImpl<'_>>::HANDLES_BORDERS;
-}
-
-pub trait RenderableChildDelegate<'a> {
-    /// Whether the child internally applies style for borders
-    fn handles_borders(&self) -> bool;
-
-    /// The logic to render the widget
-    fn render(
-        &self,
-        selection: Selection,
-        query: &str,
-        theme: Arc<ThemeData>,
-        cx: &mut App,
-    ) -> AnyElement;
-
-    /// Generates an execution path based on the child and the context menu action
-    fn build_action_exec(&'a self, action: Arc<ContextMenuAction>) -> ExecMode;
-
-    /// Generates an execution path when pressing return on this widget
-    fn build_exec(&self, cx: &mut App) -> Option<ExecMode>;
-
-    /// The string that contains or otherwise matces the user-provided search query
-    fn search(&'a self) -> &'a str;
-
-    /// The variable fields that should be shown next to the search input
-    fn vars(&self, cx: &mut App) -> Option<&[ExecVariable]>;
-
-    /// The context menu actions for this widget. (Gets called on the selected item only if:
-    /// self.has_actions == true and the context menu gets opened)
-    fn actions(&self, cx: &mut App) -> Option<Arc<[Arc<ContextMenuAction>]>>;
-
-    /// Whether this widget owns any context menu actions. (This gets called only on the selected
-    /// item)
-    fn binds(&self, _cx: &mut App) -> Option<Arc<Vec<Bind>>>;
-
-    /// Execute inner functions
-    fn execute_function(
-        &self,
-        func: InnerFunction,
-        variables: &[(SharedString, SharedString)],
-        cx: &mut App,
-    ) -> Result<ExecEffect, SherlockMessage>;
-
-    /// Get inner binds for a launcher and its children
-    fn has_actions(&self, cx: &mut App) -> bool;
-
-    /// Boolean logic for conditional display (e.g., calculator)
-    fn based_show<C: AppContext>(&self, keyword: &str, cx: &mut C) -> Option<bool>;
-
-    /// Sidebar rendering
-    fn sidebar(&self, cx: &mut App) -> Option<AnyElement>;
-
-    /// Sync update on every keypress
-    fn update_sync(&self, query: SharedString, cx: &mut App);
-
-    /// Updates a dynamic renderable child that requires re-evaluation.
-    ///
-    /// This is used for items whose state depends on internal logic (e.g., a timer)
-    /// or external factors (e.g., a weather API or file system change).
-    fn update_async<C: AppContext>(&self, cx: &mut C);
-}
-
-#[allow(dead_code)]
-pub trait LauncherValues<'a> {
-    fn name(&'a self) -> Option<&'a str>;
-    fn alias(&'a self) -> Option<&'a str>;
-    fn priority(&self) -> f32;
-    fn is_async(&self) -> bool;
-    fn home(&self) -> HomeType;
-    fn spawn_focus(&self) -> bool;
-    fn launcher_type(&'a self) -> &'a LauncherType;
-    fn launcher_variant(&'a self) -> LauncherVariant;
-    fn shortcut(&self) -> bool;
-}
-
-pub trait RenderableChildImpl<'a> {
-    /// If set to true, disables the inheritage of the border and background fill of the list item
-    const HANDLES_BORDERS: bool = false;
-    fn render(
-        &self,
-        launcher: &Arc<Launcher>,
-        selection: Selection,
-        query: &str,
-        theme: Arc<ThemeData>,
-        cx: &mut App,
-    ) -> AnyElement;
-    fn build_exec(&self, launcher: &Arc<Launcher>, cx: &mut App) -> Option<ExecMode>;
-    fn priority(&self, launcher: &Arc<Launcher>) -> f32;
-    fn search(&'a self, launcher: &Arc<Launcher>) -> &'a str;
-    /// Will only get called once the context menu gets opened
-    fn actions(
-        &self,
-        launcher: &Arc<Launcher>,
-        _cx: &mut App,
-    ) -> Option<Arc<[Arc<ContextMenuAction>]>> {
-        launcher.actions.clone()
-    }
-    /// Whether the `additional actions` indicator should show in the status bar
-    fn has_actions(&self, _cx: &mut App) -> bool {
-        false
-    }
-    fn binds(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<Arc<Vec<Bind>>> {
-        None
-    }
-    fn execute_function(
-        &self,
-        _func: &InnerFunction,
-        _launcher: &Arc<Launcher>,
-        _variables: &[(SharedString, SharedString)],
-        _cx: &mut App,
-    ) -> Option<ExecEffect> {
-        None
-    }
-    fn based_show<C: AppContext>(&self, _keyword: &str, _cx: &mut C) -> Option<bool> {
-        None
-    }
-    fn sidebar(&self, _cx: &mut App) -> Option<AnyElement> {
-        None
-    }
-    fn update_sync(&self, _query: SharedString, _launcher: &Arc<Launcher>, _cx: &mut App) {}
-    fn update_async<C: AppContext>(&self, _launcher: Arc<Launcher>, _cx: &mut C) {}
-    fn vars(&self, _cx: &mut App) -> Option<&[ExecVariable]> {
-        None
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct Selection {
-    /// The unique index of the item
-    pub data_idx: usize,
-
-    /// Whether the current item is selected by the user
-    pub is_selected: bool,
-}
-
-impl Selection {
-    #[inline(always)]
-    pub fn new(data_idx: usize, is_selected: bool) -> Self {
-        Self {
-            data_idx,
-            is_selected,
         }
     }
 }

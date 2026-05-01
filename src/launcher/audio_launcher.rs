@@ -9,9 +9,10 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use zbus::blocking::{Connection, Proxy};
 
+use crate::launcher::utils::binds::Bind;
 use crate::launcher::variant_type::InnerFunction;
 use crate::ui::widgets::RenderableChild;
-use crate::ui::widgets::mpris::MusicPlayerWidget;
+use crate::ui::widgets::audio::MusicPlayerWidget;
 use crate::utils::config::ConfigGuard;
 use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::{
@@ -19,9 +20,11 @@ use crate::utils::errors::types::{
 };
 use crate::{ensure_func, sherlock_msg, skip_func_if_nav};
 
-use super::utils::MprisData;
+pub mod utils;
 
-use crate::launcher::{Bind, ExecEffect, LauncherProvider, LauncherType};
+use utils::MprisData;
+
+use crate::launcher::{ExecEffect, LauncherProvider, LauncherType};
 use crate::loader::utils::RawLauncher;
 
 #[derive(Debug, Clone, Default)]

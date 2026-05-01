@@ -1,10 +1,10 @@
 use crate::{
     app::theme::{ActiveTheme, ThemeData},
-    launcher::{ExecMode, Launcher},
+    launcher::{Launcher, utils::exec_mode::ExecMode},
     loader::resolve_icon_path,
     ui::{
-        launcher::views::NavigationViewType,
-        widgets::{RenderableChildImpl, Selection},
+        launcher::views::NavigationViewType, traits::RenderableChildImpl,
+        utils::selection::Selection,
     },
 };
 use gpui::{

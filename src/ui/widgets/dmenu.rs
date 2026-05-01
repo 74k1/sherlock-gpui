@@ -6,7 +6,7 @@ use gpui::{
 
 use crate::{
     app::theme::ThemeData,
-    launcher::Launcher,
+    launcher::{Launcher, utils::exec_mode::ExecMode},
     ui::widgets::{RenderableChildImpl, Selection},
 };
 
@@ -52,7 +52,7 @@ impl<'a> RenderableChildImpl<'a> for DmenuData {
         &self,
         _launcher: &Arc<Launcher>,
         _cx: &mut App,
-    ) -> Option<crate::launcher::ExecMode> {
+    ) -> Option<ExecMode> {
         None
     }
     fn priority(&self, launcher: &Arc<Launcher>) -> f32 {

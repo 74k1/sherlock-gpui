@@ -22,7 +22,7 @@ use suite_223b::{
 
 use crate::{
     app::{LAUNCH_GENERATION, theme::ThemeData},
-    launcher::{ExecMode, Launcher, variant_type::LauncherType},
+    launcher::{Launcher, utils::exec_mode::ExecMode, variant_type::LauncherType},
     loader::utils::ApplicationAction,
     sherlock_msg,
     ui::{

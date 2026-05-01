@@ -8,14 +8,17 @@ use gpui::{
 use crate::{
     app::theme::ThemeData,
     launcher::{
-        ExecMode, Launcher,
-        audio_launcher::{AudioLauncherFunctions, MusicPlayerFunctions},
-        utils::MprisState,
+        Launcher,
+        audio_launcher::{AudioLauncherFunctions, MusicPlayerFunctions, utils::MprisState},
+        utils::{binds::Bind, exec_mode::ExecMode},
         variant_type::InnerFunction,
     },
     ui::{
-        utils::async_update::{AsyncUpdate, AsyncUpdateEntity, Fetchable},
-        widgets::{RenderableChildImpl, Selection},
+        utils::{
+            async_update::{AsyncUpdate, AsyncUpdateEntity, Fetchable},
+            selection::Selection,
+        },
+        widgets::RenderableChildImpl,
     },
     utils::errors::SherlockMessage,
 };
@@ -154,11 +157,7 @@ impl<'a> RenderableChildImpl<'a> for MusicPlayerWidget {
         }
     }
     #[inline(always)]
-    fn binds(
-        &self,
-        launcher: &Arc<Launcher>,
-        _cx: &mut App,
-    ) -> Option<Arc<Vec<crate::launcher::Bind>>> {
+    fn binds(&self, launcher: &Arc<Launcher>, _cx: &mut App) -> Option<Arc<Vec<Bind>>> {
         launcher.launcher_type.binds()
     }
     #[inline(always)]

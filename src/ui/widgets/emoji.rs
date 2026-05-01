@@ -9,11 +9,12 @@ use gpui::{AnyElement, App, IntoElement, ParentElement, Styled, div, px};
 use crate::{
     app::theme::ThemeData,
     launcher::{
-        ExecMode, Launcher,
+        Launcher,
         emoji_launcher::{
             EmojiData, SkinTone,
             data::{EMOJIS, EmojiEntry},
         },
+        utils::exec_mode::ExecMode,
     },
     ui::{
         launcher::context_menu::ContextMenuAction,

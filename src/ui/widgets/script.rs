@@ -8,10 +8,11 @@ use serde::{Deserialize, Serialize};
 use std::process::{Command, Stdio};
 
 use crate::{
-    launcher::Launcher,
+    launcher::{Launcher, utils::exec_mode::ExecMode},
     ui::{
-        launcher::context_menu::ContextMenuAction, utils::pango::render_pango,
-        widgets::RenderableChildImpl,
+        launcher::context_menu::ContextMenuAction,
+        traits::RenderableChildImpl,
+        utils::{pango::render_pango, selection::Selection},
     },
     utils::command_launch::split_as_command,
 };
@@ -55,7 +56,7 @@ impl<'a> RenderableChildImpl<'a> for ScriptData {
     fn render(
         &self,
         _launcher: &std::sync::Arc<crate::launcher::Launcher>,
-        _selection: super::Selection,
+        _selection: Selection,
         _query: &str,
         theme: std::sync::Arc<crate::app::theme::ThemeData>,
         cx: &mut App,
@@ -139,7 +140,7 @@ impl<'a> RenderableChildImpl<'a> for ScriptData {
         &self,
         _launcher: &std::sync::Arc<Launcher>,
         _cx: &mut App,
-    ) -> Option<crate::launcher::ExecMode> {
+    ) -> Option<ExecMode> {
         None
     }
     fn based_show<C: AppContext>(&self, _keyword: &str, _cx: &mut C) -> Option<bool> {

@@ -8,13 +8,14 @@ use smallvec::SmallVec;
 
 use crate::{
     app::reset_generation,
-    launcher::{ExecEffect, ExecMode},
+    launcher::{ExecEffect, LauncherValues, utils::exec_mode::ExecMode},
     loader::utils::{CounterReader, ExecVariable},
     sherlock_msg,
     ui::{
         launcher::{LauncherView, context_menu::ContextMenuAction, views::MoveDirection},
         search_bar::{EmptyBackspace, TextInput, actions::ShortcutAction},
-        widgets::{LauncherValues, RenderableChildDelegate, emoji::set_selected_skin_tone},
+        traits::RenderableChildDelegate,
+        widgets::emoji::set_selected_skin_tone,
     },
     utils::{
         command_launch::spawn_detached,

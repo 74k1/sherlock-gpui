@@ -8,16 +8,17 @@ use std::{rc::Rc, sync::Arc, time::Duration};
 
 use crate::{
     app::theme::ThemeData,
-    launcher::{ExecMode, Launcher, variant_type::LauncherType, weather_launcher::WeatherData},
+    launcher::{Launcher, utils::exec_mode::ExecMode, variant_type::LauncherType, weather_launcher::WeatherData},
     sherlock_msg,
     ui::{
         utils::{
             async_update::{AsyncUpdate, AsyncUpdateEntity, Fetchable},
             ease::Ease,
             render::ListItemBorder,
+            selection::Selection,
             timeout::TimeoutCaller,
         },
-        widgets::{RenderableChildImpl, Selection},
+        widgets::RenderableChildImpl,
     },
     utils::errors::{SherlockMessage, types::SherlockErrorType},
 };

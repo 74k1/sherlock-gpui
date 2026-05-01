@@ -1,7 +1,8 @@
 use crate::{
     app::theme::{ActiveTheme, ThemeData},
     launcher::{
-        ExecMode, Launcher, process_launcher::ProcessLauncherFunctions, variant_type::InnerFunction,
+        Launcher, process_launcher::ProcessLauncherFunctions, utils::exec_mode::ExecMode,
+        variant_type::InnerFunction,
     },
     loader::resolve_icon_path,
     ui::widgets::{RenderableChildImpl, Selection},

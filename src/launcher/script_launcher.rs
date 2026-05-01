@@ -9,8 +9,9 @@ use crate::{
     },
     loader::utils::RawLauncher,
     sherlock_msg, skip_func_if_nav,
+    ui::traits::RenderableChildImpl,
     ui::widgets::{
-        RenderableChild, RenderableChildImpl,
+        RenderableChild,
         script::{ScriptData, ScriptDataUpdateEntity},
     },
     utils::errors::{SherlockMessage, types::SherlockErrorType},

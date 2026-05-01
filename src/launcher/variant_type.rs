@@ -11,7 +11,7 @@ use crate::{
         app_launcher::AppLauncher,
         audio_launcher::{MusicPlayerFunctions, MusicPlayerLauncher},
         bookmark_launcher::BookmarkLauncher,
-        bulk_text_launcher::{ScriptFunctions, ScriptLauncher},
+        script_launcher::{ScriptFunctions, ScriptLauncher},
         calc_launcher::CalculatorLauncher,
         category_launcher::CategoryLauncher,
         clipboard_launcher::ClipboardLauncher,

@@ -7,12 +7,12 @@ use gpui::{
 
 use crate::{
     app::theme::ThemeData,
-    launcher::{ExecMode, Launcher, variant_type::LauncherType},
+    launcher::{Launcher, utils::exec_mode::ExecMode, variant_type::LauncherType},
     loader::{resolve_icon_path, utils::ApplicationAction},
     ui::{
         launcher::context_menu::ContextMenuAction,
-        utils::async_update::{AsyncUpdate, AsyncUpdateEntity, Fetchable},
-        widgets::{RenderableChildImpl, Selection},
+        traits::RenderableChildImpl,
+        utils::{async_update::{AsyncUpdate, AsyncUpdateEntity, Fetchable}, selection::Selection},
     },
     utils::{
         clipboard::get_clipboard,

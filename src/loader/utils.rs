@@ -13,8 +13,7 @@ use std::{
 
 use crate::{
     launcher::{
-        BindSerde, Launcher,
-        variant_type::{LauncherType, LauncherVariant},
+        Launcher, utils::binds::BindSerde, variant_type::{LauncherType, LauncherVariant}
     },
     loader::resolve_icon_path,
     sherlock_msg,

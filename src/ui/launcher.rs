@@ -1,11 +1,12 @@
 use crate::app::{RenderableChildEntity, RenderableChildWeak};
-use crate::launcher::Launcher;
-use crate::ui::launcher::context_menu::ContextMenuAction;
-use crate::ui::launcher::views::{NavigationStack, NavigationViewType};
-use crate::ui::model::Model;
-use crate::ui::utils::scoring::make_prio;
-use crate::ui::utils::search::SherlockSearch;
-use crate::ui::widgets::{LauncherValues, RenderableChildDelegate};
+use crate::launcher::{Launcher, LauncherValues};
+use crate::ui::traits::RenderableChildDelegate;
+use crate::ui::{
+    launcher::context_menu::ContextMenuAction,
+    launcher::views::{NavigationStack, NavigationViewType},
+    model::Model,
+    utils::{scoring::make_prio, search::SherlockSearch},
+};
 use crate::utils::config::HomeType;
 use gpui::AsyncApp;
 use gpui::WeakEntity;

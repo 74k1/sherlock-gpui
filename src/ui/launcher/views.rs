@@ -7,14 +7,15 @@ use std::sync::Arc;
 
 use crate::{
     app::RenderableChildEntity,
-    launcher::{Launcher, variant_type::LauncherType},
+    launcher::{Launcher, LauncherValues, variant_type::LauncherType},
     ui::{
         launcher::context_menu::ContextMenuAction,
         model::{
             Model, emoji::EmojiView, file::view::FileView, home::HomeView, message::MessageView,
             process::view::ProcessView,
         },
-        widgets::{LauncherValues, RenderableChild, RenderableChildDelegate},
+        traits::RenderableChildDelegate,
+        widgets::RenderableChild,
     },
     utils::errors::SherlockMessage,
 };

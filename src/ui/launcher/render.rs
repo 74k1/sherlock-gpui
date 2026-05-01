@@ -12,11 +12,13 @@ use crate::{
         bindings::ShortcutKeyMod,
         theme::{ActiveTheme, ThemeData},
     },
+    launcher::LauncherValues,
     ui::{
         UIFunction,
         launcher::{LauncherView, context_menu::ContextMenuAction, views::EntityStyle},
-        utils::{ease::Ease, render::ListItemBorder},
-        widgets::{LauncherValues, RenderableChild, RenderableChildDelegate, Selection},
+        traits::RenderableChildDelegate,
+        utils::{ease::Ease, render::ListItemBorder, selection::Selection},
+        widgets::RenderableChild,
     },
     utils::config::ConfigGuard,
 };

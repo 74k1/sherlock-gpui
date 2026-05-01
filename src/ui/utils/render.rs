@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use gpui::{SharedString, Styled, prelude::FluentBuilder};
 
-use crate::{app::theme::ThemeData, ui::widgets::Selection};
+use crate::{app::theme::ThemeData, ui::utils::selection::Selection};
 
 #[allow(dead_code)]
 pub trait ListItemBorder: Styled + FluentBuilder + Sized {

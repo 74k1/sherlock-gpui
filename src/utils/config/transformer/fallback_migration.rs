@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 use crate::{
-    launcher::{BindSerde, variant_type::LauncherVariant},
+    launcher::{utils::binds::BindSerde, variant_type::LauncherVariant},
     loader::utils::{ExecVariable, RawLauncher},
     ui::launcher::context_menu::ContextMenuAction,
     utils::config::HomeType,

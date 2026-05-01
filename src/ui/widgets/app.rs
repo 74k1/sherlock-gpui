@@ -7,12 +7,12 @@ use gpui::{
 
 use crate::{
     app::theme::ThemeData,
-    launcher::{ExecMode, Launcher},
+    launcher::{Launcher, utils::exec_mode::ExecMode},
     loader::utils::AppData,
     ui::{
         launcher::context_menu::ContextMenuAction,
-        utils::render::substitute,
-        widgets::{RenderableChildImpl, Selection},
+        utils::{render::substitute, selection::Selection},
+        widgets::RenderableChildImpl,
     },
 };
 

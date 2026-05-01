@@ -10,15 +10,15 @@ mod utils;
 
 use crate::{
     app::theme::ThemeData,
-    launcher::{ExecMode, Launcher},
+    launcher::{Launcher, utils::exec_mode::ExecMode},
     sherlock_msg,
-    ui::widgets::{
-        RenderableChildImpl, Selection,
+    ui::{traits::RenderableChildImpl, widgets::{
+        Selection,
         translator::{
             mymemory::MyMemoryResponse,
             utils::{ApiStatus, TranslationResult},
         },
-    },
+    }},
     utils::{
         errors::{
             SherlockMessage,
