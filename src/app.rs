@@ -122,15 +122,14 @@ fn spawn_launcher(
                     if let Some(c) = this.navigation.with_model(cx, |mdl| mdl.last_query()) {
                         this.text_input.update(cx, |ipt, _| ipt.set_text(c));
                     }
-                    this.filter_and_sort(cx);
-                } else if this.mode != LauncherMode::Home {
-                    this.mode = LauncherMode::Home;
+                    this.force_filter_and_sort(cx);
+                } else if this.navigation.current().mode != LauncherMode::Home {
+                    this.navigation.current_mut().mode = LauncherMode::Home;
                     this.navigation.with_model_mut(cx, |mdl, _| {
                         if let Model::Standard { last_query, .. } = mdl {
                             *last_query = None;
                         }
                     });
-                    this.navigation.current_mut().reset_selected_index();
                     this.filter_and_sort(cx);
                 }
             });
@@ -164,7 +163,6 @@ fn spawn_launcher(
                 text_input,
                 focus_handle: cx.focus_handle(),
                 _subs: vec![sub],
-                mode,
                 modes,
                 context_idx: None,
                 has_actions: false,

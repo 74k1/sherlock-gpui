@@ -131,7 +131,7 @@ impl LauncherView {
             .font_weight(FontWeight::BOLD)
             .text_color(theme.text_mode_label)
             .font_family(theme.font_family.clone())
-            .child(self.mode.display_str())
+            .child(self.navigation.current().mode.display_str())
     }
 
     fn render_results(&self, cx: &mut Context<Self>, _theme: Arc<ThemeData>) -> impl IntoElement {

@@ -149,7 +149,7 @@ impl FileSearchModel {
                                         entity.update(cx, |e, _| *e = children);
                                     }
                                     // Reuse the exact same apply_results path as regular search
-                                    this.apply_results(indices, query_lower, cx);
+                                    this.apply_results(indices, query_lower, false, cx);
                                 });
                             }
                         });

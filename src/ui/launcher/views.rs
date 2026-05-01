@@ -9,7 +9,7 @@ use crate::{
     app::RenderableChildEntity,
     launcher::{Launcher, LauncherValues, variant_type::LauncherType},
     ui::{
-        launcher::context_menu::ContextMenuAction,
+        launcher::{LauncherMode, context_menu::ContextMenuAction},
         model::{
             Model, emoji::EmojiView, file::view::FileView, home::HomeView, message::MessageView,
             process::view::ProcessView,
@@ -45,6 +45,7 @@ impl NavigationStack {
                 selected_index: 0,
             },
             kind: NavigationViewType::Home,
+            mode: LauncherMode::Home,
         };
         let message_len = messages.len();
         let errors = NavigationView {
@@ -54,6 +55,7 @@ impl NavigationStack {
                 selected_index: 0,
             },
             kind: NavigationViewType::Message,
+            mode: LauncherMode::Home,
         };
 
         Self {
@@ -309,6 +311,7 @@ pub struct NavigationView {
     pub view: AnyEntity,
     pub style: EntityStyle,
     pub kind: NavigationViewType,
+    pub mode: LauncherMode,
 }
 
 impl NavigationView {
@@ -439,6 +442,7 @@ impl NavigationViewType {
                         selected_index: 0,
                     },
                     kind: self.clone(),
+                    mode: LauncherMode::Home,
                 }
             }
             Self::Files { dir } => {
@@ -450,6 +454,7 @@ impl NavigationViewType {
                         selected_index: 0,
                     },
                     kind: self.clone(),
+                    mode: LauncherMode::Home,
                 }
             }
             Self::Process => {
@@ -461,6 +466,7 @@ impl NavigationViewType {
                         selected_index: 0,
                     },
                     kind: self.clone(),
+                    mode: LauncherMode::Home,
                 }
             }
             Self::Dmenu { entity } => {
@@ -472,6 +478,7 @@ impl NavigationViewType {
                         selected_index: 0,
                     },
                     kind: self.clone(),
+                    mode: LauncherMode::Home,
                 }
             }
             Self::Message | Self::Home => {

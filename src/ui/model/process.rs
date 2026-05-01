@@ -90,7 +90,7 @@ impl ProcessModel {
                         if let Some(entity) = result_entity.upgrade() {
                             entity.update(cx, |e, _| *e = children);
                         }
-                        this.apply_results(indices, query_lower, cx);
+                        this.apply_results(indices, query_lower, false, cx);
                     });
                 });
             }

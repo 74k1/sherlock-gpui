@@ -31,7 +31,6 @@ pub struct LauncherView {
     pub _subs: Vec<Subscription>,
 
     // mode
-    pub mode: LauncherMode,
     pub modes: Arc<[LauncherMode]>,
 
     // context menu
@@ -61,13 +60,14 @@ impl LauncherView {
         &mut self,
         results: Arc<[usize]>,
         query: impl Into<SharedString>,
+        force: bool,
         cx: &mut Context<Self>,
     ) {
         let Some(state) = self.navigation.current().style.list_state() else {
             return;
         };
 
-        let mut changed = false;
+        let mut changed = force;
         let query: SharedString = query.into();
 
         let old_count = state.item_count();
@@ -120,21 +120,24 @@ impl LauncherView {
         let mut query: SharedString = self.text_input.read(cx).content.to_lowercase().into();
 
         // handle mode change
-        match self.mode.transition_for_query(&query, &self.modes) {
-            ModeTransition::None => {}
-            ModeTransition::ClearInput => {
-                self.text_input.update(cx, |this, _cx| {
-                    this.reset();
-                });
-                query = "".into();
-            }
-            ModeTransition::PushStack(launcher) => {
-                let Ok(view) = NavigationViewType::try_from(&launcher.launcher_type) else {
-                    return;
-                };
-                self.text_input.update(cx, |this, _| this.reset());
-                self.navigation.push(view.create_view(launcher, cx));
-                query = "".into();
+        {
+            let nav_mut = self.navigation.current_mut();
+            match nav_mut.mode.transition_for_query(&query, &self.modes) {
+                ModeTransition::None => {}
+                ModeTransition::ClearInput => {
+                    self.text_input.update(cx, |this, _cx| {
+                        this.reset();
+                    });
+                    query = "".into();
+                }
+                ModeTransition::PushStack(launcher) => {
+                    let Ok(view) = NavigationViewType::try_from(&launcher.launcher_type) else {
+                        return;
+                    };
+                    self.text_input.update(cx, |this, _| this.reset());
+                    self.navigation.push(view.create_view(launcher, cx));
+                    query = "".into();
+                }
             }
         }
 
@@ -193,10 +196,10 @@ impl LauncherView {
                     }
                 });
 
-                let mode = self.mode.clone();
+                let mode = self.navigation.current().mode.clone();
                 let data_arc = data.read(cx).clone();
                 let render_task = Some(cx.spawn(
-                    |this: WeakEntity<LauncherView>, cx: &mut AsyncApp| {
+                    move |this: WeakEntity<LauncherView>, cx: &mut AsyncApp| {
                         let mut cx = cx.clone();
                         async move {
                             let mode = mode.as_str();
@@ -266,7 +269,7 @@ impl LauncherView {
                                 .into();
 
                             this.update(&mut cx, |this, cx| {
-                                this.apply_results(results_arc, query, cx);
+                                this.apply_results(results_arc, query, force, cx);
                             })
                             .ok();
 

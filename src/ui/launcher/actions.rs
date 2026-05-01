@@ -55,6 +55,10 @@ impl LauncherView {
             return;
         };
 
+        if indices.is_empty() || data_entity.read(cx).is_empty() {
+            return;
+        }
+
         // Find the first focusable item
         let first_valid_index = {
             let data_guard = data_entity.read(cx);
@@ -264,7 +268,7 @@ impl LauncherView {
                 increment(&exec);
             }
             ExecMode::Category { category } => {
-                self.mode = category;
+                self.navigation.current_mut().mode = category;
                 self.text_input.update(cx, |this, _cx| {
                     this.reset();
                 });
