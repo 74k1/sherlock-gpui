@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{rc::Rc, sync::Arc};
 
 use gpui::{
     AnyElement, App, AppContext, Image, ImageSource, IntoElement, ParentElement, Styled, div, img,
@@ -8,21 +8,74 @@ use gpui::{
 use crate::{
     app::theme::ThemeData,
     launcher::{
-        ExecMode, Launcher, audio_launcher::MusicPlayerFunctions, utils::MprisState,
+        ExecMode, Launcher,
+        audio_launcher::{AudioLauncherFunctions, MusicPlayerFunctions},
+        utils::MprisState,
         variant_type::InnerFunction,
     },
-    ui::widgets::{RenderableChildImpl, Selection},
+    ui::{
+        utils::async_update::{AsyncUpdate, AsyncUpdateEntity, Fetchable},
+        widgets::{RenderableChildImpl, Selection},
+    },
+    utils::errors::SherlockMessage,
 };
 
-impl<'a> RenderableChildImpl<'a> for MprisState {
+#[derive(Clone)]
+pub struct MusicPlayerWidget {
+    pub entity: AsyncUpdateEntity<MprisState>,
+}
+impl MusicPlayerWidget {
+    pub fn new(cx: &mut impl AppContext) -> Self {
+        Self {
+            entity: AsyncUpdateEntity::<MprisState>::new(cx),
+        }
+    }
+}
+
+impl Fetchable for MprisState {
+    type Error = SherlockMessage;
+    async fn fetch(
+        _launcher: &Arc<Launcher>,
+        old: Option<Rc<Self>>,
+    ) -> Result<Option<Rc<Self>>, Self::Error> {
+        let launcher = AudioLauncherFunctions::new()?;
+        let player = match launcher.get_current_player() {
+            Some(p) => p,
+            None => return Ok(None),
+        };
+
+        let raw = launcher.get_metadata(&player);
+
+        if let Some(old_ref) = old.as_ref()
+            && old_ref.raw.as_ref() == raw.as_ref()
+        {
+            return Ok(old);
+        }
+
+        let mut image = None;
+        if let Some(metadata) = raw.as_ref()
+            && let Some((img_data, _)) = metadata.get_image().await
+        {
+            image = Some(img_data);
+        }
+
+        Ok(Some(Rc::new(MprisState { raw, image, player })))
+    }
+}
+
+impl<'a> RenderableChildImpl<'a> for MusicPlayerWidget {
     fn render(
         &self,
         _launcher: &Arc<Launcher>,
         selection: Selection,
         _query: &str,
         theme: Arc<ThemeData>,
-        _cx: &mut App,
+        cx: &mut App,
     ) -> AnyElement {
+        let Ok(Some(state)) = self.entity.read(cx).as_ref() else {
+            return div().into_any_element();
+        };
+
         div()
             .px_4()
             .py_2()
@@ -35,7 +88,7 @@ impl<'a> RenderableChildImpl<'a> for MprisState {
             .when(!selection.is_selected, |this| {
                 this.border_color(theme.border_idle)
             })
-            .child(if let Some(icon) = &self.image {
+            .child(if let Some(icon) = &state.image {
                 img(ImageSource::Image(Arc::clone(icon)))
                     .size(px(64.))
                     .rounded_md()
@@ -52,7 +105,7 @@ impl<'a> RenderableChildImpl<'a> for MprisState {
                     .justify_between()
                     .items_center()
                     .when_some(
-                        self.raw.as_ref().and_then(|s| s.metadata.title.as_ref()),
+                        state.raw.as_ref().and_then(|s| s.metadata.title.as_ref()),
                         |this, name| {
                             this.child(
                                 div()
@@ -66,7 +119,7 @@ impl<'a> RenderableChildImpl<'a> for MprisState {
                         },
                     )
                     .when_some(
-                        self.raw.as_ref().and_then(|s| {
+                        state.raw.as_ref().and_then(|s| {
                             s.metadata
                                 .artists
                                 .as_ref()
@@ -93,14 +146,23 @@ impl<'a> RenderableChildImpl<'a> for MprisState {
         ""
     }
     #[inline(always)]
-    fn based_show<C: AppContext>(&self, _keyword: &str, _cx: &mut C) -> Option<bool> {
-        if self.raw.is_some() {
+    fn based_show<C: AppContext>(&self, _keyword: &str, cx: &mut C) -> Option<bool> {
+        if self.entity.is_valid(cx) {
             None
         } else {
             Some(false)
         }
     }
-    fn binds(&self, launcher: &Arc<Launcher>, _cx: &mut App) -> Option<Arc<Vec<crate::launcher::Bind>>> {
+    #[inline(always)]
+    fn binds(
+        &self,
+        launcher: &Arc<Launcher>,
+        _cx: &mut App,
+    ) -> Option<Arc<Vec<crate::launcher::Bind>>> {
         launcher.launcher_type.binds()
+    }
+    #[inline(always)]
+    fn update_async<C: AppContext>(&self, launcher: Arc<Launcher>, cx: &mut C) {
+        self.entity.update_async(launcher, cx);
     }
 }

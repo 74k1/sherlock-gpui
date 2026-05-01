@@ -54,19 +54,10 @@ impl LauncherProvider for WeatherLauncher {
         _messages: &mut Vec<SherlockMessage>,
         cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
-        match WeatherData::from_cache(self) {
-            Some(data) => Ok(vec![RenderableChild::Weather {
-                launcher,
-                inner: WeatherWidget::new(data, cx),
-            }]),
-            None => {
-                // Return None or a "Loading" placeholder for now
-                Ok(vec![RenderableChild::Weather {
-                    launcher: Arc::clone(&launcher),
-                    inner: WeatherWidget::new(WeatherData::default(), cx),
-                }])
-            }
-        }
+        Ok(vec![RenderableChild::Weather {
+            launcher: Arc::clone(&launcher),
+            inner: WeatherWidget::new(cx),
+        }])
     }
 }
 
@@ -131,12 +122,10 @@ impl WeatherData {
         None
     }
 
-    pub async fn fetch_async(
-        launcher: &WeatherLauncher,
-    ) -> Result<(WeatherData, bool), SherlockMessage> {
+    pub async fn fetch_async(launcher: &WeatherLauncher) -> Result<WeatherData, SherlockMessage> {
         // Check for cache hit
         if let Some(data) = WeatherData::from_cache(launcher) {
-            return Ok((data, false));
+            return Ok(data);
         }
 
         // Get from wttr.in
@@ -160,7 +149,7 @@ impl WeatherData {
         let data = transform_weather(raw, launcher)?;
         data.cache();
 
-        Ok((data, true))
+        Ok(data)
     }
 }
 

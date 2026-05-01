@@ -5,12 +5,17 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
-    ensure_func, launcher::{
+    ensure_func,
+    launcher::{
         ExecEffect, LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction,
-    }, loader::{
+    },
+    loader::{
         resolve_icon_path,
         utils::{AppData, RawLauncher},
-    }, sherlock_msg, skip_func_if_nav, ui::widgets::RenderableChild, utils::errors::{SherlockMessage, types::SherlockErrorType}
+    },
+    sherlock_msg, skip_func_if_nav,
+    ui::widgets::RenderableChild,
+    utils::errors::{SherlockMessage, types::SherlockErrorType},
 };
 
 use nix::sys::signal::{Signal, kill};

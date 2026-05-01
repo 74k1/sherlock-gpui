@@ -1,9 +1,7 @@
-use std::{path::PathBuf, rc::Rc, sync::Arc};
+use std::path::PathBuf;
 
-use futures::{FutureExt, StreamExt, stream::FuturesUnordered};
 use gpui::{
-    App, AppContext, AsyncApp, ClipboardItem, Context, Focusable, KeyUpEvent, SharedString, Window,
-    actions,
+    App, AppContext, ClipboardItem, Context, Focusable, KeyUpEvent, SharedString, Window, actions,
 };
 use simd_json::prelude::{ArrayTrait, Indexed};
 use smallvec::SmallVec;
@@ -91,8 +89,8 @@ impl LauncherView {
         // Handle context menu entries
         self.has_actions = self
             .navigation
-            .selected_item(cx)
-            .is_some_and(|i| i.has_actions(cx));
+            .with_selected_item(cx, |item, cx| item.has_actions(cx))
+            .unwrap_or_default();
 
         cx.notify()
     }
@@ -233,9 +231,10 @@ impl LauncherView {
         let variables = &self.get_variables(cx);
         match what {
             ExecMode::Inner { func, exit } => {
-                if let Some(item) = self.navigation.selected_item(cx) {
-                    let effect = item.execute_function(func, variables, cx)?;
-
+                if let Some(res) = self.navigation.with_selected_item(cx, move |this, cx| {
+                    this.execute_function(func, variables, cx)
+                }) {
+                    let effect = res?;
                     match effect {
                         ExecEffect::InsertMessages(msgs) => {
                             for msg in msgs {
@@ -250,9 +249,8 @@ impl LauncherView {
                         }
                         ExecEffect::None => {}
                     }
-
                     return Ok(exit);
-                }
+                };
             }
             ExecMode::App { exec, terminal } => {
                 let cmd = if terminal {
@@ -352,14 +350,16 @@ impl LauncherView {
     ) {
         let selected_binds = self
             .navigation
-            .with_selected_item(cx, |item, cx| item.and_then(|i| i.binds(cx)));
+            .with_selected_item(cx, |item, cx| item.binds(cx))
+            .and_then(|b| b);
 
         if let Some(binds) = &selected_binds
             && let Some(pressed) = binds.iter().find(|bind| bind.matches(&ev.keystroke))
         {
-            let what = self.navigation.with_selected_item(cx, move |child, _| {
-                child.and_then(|item| ExecMode::from_bind(pressed, item))
-            });
+            let what = self
+                .navigation
+                .with_selected_item(cx, move |child, _| ExecMode::from_bind(pressed, child))
+                .and_then(|f| f);
 
             let query = self.text_input.read(cx).content.clone();
 
@@ -402,19 +402,25 @@ impl LauncherView {
         cx: &mut Context<Self>,
     ) {
         if let Some(idx) = self.context_idx {
-            if let Some(action) = self.context_actions.get(idx)
-                && let Some(selected) = self.navigation.selected_item(cx)
-            {
-                let what = selected.build_action_exec(Arc::clone(action));
-
-                match self.execute_helper(what, "", cx) {
-                    Ok(exit) if exit => self.close_window(win, cx),
-                    Err(e) => self.navigation.push_message(e, cx),
-                    _ => {}
+            if let Some(action) = self.context_actions.get(idx) {
+                if let Some(what) = self
+                    .navigation
+                    .selected_item_ref(cx)
+                    .map(|i| i.build_action_exec(action.clone()))
+                {
+                    match self.execute_helper(what, "", cx) {
+                        Ok(exit) if exit => self.close_window(win, cx),
+                        Err(e) => self.navigation.push_message(e, cx),
+                        _ => {}
+                    }
                 }
 
                 // update context menu actions in case of no-exit action and changed actions
-                if selected.has_actions(cx) {
+                if self
+                    .navigation
+                    .with_selected_item(cx, |item, cx| item.has_actions(cx))
+                    .unwrap_or_default()
+                {
                     self.context_actions = self.navigation.current_actions(cx).unwrap_or_default();
                     self.context_idx = self
                         .context_idx
@@ -426,8 +432,11 @@ impl LauncherView {
             }
         } else {
             let keyword = self.text_input.read(cx).content.clone();
-            if let Some(selected) = self.navigation.selected_item(cx)
-                && let Some(what) = ExecMode::from_child(&selected, cx)
+
+            if let Some(what) = self
+                .navigation
+                .with_selected_item(cx, ExecMode::from_child)
+                .and_then(|m| m)
             {
                 match self.execute_helper(what, keyword.as_ref(), cx) {
                     Ok(exit) if exit => {
@@ -438,13 +447,17 @@ impl LauncherView {
                     }
                     _ => {}
                 }
-
-                if selected.has_actions(cx) {
-                    self.has_actions = true;
-                    self.context_actions = self.navigation.current_actions(cx).unwrap_or_default();
-                }
-                self.force_filter_and_sort(cx);
             }
+
+            let has_actions = self
+                .navigation
+                .with_selected_item(cx, |item, cx| item.has_actions(cx))
+                .unwrap_or_default();
+            if has_actions {
+                self.has_actions = true;
+                self.context_actions = self.navigation.current_actions(cx).unwrap_or_default();
+            }
+            self.force_filter_and_sort(cx);
         }
     }
     pub(super) fn open_context(
@@ -463,7 +476,7 @@ impl LauncherView {
         if self.context_actions.is_empty() {
             let launcher_type = self
                 .navigation
-                .selected_item(cx)
+                .selected_item_ref(cx)
                 .map(|i| i.launcher_type().to_owned());
 
             self.navigation.push_message(
@@ -544,45 +557,11 @@ impl LauncherView {
     }
     pub(crate) fn update_async(&mut self, cx: &mut Context<Self>) {
         let data = self.navigation.with_model(cx, |mdl| mdl.data());
-        let items = data.read_with(cx, |this, _| this.clone());
-        self.active_update_task = Some(cx.spawn(async move |this, cx: &mut AsyncApp| {
-            let mut futures: FuturesUnordered<_> = items
-                .iter()
-                .enumerate()
-                .filter(|(_, item)| item.is_async())
-                .map(|(idx, item)| {
-                    let item_owned = item.clone();
-                    let mut cx_clone = cx.clone();
-                    async move { (idx, item_owned.update_async(&mut cx_clone).await) }
-                })
-                .collect();
-
-            while let Some((idx, result)) = futures.next().await {
-                let Some(update) = result else { continue };
-
-                let mut batch = vec![(idx, update)];
-                while let Some(Some((next_idx, next_res))) = futures.next().now_or_never() {
-                    if let Some(update) = next_res {
-                        batch.push((next_idx, update));
-                    }
-                }
-
-                if let Some(launcher) = this.upgrade() {
-                    launcher.update(cx, |this, cx| {
-                        data.update(cx, |items_arc, _| {
-                            let items = Rc::make_mut(items_arc);
-                            for (b_idx, b_update) in batch {
-                                items[b_idx] = b_update;
-                            }
-                        });
-
-                        this.filter_and_sort(cx);
-                    });
-                } else {
-                    break;
-                }
-            }
-        }));
+        let data_snapshot_rc = data.read(cx).clone();
+        data_snapshot_rc
+            .iter()
+            .filter(|item| item.is_async())
+            .for_each(|item| item.update_async(cx));
     }
     pub(crate) fn update_sync(&mut self, query: SharedString, cx: &mut Context<Self>) {
         let data_entity = self.navigation.with_model(cx, |mdl| mdl.data().clone());

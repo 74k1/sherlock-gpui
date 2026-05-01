@@ -5,9 +5,14 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
-    ensure_func, launcher::{
+    ensure_func,
+    launcher::{
         ExecEffect, LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction,
-    }, loader::utils::RawLauncher, sherlock_msg, skip_func_if_nav, ui::widgets::{RenderableChild, timer::TimerChild}, utils::errors::{SherlockMessage, types::SherlockErrorType}
+    },
+    loader::utils::RawLauncher,
+    sherlock_msg, skip_func_if_nav,
+    ui::widgets::{RenderableChild, timer::TimerChild},
+    utils::errors::{SherlockMessage, types::SherlockErrorType},
 };
 
 #[derive(Clone, Debug, Deserialize)]

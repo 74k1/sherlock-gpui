@@ -17,6 +17,8 @@ pub enum SherlockErrorType {
     DeserializationError,
     /// Failure regarding provided data
     InvalidData,
+    /// The provided launcher does not have this functionality
+    InvalidLauncher,
     /// The requested UI or system action is not recognized or defined.
     InvalidAction,
     /// The specific internal function is not supported by the active launcher.

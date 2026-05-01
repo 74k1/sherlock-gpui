@@ -5,6 +5,25 @@ pub struct Ease;
 
 #[allow(dead_code)]
 impl Ease {
+    /// Creates a smooth, periodic pulsating effect.
+    ///
+    /// The output travels from 0.0 to 1.0 and back to 0.0 over the duration
+    /// of the animation. This is ideal for "breathing" animations,
+    /// activity indicators, or subtle glow effects.
+    pub fn pulse(t: f32) -> f32 {
+        (PI * t).sin()
+    }
+
+    /// A "Throb" pulse.
+    ///
+    /// This pulse accelerates toward the peak and decelerates slowly.
+    /// It gives the impression of a light glowing and then fading out,
+    /// common in high-end "Skeleton" loading states.
+    pub fn ease_throb(t: f32) -> f32 {
+        let s = (PI * t).sin();
+        s * s * s // Cubing the sine creates a sharper, more energetic peak.
+    }
+
     /// Creates a tactile "pop" effect by overshooting the target and then pulling back.
     ///
     /// This curve accelerates quickly at the start, overshoots the target value (1.0),

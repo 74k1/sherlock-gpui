@@ -136,9 +136,10 @@ impl LauncherView {
         let (indices, data) = self
             .navigation
             .with_model(cx, |mdl| (mdl.filtered_indices(), mdl.data()));
-        let sidebar = self.navigation.with_selected_item(cx, |selected_item, cx| {
-            selected_item.and_then(|s| s.sidebar(cx))
-        });
+        let sidebar = self
+            .navigation
+            .with_selected_item(cx, |selected_item, cx| selected_item.sidebar(cx))
+            .and_then(|s| s);
         let EntityStyle::Row {
             state,
             selected_index,

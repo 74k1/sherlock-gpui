@@ -4,14 +4,19 @@ use gpui::{App, SharedString};
 use serde::Deserialize;
 
 use crate::{
-    ensure_func, launcher::{
+    ensure_func,
+    launcher::{
         ExecEffect, LauncherProvider,
         variant_type::{InnerFunction, LauncherType},
-    }, loader::utils::RawLauncher, sherlock_msg, skip_func_if_nav, ui::widgets::{RenderableChild, event::EventData}, utils::{
+    },
+    loader::utils::RawLauncher,
+    sherlock_msg, skip_func_if_nav,
+    ui::widgets::{RenderableChild, event::EventWidget},
+    utils::{
         command_launch::{mime_lookup, spawn_detached},
         errors::{SherlockMessage, types::SherlockErrorType},
         websearch::websearch,
-    }
+    },
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, strum::VariantNames, strum::EnumString)]
@@ -22,26 +27,21 @@ pub enum EventLauncherFunctions {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct EventLauncher {}
+pub struct EventLauncher {
+    pub look_back: Duration,
+    pub look_ahead: Duration,
+}
 
 impl LauncherProvider for EventLauncher {
-    fn parse(_raw: &RawLauncher) -> LauncherType {
-        LauncherType::Event(Self {})
-    }
-    fn objects(
-        &self,
-        launcher: std::sync::Arc<super::Launcher>,
-        _ctx: &crate::loader::LoadContext,
-        opts: std::sync::Arc<serde_json::Value>,
-        _messages: &mut Vec<SherlockMessage>,
-        _cx: &mut gpui::App,
-    ) -> Result<Vec<RenderableChild>, SherlockMessage> {
-        let look_back_raw = opts
+    fn parse(raw: &RawLauncher) -> LauncherType {
+        let look_back_raw = raw
+            .args
             .get("look_back")
             .and_then(|v| v.as_str())
             .unwrap_or("10mins");
 
-        let look_ahead_raw = opts
+        let look_ahead_raw = raw
+            .args
             .get("look_ahead")
             .and_then(|v| v.as_str())
             .unwrap_or("1h");
@@ -49,9 +49,22 @@ impl LauncherProvider for EventLauncher {
         let look_back = parse_dynamic_time(look_back_raw).unwrap_or(Duration::from_hours(6));
         let look_ahead = parse_dynamic_time(look_ahead_raw).unwrap_or(Duration::from_hours(4));
 
+        LauncherType::Event(Self {
+            look_back,
+            look_ahead,
+        })
+    }
+    fn objects(
+        &self,
+        launcher: std::sync::Arc<super::Launcher>,
+        _ctx: &crate::loader::LoadContext,
+        _opts: std::sync::Arc<serde_json::Value>,
+        _messages: &mut Vec<SherlockMessage>,
+        cx: &mut gpui::App,
+    ) -> Result<Vec<RenderableChild>, SherlockMessage> {
         Ok(vec![RenderableChild::Event {
             launcher,
-            inner: Box::new(EventData::new(look_back, look_ahead)),
+            inner: EventWidget::new(cx),
         }])
     }
     fn execute_function(
@@ -59,7 +72,7 @@ impl LauncherProvider for EventLauncher {
         func: super::variant_type::InnerFunction,
         child: &RenderableChild,
         _variables: &[(SharedString, SharedString)],
-        _cx: &mut App,
+        cx: &mut App,
     ) -> Result<ExecEffect, SherlockMessage> {
         skip_func_if_nav!(func);
         let func = ensure_func!(func, InnerFunction::Event);
@@ -74,7 +87,9 @@ impl LauncherProvider for EventLauncher {
 
         match func {
             EventLauncherFunctions::JoinMeeting => {
-                if let Some(meeting) = inner.event.as_ref().and_then(|e| e.meeting.as_ref()) {
+                if let Ok(Some(event)) = inner.entity.read(cx)
+                    && let Some(meeting) = event.event.as_ref().and_then(|e| e.meeting.as_ref())
+                {
                     if let Some(command) = mime_lookup(meeting.protocol_prefix()) {
                         let url = meeting.mime_url();
                         spawn_detached(&command.replace("%u", &url), "", &[])?;

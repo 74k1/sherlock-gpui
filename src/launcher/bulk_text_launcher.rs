@@ -1,17 +1,16 @@
 use gpui::{App, AppContext, SharedString};
-use serde::Deserialize;
 use serde_json::Value;
 use std::sync::Arc;
 
 use crate::{
     ensure_func,
     launcher::{
-        ExecEffect, LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction,
+        Bind, ExecEffect, LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction,
     },
     loader::utils::RawLauncher,
-    sherlock_msg,
+    sherlock_msg, skip_func_if_nav,
     ui::widgets::{
-        RenderableChild,
+        RenderableChild, RenderableChildImpl,
         script::{ScriptData, ScriptDataUpdateEntity},
     },
     utils::errors::{SherlockMessage, types::SherlockErrorType},
@@ -23,15 +22,18 @@ pub enum ScriptFunctions {
     Run,
 }
 
-#[derive(Clone, Debug, Deserialize)]
-pub struct ScriptLauncher {}
+#[derive(Clone, Debug)]
+pub struct ScriptLauncher {
+    binds: Option<Arc<Vec<Bind>>>,
+}
 
 impl LauncherProvider for ScriptLauncher {
     fn parse(raw: &RawLauncher) -> LauncherType {
-        match serde_json::from_value::<ScriptLauncher>(raw.args.as_ref().clone()) {
-            Ok(launcher) => LauncherType::Script(launcher),
-            Err(_) => LauncherType::Empty,
-        }
+        let binds = raw
+            .binds
+            .as_ref()
+            .map(|vec| Arc::new(vec.iter().filter_map(|b| Bind::try_from(b).ok()).collect()));
+        LauncherType::Script(ScriptLauncher { binds })
     }
     fn objects(
         &self,
@@ -78,14 +80,18 @@ impl LauncherProvider for ScriptLauncher {
         _variables: &[(SharedString, SharedString)],
         cx: &mut App,
     ) -> Result<ExecEffect, SherlockMessage> {
+        skip_func_if_nav!(func);
         let func = ensure_func!(func, InnerFunction::Script);
         match func {
             ScriptFunctions::Run => {
-                if let RenderableChild::Script { inner, .. } = child {
-                    inner.update_async(cx);
+                if let RenderableChild::Script { inner, launcher } = child {
+                    inner.update_async(launcher.clone(), cx);
                 }
             }
         }
         Ok(ExecEffect::None)
+    }
+    fn binds(&self) -> Option<Arc<Vec<Bind>>> {
+        self.binds.clone()
     }
 }

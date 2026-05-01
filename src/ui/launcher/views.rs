@@ -164,7 +164,7 @@ impl NavigationStack {
             .last_mut()
             .expect("NavigationStack must always contain a root view.")
     }
-    pub fn with_model<R>(&self, cx: &mut App, f: impl FnOnce(&Model) -> R) -> R {
+    pub fn with_model<R>(&self, cx: &App, f: impl FnOnce(&Model) -> R) -> R {
         let current = self.current();
         match current.kind {
             NavigationViewType::Files { .. } => {
@@ -240,32 +240,32 @@ impl NavigationStack {
             filtered_indices.get(safe_idx).copied()
         })
     }
-    pub fn selected_item(&self, cx: &mut App) -> Option<RenderableChild> {
-        self.with_selected_item(cx, |selected, _| selected.cloned())
+    pub fn selected_item_ref<'a>(&self, cx: &'a App) -> Option<&'a RenderableChild> {
+        let idx = self.selected_data_idx(cx)?;
+        let data_entity = self.with_model(cx, |mdl| mdl.data());
+        data_entity.read(cx).get(idx)
     }
+
     pub fn with_selected_item<R>(
         &self,
         cx: &mut App,
-        f: impl FnOnce(Option<&RenderableChild>, &mut App) -> Option<R>,
+        f: impl FnOnce(&RenderableChild, &mut App) -> R,
     ) -> Option<R> {
+        let idx = self.selected_data_idx(cx)?;
+        let data_entity = self.with_model(cx, |mdl| mdl.data());
+
+        data_entity.update(cx, |data, cx| data.get(idx).map(|item| f(item, cx)))
+    }
+    fn selected_data_idx(&self, cx: &App) -> Option<usize> {
         let ui_idx = self.current().style.selected_index()?;
-        let (data_idx, data_entity) = self.with_model_mut(cx, |mdl, cx| {
-            let data = mdl.data();
-            if data.read(cx).is_empty() {
-                return (None, data);
-            }
+        let (data, filtered_indices) =
+            self.with_model(cx, |mdl| (mdl.data(), mdl.filtered_indices()));
 
-            let filtered_indices = mdl.filtered_indices();
-            if filtered_indices.is_empty() {
-                return (None, mdl.data());
-            }
-
-            let safe_ui_idx = ui_idx.min(filtered_indices.len() - 1);
-
-            (filtered_indices.get(safe_ui_idx).copied(), mdl.data())
-        });
-        let idx = data_idx?;
-        data_entity.update(cx, |data, cx| f(data.get(idx), cx))
+        if data.read(cx).is_empty() || filtered_indices.is_empty() {
+            return None;
+        }
+        let safe_ui_idx = ui_idx.min(filtered_indices.len() - 1);
+        filtered_indices.get(safe_ui_idx).copied()
     }
     pub fn with_nth_shortcut_item<R>(
         &self,
@@ -298,7 +298,8 @@ impl NavigationStack {
         data_entity.update(cx, |data, cx| f(data.get(idx), cx))
     }
     pub fn current_actions(&self, cx: &mut App) -> Option<Arc<[Arc<ContextMenuAction>]>> {
-        self.with_selected_item(cx, |item, cx| item.and_then(|i| i.actions(cx)))
+        self.with_selected_item(cx, |item, cx| item.actions(cx))
+            .and_then(|a| a)
     }
 }
 

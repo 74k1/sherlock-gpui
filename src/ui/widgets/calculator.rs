@@ -20,7 +20,7 @@ impl Clone for CalcData {
     fn clone(&self) -> Self {
         println!("calc cloned");
         Self {
-            capabilities: self.capabilities.clone(),
+            capabilities: self.capabilities,
             result: self.result.clone(),
         }
     }

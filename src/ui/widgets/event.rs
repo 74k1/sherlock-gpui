@@ -22,11 +22,12 @@ use suite_223b::{
 
 use crate::{
     app::{LAUNCH_GENERATION, theme::ThemeData},
-    launcher::{ExecMode, Launcher},
+    launcher::{ExecMode, Launcher, variant_type::LauncherType},
     loader::utils::ApplicationAction,
     sherlock_msg,
     ui::{
         launcher::context_menu::ContextMenuAction,
+        utils::async_update::{AsyncUpdate, AsyncUpdateEntity, Fetchable},
         widgets::{RenderableChildImpl, Selection},
     },
     utils::errors::{
@@ -40,47 +41,16 @@ pub struct EventData {
     pub time: Option<SharedString>,
     pub event: Option<CalDavEvent>,
     pub color: Option<Hsla>,
-    pub actions: Arc<[Arc<ContextMenuAction>]>,
-
-    look_back: Duration,
-    look_ahead: Duration,
-    last_call: Option<Instant>,
-
-    animation: Rc<Cell<AnimState>>,
-    generation: Rc<Cell<u32>>,
 }
-
-#[derive(Clone, Copy, Default, Debug)]
-enum AnimState {
-    #[default]
-    Inactive,
-    Done,
-    InProgress,
-}
-
-impl EventData {
-    pub fn new(look_back: Duration, look_ahead: Duration) -> Self {
-        Self {
-            time: None,
-            event: None,
-            color: None,
-            actions: Arc::new([]),
-
-            look_back,
-            look_ahead,
-            last_call: None,
-            ..Default::default()
-        }
-    }
-    pub async fn update_async(&mut self) -> Result<(), SherlockMessage> {
-        // debounce logic
-        // causes freezes if not applied!!
-        if let Some(last_call) = self.last_call
-            && last_call.elapsed() < Duration::from_secs(50)
-        {
-            return Ok(());
-        }
-        self.last_call = Some(Instant::now());
+impl Fetchable for EventData {
+    type Error = SherlockMessage;
+    async fn fetch(
+        launcher: &Arc<Launcher>,
+        _old: Option<Rc<Self>>,
+    ) -> Result<Option<Rc<Self>>, Self::Error> {
+        let LauncherType::Event(evt) = &launcher.launcher_type else {
+            unreachable!()
+        };
 
         let mut stream = tokio::net::UnixStream::connect(SocketData::SOCKET_ADDR)
             .await
@@ -94,8 +64,8 @@ impl EventData {
 
         let config = bincode::config::standard();
         let req = Request::Event(EventFilter::Nearby {
-            look_back: self.look_back,
-            look_ahead: self.look_ahead,
+            look_back: evt.look_back,
+            look_ahead: evt.look_ahead,
         });
         let req_obj = SizedMessageObj::from_struct(&req).map_err(|e| {
             sherlock_msg!(Warning, SherlockErrorType::SerializationError, e.message)
@@ -162,39 +132,69 @@ impl EventData {
                 }
             });
 
-            self.event = events.into_iter().next();
-            self.time = self
-                .event
-                .as_ref()
-                .and_then(|e| e.start_utc())
-                .map(|utc_dt| {
-                    utc_dt
-                        .with_timezone(&Local)
-                        .format("%H:%M")
-                        .to_string()
-                        .into()
-                });
-            self.color = self
-                .event
+            let event = events.into_iter().next();
+            let time = event.as_ref().and_then(|e| e.start_utc()).map(|utc_dt| {
+                utc_dt
+                    .with_timezone(&Local)
+                    .format("%H:%M")
+                    .to_string()
+                    .into()
+            });
+            let color = event
                 .as_ref()
                 .and_then(|e| e.calendar_info.color.as_deref())
                 .map(hex_to_u32)
                 .map(rgb)
                 .map(|s| s.into());
+
+            Ok(Some(Rc::new(EventData { event, time, color })))
+        } else {
+            Ok(None)
         }
-        Ok(())
     }
 }
-impl<'a> RenderableChildImpl<'a> for EventData {
+
+#[derive(Clone)]
+pub struct EventWidget {
+    pub actions: Arc<[Arc<ContextMenuAction>]>,
+    pub entity: AsyncUpdateEntity<EventData>,
+    last_call: Cell<Option<Instant>>,
+    animation: Rc<Cell<AnimState>>,
+    generation: Rc<Cell<u32>>,
+}
+impl EventWidget {
+    pub fn new(cx: &mut impl AppContext) -> Self {
+        Self {
+            last_call: Cell::new(None),
+            entity: AsyncUpdateEntity::<EventData>::new(cx),
+            animation: Rc::new(Cell::new(AnimState::Inactive)),
+            generation: Rc::new(Cell::new(0)),
+            actions: Arc::from([]),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Default, Debug)]
+enum AnimState {
+    #[default]
+    Inactive,
+    Done,
+    InProgress,
+}
+
+impl<'a> RenderableChildImpl<'a> for EventWidget {
     fn render(
         &self,
         _launcher: &Arc<Launcher>,
         selection: Selection,
         _query: &str,
         theme: Arc<ThemeData>,
-        _cx: &mut App,
+        cx: &mut App,
     ) -> AnyElement {
-        let Some(ref event) = self.event else {
+        let Ok(Some(event_data)) = self.entity.read(cx) else {
+            return div().into_any_element();
+        };
+        let Some(event) = event_data.event.as_ref() else {
             return div().into_any_element();
         };
 
@@ -206,7 +206,7 @@ impl<'a> RenderableChildImpl<'a> for EventData {
             self.generation.set(current_gen);
         }
 
-        let accent_color = self.color.unwrap_or(theme.bg_idle);
+        let accent_color = event_data.color.unwrap_or(theme.bg_idle);
         div()
             .group("event-card")
             .px_4()
@@ -284,7 +284,7 @@ impl<'a> RenderableChildImpl<'a> for EventData {
                                             .font_family(theme.font_family.clone())
                                             .font_weight(FontWeight::MEDIUM)
                                             .text_color(theme.secondary_text)
-                                            .children(self.time.clone()),
+                                            .children(event_data.time.clone()),
                                     )
                                     .child(
                                         div()
@@ -401,9 +401,10 @@ impl<'a> RenderableChildImpl<'a> for EventData {
     fn actions(
         &self,
         launcher: &Arc<Launcher>,
-        _cx: &mut App,
+        cx: &mut App,
     ) -> Option<Arc<[Arc<ContextMenuAction>]>> {
-        let event = self.event.as_ref()?;
+        let event_data = self.entity.read(cx).as_ref().ok()?.as_ref()?;
+        let event = event_data.event.as_ref()?;
         let meeting = event.meeting.as_ref();
         let extra = launcher.add_actions.as_ref();
 
@@ -439,12 +440,23 @@ impl<'a> RenderableChildImpl<'a> for EventData {
         Some(Arc::from(actions))
     }
     #[inline(always)]
-    fn has_actions(&self, _cx: &mut App) -> bool {
-        self.event.is_some()
+    fn has_actions(&self, cx: &mut App) -> bool {
+        self.entity.read(cx).as_ref().is_ok_and(|i| i.is_some())
     }
     #[inline(always)]
-    fn based_show<C: AppContext>(&self, _keyword: &str, _cx: &mut C) -> Option<bool> {
-        Some(self.event.is_some())
+    fn based_show<C: AppContext>(&self, _keyword: &str, cx: &mut C) -> Option<bool> {
+        Some(self.entity.is_valid(cx))
+    }
+    fn update_async<C: AppContext>(&self, launcher: Arc<Launcher>, cx: &mut C) {
+        // debounce logic
+        // causes freezes if not applied!!
+        if let Some(last_call) = self.last_call.get()
+            && last_call.elapsed() < Duration::from_secs(50)
+        {
+            return;
+        }
+        self.last_call.set(Some(Instant::now()));
+        self.entity.update_async(launcher, cx);
     }
 }
 

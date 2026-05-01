@@ -205,8 +205,57 @@ impl<'a> RenderableChildImpl<'a> for ScriptData {
         });
 
         if launcher.r#async {
-            self.update_async(cx);
+            self.update_async(launcher.clone(), cx);
         }
+    }
+    fn update_async<C: AppContext>(&self, _launcher: Arc<Launcher>, cx: &mut C) {
+        self.update_entity.update(cx, |this, cx| {
+            this.task = None;
+
+            let command = self.command.clone();
+            let args = self.args.clone();
+            let query = this.last_query.clone();
+
+            this.task = Some(cx.spawn(
+                |weak_self: WeakEntity<ScriptDataUpdateEntity>, cx: &mut AsyncApp| {
+                    let mut cx = cx.clone();
+                    async move {
+                        let result =
+                            ScriptData::get_result(command.clone(), args.clone(), query.as_str());
+                        let timer = cx.background_executor().timer(Duration::from_millis(75));
+
+                        futures::pin_mut!(result);
+                        futures::pin_mut!(timer);
+
+                        match futures::future::select(result, timer).await {
+                            futures::future::Either::Left((res, _)) => {
+                                // Done before timer
+                                let _ = weak_self.update(&mut cx, |this, cx| {
+                                    this.task = None;
+                                    this.show_loading = false;
+                                    this.result = res;
+                                    cx.notify();
+                                });
+                            }
+                            futures::future::Either::Right((_, result_fut)) => {
+                                // wait for result
+                                let _ = weak_self.update(&mut cx, |this, cx| {
+                                    this.show_loading = true;
+                                    cx.notify();
+                                });
+                                let res = result_fut.await;
+                                let _ = weak_self.update(&mut cx, |this, cx| {
+                                    this.task = None;
+                                    this.show_loading = false;
+                                    this.result = res;
+                                    cx.notify();
+                                });
+                            }
+                        }
+                    }
+                },
+            ));
+        });
     }
 }
 
@@ -298,57 +347,5 @@ impl ScriptData {
             }
         })
         .await
-    }
-}
-
-impl ScriptData {
-    pub fn update_async<C: AppContext>(&self, cx: &mut C) {
-        self.update_entity.update(cx, |this, cx| {
-            this.task = None;
-
-            let command = self.command.clone();
-            let args = self.args.clone();
-            let query = this.last_query.clone();
-
-            this.task = Some(cx.spawn(
-                |weak_self: WeakEntity<ScriptDataUpdateEntity>, cx: &mut AsyncApp| {
-                    let mut cx = cx.clone();
-                    async move {
-                        let result =
-                            ScriptData::get_result(command.clone(), args.clone(), query.as_str());
-                        let timer = cx.background_executor().timer(Duration::from_millis(75));
-
-                        futures::pin_mut!(result);
-                        futures::pin_mut!(timer);
-
-                        match futures::future::select(result, timer).await {
-                            futures::future::Either::Left((res, _)) => {
-                                // Done before timer
-                                let _ = weak_self.update(&mut cx, |this, cx| {
-                                    this.task = None;
-                                    this.show_loading = false;
-                                    this.result = res;
-                                    cx.notify();
-                                });
-                            }
-                            futures::future::Either::Right((_, result_fut)) => {
-                                // wait for result
-                                let _ = weak_self.update(&mut cx, |this, cx| {
-                                    this.show_loading = true;
-                                    cx.notify();
-                                });
-                                let res = result_fut.await;
-                                let _ = weak_self.update(&mut cx, |this, cx| {
-                                    this.task = None;
-                                    this.show_loading = false;
-                                    this.result = res;
-                                    cx.notify();
-                                });
-                            }
-                        }
-                    }
-                },
-            ));
-        });
     }
 }

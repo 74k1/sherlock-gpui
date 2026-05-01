@@ -1,37 +1,39 @@
-use gpui::SharedString;
 use serde_json::Value;
 
 use crate::{
     launcher::{LauncherProvider, LauncherType},
     loader::utils::RawLauncher,
-    ui::widgets::{RenderableChild, clipboard::ClipData},
+    ui::widgets::{RenderableChild, clipboard::ClipWidget},
     utils::{errors::SherlockMessage, intent::Capabilities},
 };
 
-#[derive(Clone, Debug, Default)]
-pub struct ClipboardLauncher;
+#[derive(Clone, Debug)]
+pub struct ClipboardLauncher {
+    pub capabilities: Capabilities,
+}
 impl LauncherProvider for ClipboardLauncher {
-    fn parse(_raw: &RawLauncher) -> LauncherType {
-        LauncherType::Clipboard(ClipboardLauncher {})
-    }
-    fn objects(
-        &self,
-        launcher: std::sync::Arc<super::Launcher>,
-        _ctx: &crate::loader::LoadContext,
-        opts: std::sync::Arc<serde_json::Value>,
-        _messages: &mut Vec<SherlockMessage>,
-        _cx: &mut gpui::App,
-    ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
-        let capabilities: Vec<String> = match opts.get("capabilities") {
+    fn parse(raw: &RawLauncher) -> LauncherType {
+        let caps: Vec<String> = match raw.args.get("capabilities") {
             Some(Value::Array(arr)) => arr
                 .iter()
                 .filter_map(|v| v.as_str().map(str::to_string))
                 .collect(),
             _ => vec![String::from("calc.math"), String::from("calc.units")],
         };
-        let caps = Capabilities::from_strings(&capabilities);
-        let inner = ClipData::new(caps, SharedString::from(""));
-
-        Ok(vec![RenderableChild::Clip { launcher, inner }])
+        let capabilities = Capabilities::from_strings(&caps);
+        LauncherType::Clipboard(ClipboardLauncher { capabilities })
+    }
+    fn objects(
+        &self,
+        launcher: std::sync::Arc<super::Launcher>,
+        _ctx: &crate::loader::LoadContext,
+        _opts: std::sync::Arc<serde_json::Value>,
+        _messages: &mut Vec<SherlockMessage>,
+        cx: &mut gpui::App,
+    ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
+        Ok(vec![RenderableChild::Clip {
+            launcher,
+            inner: ClipWidget::new(cx),
+        }])
     }
 }

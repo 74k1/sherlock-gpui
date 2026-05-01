@@ -9,12 +9,14 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use zbus::blocking::{Connection, Proxy};
 
-use crate::launcher::utils::MprisState;
 use crate::launcher::variant_type::InnerFunction;
 use crate::ui::widgets::RenderableChild;
+use crate::ui::widgets::mpris::MusicPlayerWidget;
 use crate::utils::config::ConfigGuard;
 use crate::utils::errors::SherlockMessage;
-use crate::utils::errors::types::{DBusAction, DirAction, FileAction, SherlockErrorType};
+use crate::utils::errors::types::{
+    DBusAction, DirAction, FileAction, SherlockErrorType, SocketAction,
+};
 use crate::{ensure_func, sherlock_msg, skip_func_if_nav};
 
 use super::utils::MprisData;
@@ -49,10 +51,12 @@ impl LauncherProvider for MusicPlayerLauncher {
         _: &crate::loader::LoadContext,
         _opts: Arc<Value>,
         _messages: &mut Vec<SherlockMessage>,
-        _cx: &mut gpui::App,
+        cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, SherlockMessage> {
-        let inner = MprisState::default();
-        Ok(vec![RenderableChild::Music { launcher, inner }])
+        Ok(vec![RenderableChild::Music {
+            launcher,
+            inner: MusicPlayerWidget::new(cx),
+        }])
     }
     fn binds(&self) -> Option<Arc<Vec<Bind>>> {
         self.binds.clone()
@@ -62,7 +66,7 @@ impl LauncherProvider for MusicPlayerLauncher {
         func: InnerFunction,
         child: &RenderableChild,
         _variables: &[(SharedString, SharedString)],
-        _cx: &mut App,
+        cx: &mut App,
     ) -> Result<ExecEffect, SherlockMessage> {
         skip_func_if_nav!(func);
         let func = ensure_func!(func, InnerFunction::MusicPlayer);
@@ -75,14 +79,14 @@ impl LauncherProvider for MusicPlayerLauncher {
             ));
         };
 
-        let Some(player) = &inner.player else {
+        let Ok(Some(state)) = inner.entity.read(cx).as_ref() else {
             return Ok(ExecEffect::None);
         };
 
         match func {
-            MusicPlayerFunctions::Next => MprisData::next(player)?,
-            MusicPlayerFunctions::Previous => MprisData::previous(player)?,
-            MusicPlayerFunctions::TogglePlayback => MprisData::playpause(player)?,
+            MusicPlayerFunctions::Next => MprisData::next(&state.player)?,
+            MusicPlayerFunctions::Previous => MprisData::previous(&state.player)?,
+            MusicPlayerFunctions::TogglePlayback => MprisData::playpause(&state.player)?,
         }
 
         Ok(ExecEffect::UpdateAsync)
@@ -250,9 +254,15 @@ pub struct AudioLauncherFunctions {
 }
 
 impl AudioLauncherFunctions {
-    pub fn new() -> Option<Self> {
-        let conn = Connection::session().ok()?;
-        Some(AudioLauncherFunctions { conn })
+    pub fn new() -> Result<Self, SherlockMessage> {
+        let conn = Connection::session().map_err(|e| {
+            sherlock_msg!(
+                Warning,
+                SherlockErrorType::SocketError(SocketAction::Connect),
+                e
+            )
+        })?;
+        Ok(AudioLauncherFunctions { conn })
     }
     pub fn get_current_player(&self) -> Option<String> {
         let proxy = Proxy::new(

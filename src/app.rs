@@ -173,7 +173,6 @@ fn spawn_launcher(
                 active_bar: 0,
                 navigation,
                 config_initialized: ConfigGuard::is_initialized(),
-                active_update_task: None,
             }
         })
     })

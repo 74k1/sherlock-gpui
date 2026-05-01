@@ -1,34 +1,59 @@
 use chrono::{Local, Timelike};
 use gpui::{
-    Animation, AnimationExt, AnyElement, App, AppContext, Entity, FontWeight, Hsla, Image,
-    ImageSource, IntoElement, ParentElement, Styled, Task, div, img, linear_gradient,
-    prelude::FluentBuilder, px, relative,
+    Animation, AnimationExt, AnyElement, App, AppContext, FontWeight, Hsla, Image, ImageSource,
+    IntoElement, ParentElement, Styled, div, img, linear_gradient, prelude::FluentBuilder, px,
+    relative,
 };
-use std::{sync::Arc, time::Duration};
+use std::{rc::Rc, sync::Arc, time::Duration};
 
 use crate::{
     app::theme::ThemeData,
     launcher::{ExecMode, Launcher, variant_type::LauncherType, weather_launcher::WeatherData},
+    sherlock_msg,
     ui::{
-        utils::timeout::Timeout,
+        utils::{
+            async_update::{AsyncUpdate, AsyncUpdateEntity, Fetchable},
+            ease::Ease,
+            render::ListItemBorder,
+            timeout::TimeoutCaller,
+        },
         widgets::{RenderableChildImpl, Selection},
     },
+    utils::errors::{SherlockMessage, types::SherlockErrorType},
 };
 
-pub struct WeatherEntity {
-    update_task: Option<Task<()>>,
+impl Fetchable for WeatherData {
+    type Error = SherlockMessage;
+    async fn fetch(
+        launcher: &Arc<Launcher>,
+        _old: Option<Rc<Self>>,
+    ) -> Result<Option<Rc<Self>>, Self::Error> {
+        let LauncherType::Weather(wttr) = &launcher.launcher_type else {
+            return Err(sherlock_msg!(
+                Error,
+                SherlockErrorType::InvalidLauncher,
+                format!(
+                    "Wrong launcher type.\nExpected: WeatherLauncher\nGot:{:?}",
+                    &launcher.launcher_type
+                )
+            ));
+        };
+        WeatherData::fetch_async(wttr)
+            .await
+            .map(|d| Some(Rc::new(d)))
+    }
 }
 
 #[derive(Clone)]
 pub struct WeatherWidget {
-    pub data: WeatherData,
-    entity: Entity<WeatherEntity>,
+    timeout: TimeoutCaller<()>,
+    entity: AsyncUpdateEntity<WeatherData>,
 }
 impl WeatherWidget {
-    pub fn new(data: WeatherData, cx: &mut App) -> Self {
+    pub fn new(cx: &mut App) -> Self {
         Self {
-            data,
-            entity: cx.new(|_| WeatherEntity { update_task: None }),
+            timeout: TimeoutCaller::new((), cx),
+            entity: AsyncUpdateEntity::<WeatherData>::new(cx),
         }
     }
 }
@@ -38,7 +63,7 @@ impl<'a> RenderableChildImpl<'a> for WeatherWidget {
     fn render(
         &self,
         launcher: &Arc<Launcher>,
-        _selection: Selection,
+        selection: Selection,
         _query: &str,
         theme: Arc<ThemeData>,
         cx: &mut App,
@@ -53,21 +78,48 @@ impl<'a> RenderableChildImpl<'a> for WeatherWidget {
         let time = now.time();
         if show_datetime {
             let secs_until_next_minute = 60 - now.second() as u64;
-            self.entity.update(cx, |this, cx| {
-                this.start_timer(Duration::from_secs(secs_until_next_minute), cx, |_, _| {});
-            });
+            self.timeout
+                .start(Duration::from_secs(secs_until_next_minute), cx, |_, _| {});
         }
 
-        let is_init = self.data.init;
-        let (p1, p2) = self
-            .data
-            .css
-            .background(time, self.data.sunset, self.data.sunrise);
-        let text_color: Hsla = self
-            .data
-            .css
-            .color(time, self.data.sunset, self.data.sunrise)
-            .into();
+        let data_ref = match self.entity.read(cx) {
+            Ok(data) => data,
+            Err(_) => {
+                return div()
+                    .h(px(100.))
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .gap_0()
+                    .list_item_border(&theme, &selection)
+                    .bg(theme.bg_muted)
+                    .text_xs()
+                    .font_family(theme.font_family.clone())
+                    .text_color(theme.tertiary_text)
+                    .child("Weather currently unavailable")
+                    .into_any_element();
+            }
+        };
+        let Some(data) = data_ref else {
+            return div()
+                .h(px(100.))
+                .flex()
+                .items_stretch()
+                .gap(px(8.))
+                .list_item_border(&theme, &selection)
+                .with_animation(
+                    "pulsate",
+                    Animation::new(Duration::from_secs(1))
+                        .with_easing(Ease::ease_throb)
+                        .repeat(),
+                    move |this, fac| this.bg(theme.bg_muted.opacity(fac)),
+                )
+                .into_any_element();
+        };
+
+        let is_init = data.init;
+        let (p1, p2) = data.css.background(time, data.sunset, data.sunrise);
+        let text_color: Hsla = data.css.color(time, data.sunset, data.sunrise).into();
         div()
             .h(px(100.))
             .flex()
@@ -78,7 +130,7 @@ impl<'a> RenderableChildImpl<'a> for WeatherWidget {
                 div()
                     .flex_1()
                     .w_full()
-                    .px(px(16.))
+                    .px_4()
                     .py(px(12.))
                     .flex()
                     .items_center()
@@ -97,14 +149,14 @@ impl<'a> RenderableChildImpl<'a> for WeatherWidget {
                                     .text_size(px(10.))
                                     .font_weight(FontWeight::MEDIUM)
                                     .font_family(theme.font_family.clone())
-                                    .child(self.data.format_str.clone()),
+                                    .child(data.format_str.clone()),
                             )
                             .child(
                                 div()
                                     .text_color(text_color)
                                     .text_size(px(11.))
                                     .font_family(theme.font_family.clone())
-                                    .child(self.data.condition.clone()),
+                                    .child(data.condition.clone()),
                             ),
                     )
                     .child(
@@ -113,7 +165,7 @@ impl<'a> RenderableChildImpl<'a> for WeatherWidget {
                             .flex()
                             .items_center()
                             .gap(px(8.))
-                            .child(if let Some(icon) = self.data.icon.as_ref() {
+                            .child(if let Some(icon) = data.icon.as_ref() {
                                 img(Arc::clone(icon)).size(px(36.))
                             } else {
                                 img(ImageSource::Image(Arc::new(Image::empty()))).size(px(36.))
@@ -125,7 +177,7 @@ impl<'a> RenderableChildImpl<'a> for WeatherWidget {
                                     .line_height(relative(1.))
                                     .font_weight(FontWeight::NORMAL)
                                     .font_family(theme.font_family.clone())
-                                    .child(self.data.temperature.clone()),
+                                    .child(data.temperature.clone()),
                             )
                             .with_animation(
                                 "weather_fade_in",
@@ -184,13 +236,8 @@ impl<'a> RenderableChildImpl<'a> for WeatherWidget {
     fn search(&self, _launcher: &Arc<Launcher>) -> &'a str {
         ""
     }
-}
-
-impl Timeout for WeatherEntity {
-    fn update_task(&self) -> &Option<Task<()>> {
-        &self.update_task
-    }
-    fn update_task_mut(&mut self) -> &mut Option<Task<()>> {
-        &mut self.update_task
+    #[inline(always)]
+    fn update_async<C: AppContext>(&self, launcher: Arc<Launcher>, cx: &mut C) {
+        self.entity.update_async(launcher, cx);
     }
 }

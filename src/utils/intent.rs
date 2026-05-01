@@ -57,12 +57,6 @@ pub enum Intent {
 }
 
 impl Intent {
-    #[inline]
-    pub fn is_some(&self) -> bool {
-        !matches!(self, Self::None)
-    }
-}
-impl Intent {
     pub fn execute(&self) -> Option<IntentResult> {
         match self {
             Intent::Conversion { value, from, to } => {

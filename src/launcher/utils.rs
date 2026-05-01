@@ -5,12 +5,12 @@ use zbus::zvariant::{DeserializeDict, Type};
 
 #[derive(Clone, Default)]
 pub struct MprisState {
-    pub player: Option<String>,
+    pub player: String,
     pub raw: Option<MprisData>,
     pub image: Option<Arc<Image>>,
 }
 
-#[derive(DeserializeDict, Type, Debug, Clone, Default)]
+#[derive(DeserializeDict, Type, Debug, Clone, Default, PartialEq)]
 #[zvariant(signature = "a{sv}")]
 #[allow(unused)]
 pub struct MprisData {
@@ -20,7 +20,7 @@ pub struct MprisData {
     #[zvariant(rename = "Metadata")]
     pub metadata: MetaData,
 }
-#[derive(DeserializeDict, Type, Debug, Clone, Default)]
+#[derive(DeserializeDict, Type, Debug, Clone, Default, PartialEq)]
 #[zvariant(signature = "a{sv}")]
 #[allow(unused)]
 pub struct MetaData {

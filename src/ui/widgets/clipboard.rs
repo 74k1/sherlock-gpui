@@ -1,4 +1,4 @@
-use std::sync::{Arc, RwLock};
+use std::{rc::Rc, sync::Arc};
 
 use gpui::{
     App, AppContext, Image, ImageSource, IntoElement, ParentElement, SharedString, Styled, div,
@@ -7,91 +7,113 @@ use gpui::{
 
 use crate::{
     app::theme::ThemeData,
-    launcher::{ExecMode, Launcher},
+    launcher::{ExecMode, Launcher, variant_type::LauncherType},
     loader::{resolve_icon_path, utils::ApplicationAction},
     ui::{
         launcher::context_menu::ContextMenuAction,
+        utils::async_update::{AsyncUpdate, AsyncUpdateEntity, Fetchable},
         widgets::{RenderableChildImpl, Selection},
     },
     utils::{
         clipboard::get_clipboard,
-        intent::{Capabilities, Intent, IntentResult},
+        errors::SherlockMessage,
+        intent::{Intent, IntentResult},
     },
 };
 
 #[derive(Clone)]
 pub struct ClipData {
-    pub content: SharedString,
-    pub capabilities: Capabilities,
-    result: Arc<RwLock<Option<(Intent, IntentResult)>>>,
-    pub actions: Arc<[Arc<ContextMenuAction>]>,
+    pub actions: Option<Arc<[Arc<ContextMenuAction>]>>,
+    result: Option<(Intent, IntentResult)>,
 }
 
-impl ClipData {
-    pub fn new(capabilities: Capabilities, content: SharedString) -> Self {
-        let mut this = Self {
-            content,
-            capabilities,
-            result: Arc::new(RwLock::new(None)),
-            actions: Arc::from([]),
+impl Fetchable for ClipData {
+    type Error = SherlockMessage;
+    async fn fetch(
+        launcher: &Arc<Launcher>,
+        old: Option<Rc<Self>>,
+    ) -> Result<Option<Rc<Self>>, Self::Error> {
+        let LauncherType::Clipboard(clp) = &launcher.launcher_type else {
+            unreachable!()
         };
-        this.update_async();
 
-        this
-    }
-    pub fn update_async(&mut self) -> Option<()> {
-        let content = get_clipboard()?;
-        let intent = Intent::parse(&content, &self.capabilities);
+        let content = match get_clipboard() {
+            Some(c) => c,
+            None => return Ok(None),
+        };
+
+        let intent = Intent::parse(&content, &clp.capabilities);
 
         // early return if intents are the same
-        if let Ok(guard) = self.result.read()
-            && let Some((res_intent, _)) = guard.as_ref()
-            && res_intent == &intent
+        if let Some(old_intent) = old.as_ref().and_then(|o| o.result.as_ref()).map(|(i, _)| i)
+            && old_intent == &intent
         {
-            return None;
+            return Ok(old);
         }
 
+        let mut actions: Option<Arc<[Arc<ContextMenuAction>]>> = None;
         let r = match &intent {
             Intent::ColorConvert { .. } => intent.execute(),
             Intent::Conversion { .. } => intent.execute(),
             Intent::ColorDisplay { .. } => intent.execute(),
             Intent::Url { url } => {
-                self.actions = Arc::new([Arc::from(
+                actions = Some(Arc::new([Arc::from(
                     ApplicationAction::new("create_bookmark")
                         .name("Create Bookmark")
                         .icon_name("sherlock-bookmark"),
-                )]);
+                )]));
                 Some(IntentResult::String(url.into()))
             }
             _ => None,
-        }?;
+        };
 
-        if let Ok(mut writer) = self.result.write() {
-            *writer = Some((intent, r));
-        }
-        Some(())
+        let Some(r) = r else {
+            return Ok(None);
+        };
+
+        let new = Self {
+            result: Some((intent, r)),
+            actions,
+        };
+
+        Ok(Some(Rc::new(new)))
     }
 }
 
-impl<'a> RenderableChildImpl<'a> for ClipData {
+#[derive(Clone)]
+pub struct ClipWidget {
+    entity: AsyncUpdateEntity<ClipData>,
+}
+
+impl ClipWidget {
+    pub fn new(cx: &mut impl AppContext) -> Self {
+        Self {
+            entity: AsyncUpdateEntity::<ClipData>::new(cx),
+        }
+    }
+}
+
+impl<'a> RenderableChildImpl<'a> for ClipWidget {
     fn render(
         &self,
         _launcher: &std::sync::Arc<crate::launcher::Launcher>,
         selection: Selection,
         _query: &str,
         theme: Arc<ThemeData>,
-        _cx: &mut App,
+        cx: &mut App,
     ) -> gpui::AnyElement {
-        let guard = self.result.read().ok();
-        let Some((intent, result)) = guard
+        let Some((intent, result)) = self
+            .entity
+            .read(cx)
             .as_ref()
-            .and_then(|r| r.as_ref())
-            .map(|(i, r)| (i.clone(), r.clone()))
+            .ok()
+            .and_then(|data| data.as_ref())
+            .and_then(|d| d.result.as_ref())
         else {
             return div().into_any_element();
         };
 
-        match (&intent, &result) {
+        match (intent, result) {
             (Intent::Url { url }, _) => url_show(url.clone(), selection, theme),
             (Intent::Conversion { .. }, IntentResult::String(s)) => {
                 calc_tile(s.clone(), selection, theme)
@@ -107,23 +129,31 @@ impl<'a> RenderableChildImpl<'a> for ClipData {
     }
     #[inline(always)]
     fn search(&'a self, _launcher: &std::sync::Arc<crate::launcher::Launcher>) -> &'a str {
-        self.content.as_str()
+        ""
     }
     #[inline(always)]
-    fn build_exec(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
-        let lock = self.result.read().ok()?;
-        let (intent, res) = lock.as_ref()?;
-
-        match intent {
-            Intent::Url { url } => Some(ExecMode::Web {
-                engine: None,
-                browser: None,
-                exec: Some(url.to_string()),
-            }),
-            _ => Some(ExecMode::Copy {
-                content: res.to_string(),
-            }),
+    fn build_exec(&self, _launcher: &Arc<Launcher>, cx: &mut App) -> Option<ExecMode> {
+        if let Some((intent, res)) = self
+            .entity
+            .read(cx)
+            .as_ref()
+            .ok()
+            .and_then(|data| data.as_ref())
+            .and_then(|d| d.result.as_ref())
+        {
+            return match intent {
+                Intent::Url { url } => Some(ExecMode::Web {
+                    engine: None,
+                    browser: None,
+                    exec: Some(url.to_string()),
+                }),
+                _ => Some(ExecMode::Copy {
+                    content: res.to_string(),
+                }),
+            };
         }
+
+        None
     }
     #[inline(always)]
     fn priority(&self, launcher: &std::sync::Arc<crate::launcher::Launcher>) -> f32 {
@@ -133,35 +163,53 @@ impl<'a> RenderableChildImpl<'a> for ClipData {
     fn actions(
         &self,
         launcher: &Arc<Launcher>,
-        _cx: &mut App,
+        cx: &mut App,
     ) -> Option<Arc<[Arc<ContextMenuAction>]>> {
-        if let Some(extra_actions) = launcher.add_actions.as_ref() {
-            if extra_actions.is_empty() {
-                return Some(self.actions.clone());
+        if let Some(own_actions) = self
+            .entity
+            .read(cx)
+            .as_ref()
+            .ok()
+            .and_then(|e| e.as_ref())
+            .and_then(|d| d.actions.clone())
+        {
+            if let Some(extra_actions) = launcher.add_actions.as_ref() {
+                if extra_actions.is_empty() {
+                    return Some(own_actions);
+                }
+
+                let mut combined = Vec::with_capacity(own_actions.len() + extra_actions.len());
+
+                combined.extend(own_actions.iter().cloned());
+                combined.extend(extra_actions.iter().cloned());
+
+                return Some(combined.into());
             }
-
-            let mut combined = Vec::with_capacity(self.actions.len() + extra_actions.len());
-
-            combined.extend(self.actions.iter().cloned());
-            combined.extend(extra_actions.iter().cloned());
-
-            return Some(combined.into());
+            return Some(own_actions);
         }
-
-        Some(self.actions.clone())
+        None
     }
     #[inline(always)]
-    fn has_actions(&self, _cx: &mut App) -> bool {
-        !self.actions.is_empty()
+    fn has_actions(&self, cx: &mut App) -> bool {
+        self.entity.read(cx).as_ref().is_ok_and(|e| {
+            e.as_ref()
+                .and_then(|d| d.actions.as_ref())
+                .is_some_and(|a| !a.is_empty())
+        })
     }
-    fn based_show<C: AppContext>(&self, _keyword: &str, _cx: &mut C) -> Option<bool> {
-        Some(
-            self.result
-                .read()
-                .ok()
-                .and_then(|r| r.as_ref().map(|r| r.0.is_some()))
-                .unwrap_or(false),
-        )
+    #[inline(always)]
+    fn based_show<C: AppContext>(&self, _keyword: &str, cx: &mut C) -> Option<bool> {
+        Some(self.entity.read_with(cx, |this, _| {
+            if let Ok(Some(clip)) = this.as_ref() {
+                clip.result.is_some()
+            } else {
+                false
+            }
+        }))
+    }
+    #[inline(always)]
+    fn update_async<C: AppContext>(&self, launcher: Arc<Launcher>, cx: &mut C) {
+        self.entity.update_async(launcher, cx);
     }
 }
 

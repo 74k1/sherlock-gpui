@@ -7,9 +7,9 @@ use crate::ui::utils::scoring::make_prio;
 use crate::ui::utils::search::SherlockSearch;
 use crate::ui::widgets::{LauncherValues, RenderableChildDelegate};
 use crate::utils::config::HomeType;
+use gpui::AsyncApp;
 use gpui::WeakEntity;
 use gpui::{App, Context, Entity, FocusHandle, Focusable, SharedString, Subscription};
-use gpui::{AsyncApp, Task};
 use std::sync::Arc;
 
 use crate::ui::search_bar::TextInput;
@@ -47,8 +47,6 @@ pub struct LauncherView {
 
     // State
     pub config_initialized: bool,
-
-    pub active_update_task: Option<Task<()>>,
 }
 
 impl Focusable for LauncherView {

@@ -4,6 +4,7 @@ use gpui::{SharedString, Styled, prelude::FluentBuilder};
 
 use crate::{app::theme::ThemeData, ui::widgets::Selection};
 
+#[allow(dead_code)]
 pub trait ListItemBorder: Styled + FluentBuilder + Sized {
     fn list_item_border(self, theme: &Arc<ThemeData>, selection: &Selection) -> Self {
         self.bg(theme.bg_idle)
@@ -21,9 +22,8 @@ pub trait ListItemBorder: Styled + FluentBuilder + Sized {
             })
     }
     fn tile_bg(self, theme: &Arc<ThemeData>, selection: &Selection) -> Self {
-        self.bg(theme.bg_idle).when(selection.is_selected, |this| {
-            this.bg(theme.bg_selected)
-        })
+        self.bg(theme.bg_idle)
+            .when(selection.is_selected, |this| this.bg(theme.bg_selected))
     }
 }
 
@@ -44,7 +44,7 @@ pub fn substitute(to: SharedString, name: &str, value: &str) -> SharedString {
         let start = i + open + 1;
         if s[start..].starts_with(name)
             && s.get(start + name.len()..)
-                .map_or(false, |r| r.starts_with('}'))
+                .is_some_and(|r| r.starts_with('}'))
         {
             break true;
         }

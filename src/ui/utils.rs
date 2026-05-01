@@ -1,3 +1,4 @@
+pub mod async_update;
 pub mod ease;
 pub(super) mod pango;
 pub(super) mod render;

@@ -221,8 +221,11 @@ macro_rules! ensure_func {
 #[macro_export]
 macro_rules! skip_func_if_nav {
     ($val:expr) => {
-        if matches!($val, InnerFunction::SelectionUp | InnerFunction::SelectionDown ) {
-            return Ok(ExecEffect::None)
+        if matches!(
+            $val,
+            InnerFunction::SelectionUp | InnerFunction::SelectionDown
+        ) {
+            return Ok(ExecEffect::None);
         }
     };
 }

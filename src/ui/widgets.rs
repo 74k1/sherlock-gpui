@@ -1,4 +1,4 @@
-use gpui::{AnyElement, App, AppContext, AsyncApp, SharedString};
+use gpui::{AnyElement, App, AppContext, SharedString};
 use std::sync::Arc;
 
 pub mod app;
@@ -21,26 +21,22 @@ use crate::{
     app::theme::ThemeData,
     launcher::{
         Bind, ExecEffect, ExecMode, Launcher,
-        audio_launcher::AudioLauncherFunctions,
         emoji_launcher::EmojiData,
-        utils::MprisState,
         variant_type::{InnerFunction, LauncherType, LauncherVariant},
-        weather_launcher::WeatherData,
     },
     loader::utils::{AppData, ExecVariable},
     ui::{
         launcher::context_menu::ContextMenuAction,
         widgets::{
-            dmenu::DmenuData, message::MessageChild, process::ProcessData, script::ScriptData,
-            timer::TimerChild, translator::TranslationData, weather::WeatherWidget,
+            clipboard::ClipWidget, dmenu::DmenuData, event::EventWidget, message::MessageChild,
+            mpris::MusicPlayerWidget, process::ProcessData, script::ScriptData, timer::TimerChild,
+            translator::TranslationData, weather::WeatherWidget,
         },
     },
     utils::{config::HomeType, errors::SherlockMessage},
 };
 
 use calculator::CalcData;
-use clipboard::ClipData;
-use event::EventData;
 use file::FileData;
 use theme::ThemeWidget;
 
@@ -173,6 +169,12 @@ macro_rules! renderable_enum {
                     $(Self::$variant {inner, launcher} => inner.update_sync(query, launcher, cx)),*
                 }
             }
+
+            fn update_async<C: AppContext>(&self,  cx: &mut C) {
+                match self {
+                    $(Self::$variant {inner, launcher} => inner.update_async(launcher.clone(), cx)),*
+                }
+            }
         }
 
         impl<'a> LauncherValues<'a> for $name {
@@ -239,84 +241,16 @@ macro_rules! renderable_enum {
 
     };
 }
-impl RenderableChild {
-    /// Updates a dynamic renderable child that requires re-evaluation.
-    ///
-    /// This is used for items whose state depends on internal logic (e.g., a timer)
-    /// or external factors (e.g., a weather API or file system change).
-    ///
-    /// # Returns
-    ///
-    /// * `Some(Self)` - If the state was updated and a re-render is required.
-    /// * `None` - If no changes were detected, allowing the UI to skip an update cycle.
-    pub async fn update_async(mut self, _cx: &mut AsyncApp) -> Option<Self> {
-        match &mut self {
-            Self::Clip { inner, .. } => {
-                inner.update_async();
-            }
-            Self::Event { inner, .. } => {
-                let _ = inner.update_async().await;
-            }
-            Self::Music { inner, .. } => {
-                let launcher = AudioLauncherFunctions::new()?;
-                inner.player = launcher.get_current_player();
-
-                // id player is none, nothing is playing...
-                if inner.player.is_none() {
-                    inner.raw = None;
-                    inner.image = None;
-                    return Some(self);
-                }
-
-                let new_inner = launcher.get_metadata(inner.player.as_ref()?);
-
-                // early return if nothing has changed
-                if new_inner.as_ref().and_then(|i| i.metadata.title.as_ref())
-                    == inner.raw.as_ref().and_then(|i| i.metadata.title.as_ref())
-                {
-                    return None;
-                }
-
-                if let Some(new_inner) = &new_inner {
-                    inner.image = new_inner.get_image().await.map(|(image, _)| image);
-                }
-                inner.raw = new_inner;
-            }
-            Self::Weather { inner, launcher } => {
-                let LauncherType::Weather(wtr) = &launcher.launcher_type else {
-                    unreachable!("WeatherLike variant must have LauncherType::Weather");
-                };
-
-                let (new_weather_data, changed) = match WeatherData::fetch_async(wtr).await {
-                    Ok((w, c)) => (w, c),
-                    Err(e) => {
-                        println!("{:?}", e);
-                        return None;
-                    }
-                };
-
-                if changed {
-                    inner.data = new_weather_data;
-                } else {
-                    return None;
-                }
-            }
-            _ => return None,
-        }
-
-        Some(self)
-    }
-}
 renderable_enum! {
     enum RenderableChild {
         App(AppData),
         Calc(CalcData),
-        Clip(ClipData),
+        Clip(ClipWidget),
         Emoji(EmojiData),
-        Event(Box<EventData>),
+        Event(EventWidget),
         File(FileData),
         Message(MessageChild),
-        Music(MprisState),
+        Music(MusicPlayerWidget),
         Process(ProcessData),
         Script(ScriptData),
         Theme(ThemeWidget),
@@ -337,6 +271,7 @@ impl RenderableChild {
 }
 
 // To make compatible with Boxed data
+#[allow(dead_code)]
 pub trait HandlesBorders {
     const HANDLES_BORDERS: bool;
 }
@@ -382,7 +317,12 @@ pub trait RenderableChildDelegate<'a> {
     fn binds(&self, _cx: &mut App) -> Option<Arc<Vec<Bind>>>;
 
     /// Execute inner functions
-    fn execute_function(&self, func: InnerFunction, variables: &[(SharedString, SharedString)], cx: &mut App) -> Result<ExecEffect, SherlockMessage>;
+    fn execute_function(
+        &self,
+        func: InnerFunction,
+        variables: &[(SharedString, SharedString)],
+        cx: &mut App,
+    ) -> Result<ExecEffect, SherlockMessage>;
 
     /// Get inner binds for a launcher and its children
     fn has_actions(&self, cx: &mut App) -> bool;
@@ -395,6 +335,12 @@ pub trait RenderableChildDelegate<'a> {
 
     /// Sync update on every keypress
     fn update_sync(&self, query: SharedString, cx: &mut App);
+
+    /// Updates a dynamic renderable child that requires re-evaluation.
+    ///
+    /// This is used for items whose state depends on internal logic (e.g., a timer)
+    /// or external factors (e.g., a weather API or file system change).
+    fn update_async<C: AppContext>(&self, cx: &mut C);
 }
 
 #[allow(dead_code)]
@@ -439,7 +385,13 @@ pub trait RenderableChildImpl<'a> {
     fn binds(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<Arc<Vec<Bind>>> {
         None
     }
-    fn execute_function(&self, _func: &InnerFunction, _launcher: &Arc<Launcher>, _variables: &[(SharedString, SharedString)], _cx: &mut App) -> Option<ExecEffect> {
+    fn execute_function(
+        &self,
+        _func: &InnerFunction,
+        _launcher: &Arc<Launcher>,
+        _variables: &[(SharedString, SharedString)],
+        _cx: &mut App,
+    ) -> Option<ExecEffect> {
         None
     }
     fn based_show<C: AppContext>(&self, _keyword: &str, _cx: &mut C) -> Option<bool> {
@@ -449,6 +401,7 @@ pub trait RenderableChildImpl<'a> {
         None
     }
     fn update_sync(&self, _query: SharedString, _launcher: &Arc<Launcher>, _cx: &mut App) {}
+    fn update_async<C: AppContext>(&self, _launcher: Arc<Launcher>, _cx: &mut C) {}
     fn vars(&self, _cx: &mut App) -> Option<&[ExecVariable]> {
         None
     }
