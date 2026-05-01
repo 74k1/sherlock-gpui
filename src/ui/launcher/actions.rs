@@ -318,6 +318,9 @@ impl LauncherView {
                 };
                 websearch(engine, query, browser.as_deref(), variables)?;
             }
+            ExecMode::None => {
+                return Ok(false);
+            }
             _ => {}
         };
 
@@ -434,6 +437,7 @@ impl LauncherView {
                     self.context_actions = Default::default();
                     self.close_context(cx);
                 }
+                cx.notify();
             }
         } else {
             let keyword = self.text_input.read(cx).content.clone();
