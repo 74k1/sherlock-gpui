@@ -69,7 +69,7 @@ impl<'a> DesktopFileParser<'a> {
             ..AppData::new()
         };
         let mut actions: Vec<Arc<ApplicationAction>> = Vec::new();
-        let mut current_action = ApplicationAction::new("app_launcher");
+        let mut current_action = ApplicationAction::new("app_launcher", "");
         let mut section = Section::Other;
         let mut key_buf = String::with_capacity(32);
 
@@ -83,7 +83,7 @@ impl<'a> DesktopFileParser<'a> {
             if let Some(header) = line.strip_prefix('[').and_then(|l| l.strip_suffix(']')) {
                 if section == Section::Action && current_action.is_valid() {
                     actions.push(Arc::new(current_action));
-                    current_action = ApplicationAction::new("app_launcher");
+                    current_action = ApplicationAction::new("app_launcher", "");
                 }
                 section = Section::from_header(header);
                 continue;
@@ -108,7 +108,7 @@ impl<'a> DesktopFileParser<'a> {
                     self.handle_action_field(key, value, &data, &mut current_action);
                     if current_action.is_full() {
                         actions.push(Arc::new(current_action));
-                        current_action = ApplicationAction::new("app_launcher");
+                        current_action = ApplicationAction::new("app_launcher", "");
                         section = Section::Other;
                     }
                 }
@@ -172,7 +172,7 @@ impl<'a> DesktopFileParser<'a> {
         current_action: &mut ApplicationAction,
     ) {
         match key {
-            "name" => current_action.name = Some(SharedString::from(value.to_string())),
+            "name" => current_action.name = SharedString::from(value.to_string()),
             "exec" => current_action.exec = Some(value.to_string()),
             "icon" => current_action.icon = resolve_icon_path(value),
             _ => {}

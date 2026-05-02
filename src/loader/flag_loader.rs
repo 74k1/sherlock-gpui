@@ -1,8 +1,8 @@
-use std::{env, path::PathBuf, str::FromStr};
+use std::{env, path::PathBuf, process::exit, str::FromStr};
 
 use super::Loader;
 use crate::utils::{
-    config::{SherlockConfig, SherlockFlags},
+    config::{SherlockConfig, SherlockFlags, repair_config},
     errors::SherlockMessage,
 };
 
@@ -70,7 +70,7 @@ impl SherlockFlags {
             eprintln!("{:?}", x);
         }
 
-        SherlockFlags {
+        let flags = SherlockFlags {
             config_dir: extract_path_value("--config-dir"),
             config: extract_path_value("--config"),
             fallback: extract_path_value("--fallback"),
@@ -87,7 +87,14 @@ impl SherlockFlags {
             photo_mode: check_flag_existence("--photo"),
             input: Self::extract_flag_value::<bool>(&args, "--input", None),
             placeholder: Self::extract_flag_value::<String>(&args, "--placeholder", Some("-p")),
+        };
+
+        if check_flag_existence("repair") {
+            repair_config(flags);
+            exit(0)
         }
+
+        flags
     }
 }
 

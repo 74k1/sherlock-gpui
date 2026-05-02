@@ -21,6 +21,7 @@ pub use defaults::{
 pub use flags::SherlockFlags;
 pub use guard::ConfigGuard;
 pub use reload::reload;
+pub use transformer::repair_config;
 pub use watcher::ConfigWatcher;
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]

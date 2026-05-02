@@ -425,8 +425,7 @@ impl<'a> RenderableChildImpl<'a> for EventWidget {
 
         if let Some(url) = meeting.map(|m| m.url()) {
             actions.push(Arc::new(ContextMenuAction::App(
-                ApplicationAction::new("inner.join_meeting")
-                    .name("Join Meeting")
+                ApplicationAction::new("inner.join_meeting", "Join Meeting")
                     .icon_name("call-start")
                     .exec(url.to_string()),
             )));

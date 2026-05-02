@@ -1,3 +1,4 @@
+mod counter_file;
 mod fallback_migration;
 
 use std::fs;
@@ -5,11 +6,40 @@ use std::path::Path;
 
 use crate::sherlock_msg;
 use crate::utils::config::transformer::fallback_migration::LegacyRawLauncher;
+use crate::utils::config::{SherlockConfig, SherlockFlags};
 use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::{FileAction, SherlockErrorType};
+use crate::utils::paths;
+
+pub fn repair_config(mut flags: SherlockFlags) {
+    // parse configs
+    let config = match flags.get_config() {
+        Err(_) => {
+            let mut defaults = SherlockConfig::default();
+            defaults.apply_flags(&mut flags);
+            defaults
+        }
+        Ok((cfg, _)) => cfg,
+    };
+
+    // repair broken fallback.json
+    let _ = migrate_fallback(&config.files.fallback);
+
+    // repair broken counts file
+    match paths::get_data_dir() {
+        Ok(data_dir) => {
+            let count_path = data_dir.join("counts.bin");
+            println!("--- Migration Logs for {} ---", count_path.display());
+            migrate_counts(&count_path);
+        }
+        Err(e) => {
+            eprintln!("[Counter File]: Failed to get sherlock data dir: {:?}", e);
+        }
+    }
+}
 
 #[allow(dead_code)]
-pub fn migrate_file<P: AsRef<Path>>(path: P) -> Result<(), SherlockMessage> {
+pub fn migrate_fallback<P: AsRef<Path>>(path: P) -> Result<(), SherlockMessage> {
     let path_ref = path.as_ref();
     let content = fs::read_to_string(path_ref).map_err(|e| {
         sherlock_msg!(
@@ -31,9 +61,15 @@ pub fn migrate_file<P: AsRef<Path>>(path: P) -> Result<(), SherlockMessage> {
     let mut all_logs = Vec::new();
 
     for legacy in legacy_configs {
-        let result = legacy.migrate();
-        upgraded_launchers.push(result.launcher);
-        all_logs.extend(result.logs);
+        match legacy.migrate() {
+            Ok(result) => {
+                upgraded_launchers.push(result.launcher);
+                all_logs.extend(result.logs);
+            }
+            Err(e) => {
+                all_logs.extend(e);
+            }
+        }
     }
 
     // 4. Print migration audit trail
@@ -61,4 +97,9 @@ pub fn migrate_file<P: AsRef<Path>>(path: P) -> Result<(), SherlockMessage> {
     );
 
     Ok(())
+}
+
+#[allow(dead_code)]
+pub fn migrate_counts(path: &Path) {
+    counter_file::transform_counter_file(path);
 }

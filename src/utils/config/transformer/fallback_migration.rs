@@ -152,15 +152,15 @@ impl LegacyRawLauncher {
             "bulk_text" => Some(LauncherVariant::Script),
             "files" => Some(LauncherVariant::Files),
             "teams_event" | "event" => Some(LauncherVariant::Event),
-            "debug" => None,
-            "theme_picker" | "theme" => None,
-            "process" => None,
-            "pomodoro" => None,
+            "debug" => Some(LauncherVariant::Debug),
+            "theme_picker" | "theme" => Some(LauncherVariant::Theme),
+            "process" => Some(LauncherVariant::Process),
+            "pomodoro" => Some(LauncherVariant::Timer),
             _ => None,
         }
     }
 
-    pub fn migrate(mut self) -> MigrationResult {
+    pub fn migrate(mut self) -> Result<MigrationResult, Vec<String>> {
         let mut logs = Vec::new();
         let name = self.name.clone().unwrap_or_else(|| "Unknown".to_string());
 
@@ -172,9 +172,23 @@ impl LegacyRawLauncher {
             ));
         }
 
-        // 2. Check for removed keybinds
-        if self.binds.is_some() {
-            logs.push(format!("[{}] Dropped custom keybind(s).", name));
+        // Check for keybinds
+        if let Some(binds) = &mut self.binds {
+            for bind in binds {
+                bind.bind = bind
+                    .bind
+                    .split("+")
+                    .map(|token| match token {
+                        "control" => "ctrl",
+                        "lock" => "lock",
+                        "hypr" => "cmd",
+                        "meta" => "win",
+                        _ => token,
+                    })
+                    .collect::<Vec<_>>()
+                    .join("-")
+                    .to_lowercase();
+            }
         }
 
         // 3. Log variable conversion
@@ -190,12 +204,17 @@ impl LegacyRawLauncher {
 
         self.migrate_args(new_type, &mut logs, &name);
 
+        let Some(new_type) = self.migrate_type() else {
+            logs.push(format!("[{name}] Failed to parse type. ({})", self.r#type));
+            return Err(logs);
+        };
+
         let launcher = RawLauncher {
             name: self.name,
             alias: self.alias,
             on_return: self.on_return,
             next_content: self.next_content,
-            r#type: new_type.unwrap_or_default(),
+            r#type: new_type,
             priority: self.priority as u16,
             exit: self.exit,
             shortcut: self.shortcut,
@@ -211,7 +230,7 @@ impl LegacyRawLauncher {
                 .map(|vars| vars.into_iter().map(ExecVariable::from).collect()),
         };
 
-        MigrationResult { launcher, logs }
+        Ok(MigrationResult { launcher, logs })
     }
 }
 
@@ -232,7 +251,23 @@ mod tests {
             "variables": [
                 { "string_input": "username" }
             ],
-            "binds": [] // This should be dropped/logged
+            "binds": [
+                {
+                    "bind": "Return",
+                    "callback": "playpause",
+                    "exit": false
+                },
+                {
+                    "bind": "control+l",
+                    "callback": "next",
+                    "exit": false
+                },
+                {
+                    "bind": "control+h",
+                    "callback": "previous",
+                    "exit": false
+                }
+            ],
         });
 
         // 2. Deserialize into Legacy struct
@@ -240,7 +275,7 @@ mod tests {
             serde_json::from_value(legacy_json).expect("Failed to parse legacy JSON");
 
         // 3. Perform Migration
-        let result = legacy.migrate();
+        let result = legacy.migrate().expect("Failed to parse migrate launcher");
 
         // 4. Assertions
         assert_eq!(result.launcher.name, Some("Test Launcher".to_string()));
@@ -248,6 +283,17 @@ mod tests {
 
         // Check if Arc wrapping worked
         assert_eq!(result.launcher.args.get("cmd").unwrap(), "ls");
+
+        if let Some(binds) = result.launcher.binds {
+            assert_eq!(binds.len(), 3);
+            let is = binds.iter().map(|b| b.bind.as_str()).collect::<Vec<&str>>();
+            let should_be: Vec<&str> = vec!["return", "ctrl-l", "ctrl-h"];
+            for (is, sb) in is.iter().zip(should_be) {
+                assert_eq!(is, &sb);
+            }
+        } else {
+            panic!("Variables were lost during migration!");
+        }
 
         // Verify Variable migration
         if let Some(vars) = result.launcher.variables {

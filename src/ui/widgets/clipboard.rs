@@ -64,8 +64,7 @@ impl Fetchable for ClipData {
             Intent::ColorDisplay { .. } => intent.execute(),
             Intent::Url { url } => {
                 actions = Some(Arc::new([Arc::from(
-                    ApplicationAction::new("create_bookmark")
-                        .name("Create Bookmark")
+                    ApplicationAction::new("create_bookmark", "Create Bookmark")
                         .icon_name("sherlock-bookmark"),
                 )]));
                 Some(IntentResult::String(url.into()))

@@ -15,7 +15,7 @@ impl Bind {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct BindSerde {
-    bind: String,
+    pub bind: String,
     callback: String,
     pub exit: bool,
 }

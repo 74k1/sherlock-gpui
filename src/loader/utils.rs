@@ -104,18 +104,24 @@ impl<'de> Deserialize<'de> for PriorityGuard {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 pub struct ApplicationAction {
-    pub name: Option<SharedString>,
+    pub name: SharedString,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub exec: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<Arc<Path>>,
+
     pub method: String,
+
     #[serde(default = "default_true")]
     pub exit: bool,
 }
 
 impl ApplicationAction {
-    pub fn new(method: &str) -> Self {
+    pub fn new(method: &str, name: &str) -> Self {
         Self {
-            name: None,
+            name: name.to_string().into(),
             exec: None,
             icon: None,
             method: method.to_string(),
@@ -123,14 +129,14 @@ impl ApplicationAction {
         }
     }
     pub fn is_valid(&self) -> bool {
-        self.name.is_some() && self.exec.is_some()
+        !self.name.is_empty() && self.exec.is_some()
     }
     pub fn is_full(&self) -> bool {
-        self.name.is_some() && self.exec.is_some() && self.icon.is_some()
+        !self.name.is_empty() && self.exec.is_some() && self.icon.is_some()
     }
 
     pub fn name(mut self, name: impl Into<SharedString>) -> Self {
-        self.name = Some(name.into());
+        self.name = name.into();
         self
     }
     pub fn icon(mut self, icon: Arc<Path>) -> Self {
@@ -221,33 +227,66 @@ fn default_true() -> bool {
 
 #[derive(Deserialize, Debug, Serialize)]
 pub struct RawLauncher {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub alias: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub on_return: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub next_content: Option<String>,
+
     pub r#type: LauncherVariant,
     pub priority: u16,
 
     #[serde(default = "default_true")]
+    #[serde(skip_serializing_if = "is_true")]
     pub exit: bool,
+
     #[serde(default = "default_true")]
+    #[serde(skip_serializing_if = "is_true")]
     pub shortcut: bool,
+
     #[serde(default = "default_true")]
+    #[serde(skip_serializing_if = "is_true")]
     pub spawn_focus: bool,
+
     #[serde(default)]
+    #[serde(skip_serializing_if = "is_default")]
     pub r#async: bool,
+
     #[serde(default)]
+    #[serde(skip_serializing_if = "is_default")]
     pub home: HomeType,
+
     #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub binds: Option<Vec<BindSerde>>,
+
     #[serde(default)]
     pub args: Arc<serde_json::Value>,
+
     #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub actions: Option<Arc<[Arc<ContextMenuAction>]>>,
+
     #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub add_actions: Option<Arc<[Arc<ContextMenuAction>]>>,
+
     #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub variables: Option<Vec<ExecVariable>>,
+}
+
+fn is_default<T: Default + PartialEq>(t: &T) -> bool {
+    t == &T::default()
+}
+fn is_true(t: &bool) -> bool {
+    *t
 }
 
 /// Persists and normalizes application launch counts across sessions.

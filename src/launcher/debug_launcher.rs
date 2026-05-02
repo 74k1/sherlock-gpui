@@ -49,28 +49,28 @@ impl LauncherProvider for DebugLauncher {
                 priority: PriorityGuard::new_with_launcher(&launcher, 0),
                 actions: Arc::from([
                     Arc::new(ContextMenuAction::App(ApplicationAction {
-                        name: Some("Clear Cache".into()),
+                        name: "Clear Cache".into(),
                         method: "inner.clear_cache".into(),
                         icon: resolve_icon_path("sherlock-process"),
                         exit: launcher.exit,
                         ..Default::default()
                     })),
                     Arc::new(ContextMenuAction::App(ApplicationAction {
-                        name: Some("Reset App Count".into()),
+                        name: "Reset App Count".into(),
                         method: "inner.clear_app_counts".into(),
                         icon: resolve_icon_path("sherlock-process"),
                         exit: launcher.exit,
                         ..Default::default()
                     })),
                     Arc::new(ContextMenuAction::App(ApplicationAction {
-                        name: Some("Clear Error Messages".into()),
+                        name: "Clear Error Messages".into(),
                         method: "inner.clear_errors".into(),
                         icon: resolve_icon_path("sherlock-process"),
                         exit: launcher.exit,
                         ..Default::default()
                     })),
                     Arc::new(ContextMenuAction::App(ApplicationAction {
-                        name: Some("Insert Test Errors".into()),
+                        name: "Insert Test Errors".into(),
                         method: "inner.insert_test_errors".into(),
                         icon: resolve_icon_path("sherlock-devtools"),
                         exit: launcher.exit,

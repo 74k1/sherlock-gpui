@@ -57,7 +57,7 @@ impl ContextMenuAction {
     pub fn render_row(&self, is_selected: bool, theme: Arc<ThemeData>) -> impl IntoElement {
         let (name, icon) = match self {
             Self::Fn(this) => (this.name.clone(), this.icon.as_ref()),
-            Self::App(this) => (this.name.as_ref().unwrap().clone(), this.icon.as_ref()),
+            Self::App(this) => (this.name.clone(), this.icon.as_ref()),
             _ => return div(),
         };
 
@@ -235,7 +235,7 @@ mod tests {
     #[test]
     fn test_context_menu_action_round_trip() {
         // 1. Setup mock actions
-        let app_action = ContextMenuAction::App(ApplicationAction::new("test"));
+        let app_action = ContextMenuAction::App(ApplicationAction::new("test", "test"));
 
         // 2. Serialize to JSON
         let serialized = serde_json::to_string(&app_action).expect("Failed to serialize");
@@ -249,7 +249,7 @@ mod tests {
 
     #[test]
     fn test_appdata_round_trip() {
-        let app_action = ContextMenuAction::App(ApplicationAction::new("test"));
+        let app_action = ContextMenuAction::App(ApplicationAction::new("test", "test"));
         let mut app_data = AppData::new();
         app_data.actions = Arc::new([Arc::new(app_action)]);
 
