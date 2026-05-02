@@ -276,7 +276,6 @@ Groups launchers or commands under a single tile. Activating the tile switches i
 | `search_string` |  String used for fuzzy matching |
 | `actions` |  The actions to be displayed in the context menu. |
 
-
 ---
 
 ## Command Launcher
@@ -397,9 +396,8 @@ Opens a search query in the browser using a configured search engine.
 ```json
 {
     "name": "Web Search",
-    "display_name": "Google Search",
     "alias": "gg",
-    "type": "web_launcher",
+    "type": "web",
     "args": {
         "search_engine": "google",
         "icon": "google"
@@ -412,8 +410,9 @@ Opens a search query in the browser using a configured search engine.
 
 | Field | Required | Description |
 |---|---|---|
-| `search_engine` | yes | Engine name or a custom URL containing `{keyword}` |
-| `icon` | yes | Icon name to display |
+| `search_engine` | false | Engine name or a custom URL containing `{keyword}` |
+| `icon` | false | Icon name to display |
+| `display_name` | false | Display name for, replacing `{keyword}` with query. |
 
 ### Built-in search engines
 
@@ -433,29 +432,85 @@ Opens a search query in the browser using a configured search engine.
 
 ## Clipboard Launcher
 
-> **Not yet implemented in this version**
-
 Reads the clipboard and acts on its content — opening URLs, displaying colors, or evaluating expressions.
+
+```json
+{
+    "name": "Clipboard",
+    "type": "clipboard",
+    "args": {
+        "capabilities": [
+            "url",
+            "colors",
+            "calc.math"
+        ]
+    },
+    "on_return": "copy",
+    "priority": 3,
+    "home": "OnlyHome",
+    "async": true
+}
+```
+
+### args
+
+| Field | Required | Description |
+|---|---|---|
+| `capabilities` | no | List of enabled features. See [Capabilities](#Capabilities) |
 
 ---
 
 ## Debug Launcher
 
-> **Not yet implemented in this version**
-
 Runs internal debug commands such as clearing the cache or resetting launch counts.
+
+```json
+{
+    "name": "Debug",
+    "type": "debug",
+    "alias": "debug",
+    "args": {},
+    "priority": 1,
+    "exit": false
+}
+```
+
+### Functions
+
+* **Clear Cache:** Resets the entire `~/.cache/sherlock/` directory
+* **Reset App Count:** Resets the counter for how often an app / command has been launched
+* **Clear Error Messages:** Will clear all messages from the message view
+* **Insert Test Error Messages:** Will insert a message per message type (info,
+  warning, error) into the error view
 
 ---
 
 ## Emoji Picker
 
-> **Not yet implemented in this version**
+Searches and copies emoji characters.
 
-Searches and inserts emoji characters.
+```json
+{
+    "name": "Emoji Picker",
+    "alias": "emj",
+    "type": "emoji",
+    "args": {
+        "default_skin_tone": "Light"
+    },
+    "priority": 5,
+    "home": "Home"
+}
+```
+
+### args
+
+| Field | Required | Description |
+|---|---|---|
+| `default_skin_tone` | no | Can be either of `Simpsons`, `Light`, `MediumLight`, `Medium`, `MediumDar,` `Dark` |
 
 ---
 
-## Bulk Text
+## Script
 
 > **Not yet implemented in this version**
 
@@ -463,7 +518,7 @@ Runs an external script asynchronously and displays its output as a text widget.
 
 ---
 
-## Teams Event
+## Event
 
 > **Not yet implemented in this version**
 
@@ -487,8 +542,6 @@ Lists running user processes and terminates the selected one on return.
 
 ---
 
-## Pomodoro Timer
+## Timer
 
 > **Not yet implemented in this version**
-
-Displays a Pomodoro focus timer. Requires the external [sherlock-pomodoro](https://github.com/Skxxtz/sherlock-pomodoro) client.
