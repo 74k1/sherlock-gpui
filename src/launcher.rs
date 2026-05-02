@@ -28,7 +28,10 @@ use crate::{
         utils::binds::Bind,
         variant_type::{InnerFunction, LauncherType, LauncherVariant},
     },
-    loader::{LoadContext, resolve_icon_path, utils::RawLauncher},
+    loader::{
+        LoadContext, resolve_icon_path,
+        utils::{Priority, RawLauncher},
+    },
     sherlock_msg,
     ui::{launcher::context_menu::ContextMenuAction, widgets::RenderableChild},
     utils::{
@@ -86,7 +89,7 @@ pub struct Launcher {
     pub exit: bool,
 
     /// Sorting weight for display order. Lower values appear first, 0 appears only in alias mode
-    pub priority: u32,
+    pub priority: u16,
 
     /// If true, this item will receive async updates
     pub r#async: bool,
@@ -114,7 +117,7 @@ pub struct Launcher {
 pub trait LauncherValues<'a> {
     fn name(&'a self) -> Option<&'a str>;
     fn alias(&'a self) -> Option<&'a str>;
-    fn priority(&self) -> f32;
+    fn priority(&self) -> Priority;
     fn is_async(&self) -> bool;
     fn home(&self) -> HomeType;
     fn spawn_focus(&self) -> bool;
@@ -131,7 +134,7 @@ impl Launcher {
             alias: raw.alias,
             on_return: raw.on_return,
             exit: raw.exit,
-            priority: raw.priority as u32,
+            priority: raw.priority,
             r#async: raw.r#async,
             home: raw.home,
             launcher_type,

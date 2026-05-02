@@ -2,10 +2,11 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::launcher::app_launcher::app_data::AppData;
 use crate::launcher::variant_type::InnerFunction;
 use crate::launcher::{ExecEffect, LauncherProvider, LauncherType};
 use crate::loader::resolve_icon_path;
-use crate::loader::utils::{AppData, ApplicationAction, RawLauncher};
+use crate::loader::utils::{ApplicationAction, PriorityGuard, RawLauncher};
 use crate::ui::launcher::context_menu::ContextMenuAction;
 use crate::ui::widgets::RenderableChild;
 use crate::utils::config::ConfigGuard;
@@ -45,6 +46,7 @@ impl LauncherProvider for DebugLauncher {
                 name: Some("Debug".into()),
                 search_string: "clear cache;debug;app count".into(),
                 icon: resolve_icon_path("sherlock-devtools"),
+                priority: PriorityGuard::new_with_launcher(&launcher, 0),
                 actions: Arc::from([
                     Arc::new(ContextMenuAction::App(ApplicationAction {
                         name: Some("Clear Cache".into()),

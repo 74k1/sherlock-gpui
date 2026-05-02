@@ -4,6 +4,7 @@ use crate::{
         Launcher, theme_launcher::ThemePickerFunctions, utils::exec_mode::ExecMode,
         variant_type::InnerFunction,
     },
+    loader::utils::Priority,
     ui::{
         utils::render::ListItemBorder,
         widgets::{RenderableChildImpl, Selection},
@@ -147,8 +148,8 @@ impl<'a> RenderableChildImpl<'a> for ThemeWidget {
     }
 
     #[inline(always)]
-    fn priority(&self, launcher: &Arc<Launcher>) -> f32 {
-        launcher.priority as f32
+    fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
+        Priority::new_with_launcher(launcher, 0)
     }
 
     #[inline(always)]

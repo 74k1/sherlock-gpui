@@ -8,7 +8,10 @@ use gpui::{
 use crate::{
     app::theme::ThemeData,
     launcher::{Launcher, utils::exec_mode::ExecMode, variant_type::LauncherType},
-    loader::{resolve_icon_path, utils::ApplicationAction},
+    loader::{
+        resolve_icon_path,
+        utils::{ApplicationAction, Priority},
+    },
     ui::{
         launcher::context_menu::ContextMenuAction,
         traits::RenderableChildImpl,
@@ -159,8 +162,8 @@ impl<'a> RenderableChildImpl<'a> for ClipWidget {
         None
     }
     #[inline(always)]
-    fn priority(&self, launcher: &std::sync::Arc<crate::launcher::Launcher>) -> f32 {
-        launcher.priority as f32
+    fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
+        Priority::new_with_launcher(launcher, 0)
     }
     #[inline(always)]
     fn actions(

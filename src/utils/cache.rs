@@ -1,6 +1,7 @@
 use std::{
     fmt::Debug,
     fs::{self, File},
+    io::ErrorKind,
     path::{Path, PathBuf},
     time::{Duration, SystemTime},
 };
@@ -44,26 +45,33 @@ impl BinaryCache {
     ) -> Result<T, SherlockMessage> {
         let cache = path.as_ref();
 
-        let bytes = std::fs::read(cache).map_err(|e| {
-            sherlock_msg!(
-                Warning,
-                SherlockErrorType::FileError(FileAction::Read, cache.to_path_buf()),
-                e
-            )
-        })?;
+        let bytes = match std::fs::read(cache) {
+            Ok(b) => b,
+            Err(e) if e.kind() == ErrorKind::NotFound => {
+                return Err(sherlock_msg!(
+                    Warning,
+                    SherlockErrorType::FileError(FileAction::Find, cache.to_path_buf()),
+                    e
+                ));
+            }
+            Err(e) => {
+                return Err(sherlock_msg!(
+                    Warning,
+                    SherlockErrorType::FileError(FileAction::Read, cache.to_path_buf()),
+                    e
+                ));
+            }
+        };
 
         // Decode binary
         let cfg = bincode::config::standard().with_fixed_int_encoding();
         match bincode::serde::decode_from_slice::<T, _>(&bytes, cfg) {
             Ok(decoded) => Ok(decoded.0),
-            Err(e) => {
-                let _ = fs::remove_file(path);
-                Err(sherlock_msg!(
-                    Warning,
-                    SherlockErrorType::DeserializationError,
-                    e
-                ))
-            }
+            Err(e) => Err(sherlock_msg!(
+                Warning,
+                SherlockErrorType::DeserializationError,
+                e
+            )),
         }
     }
 }

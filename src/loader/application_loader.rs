@@ -9,8 +9,9 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 use std::time::SystemTime;
 
-use super::utils::{AppData, SherlockAlias};
+use super::utils::SherlockAlias;
 use crate::launcher::Launcher;
+use crate::launcher::app_launcher::app_data::AppData;
 use crate::loader::application_loader::parser::DesktopFileParser;
 use crate::prelude::PathHelpers;
 use crate::sherlock_msg;
@@ -47,8 +48,7 @@ impl ApplicationLoader {
     /// fails critically.
     pub fn load_applications(
         launcher: Arc<Launcher>,
-        counts: &HashMap<String, u32>,
-        decimals: i32,
+        counts: &HashMap<String, u16>,
         use_keywords: bool,
     ) -> Result<Arc<Vec<AppData>>, SherlockMessage> {
         let config = ConfigGuard::read()?;
@@ -63,14 +63,22 @@ impl ApplicationLoader {
             need_update.clone(),
             &launcher,
             counts,
-            decimals,
             use_keywords,
         )?;
 
-        let Ok(cached_apps) = BinaryCache::read::<Vec<AppData>, _>(&config.caching.cache) else {
-            let apps: Arc<Vec<AppData>> = new_apps.into();
-            Self::spawn_cache_write(&cache_path, apps.clone());
-            return Ok(apps);
+        let cached_apps: Vec<AppData> = match BinaryCache::read(&config.caching.cache) {
+            Ok(apps) => apps,
+            Err(e)
+                if matches!(
+                    e.error_type,
+                    SherlockErrorType::FileError(FileAction::Find, _)
+                ) =>
+            {
+                let apps: Arc<Vec<AppData>> = new_apps.into();
+                Self::spawn_cache_write(&cache_path, apps.clone());
+                return Ok(apps);
+            }
+            Err(e) => return Err(e),
         };
         let cached_apps_len = cached_apps.len();
 
@@ -81,15 +89,11 @@ impl ApplicationLoader {
                     .as_ref()
                     .is_some_and(|d| d.exists() && !update_lookup.contains(d))
             })
-            .map(|mut ad| {
-                ad.priority = ad.get_exec(&launcher).map(|exec| {
-                    parse_priority(
-                        launcher.priority as f32,
-                        counts.get(&exec).copied().unwrap_or(0u32),
-                        decimals,
-                    )
-                });
-                ad
+            .inspect(|ad| {
+                if let Some(exec) = ad.get_exec(&launcher) {
+                    let count = counts.get(&exec).copied().unwrap_or(0u16);
+                    ad.priority.set_count(count);
+                }
             })
             .chain(new_apps)
             .collect::<Vec<_>>()
@@ -123,8 +127,7 @@ impl ApplicationLoader {
     fn load_applications_from_disk(
         files: Arc<[PathBuf]>,
         launcher: &Arc<Launcher>,
-        counts: &HashMap<String, u32>,
-        decimals: i32,
+        counts: &HashMap<String, u16>,
         use_keywords: bool,
     ) -> Result<Vec<AppData>, SherlockMessage> {
         if files.is_empty() {
@@ -138,7 +141,7 @@ impl ApplicationLoader {
             ignore = Self::load_ignore_patterns(&config.files.ignore)?;
             aliases = RwLock::new(Self::load_aliases(&config.files.alias)?);
         }
-        let parser = DesktopFileParser::new(launcher, &ignore, counts, decimals, use_keywords);
+        let parser = DesktopFileParser::new(launcher, &ignore, counts, use_keywords);
 
         let apps: Vec<AppData> = files
             .into_par_iter()
@@ -160,7 +163,7 @@ impl ApplicationLoader {
 
     #[inline(always)]
     fn load_ignore_patterns(path: &Path) -> Result<Vec<Pattern>, SherlockMessage> {
-        match read_lines(&path) {
+        match read_lines(path) {
             Ok(lines) => Ok(lines
                 .map_while(Result::ok)
                 .filter_map(|l| Pattern::new(&l.to_lowercase()).ok())
@@ -176,7 +179,7 @@ impl ApplicationLoader {
 
     #[inline(always)]
     fn load_aliases(path: &Path) -> Result<HashMap<String, SherlockAlias>, SherlockMessage> {
-        match File::open(&path) {
+        match File::open(path) {
             Ok(f) => simd_json::from_reader(f)
                 .map_err(|e| sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e)),
             Err(e) if e.kind() == ErrorKind::NotFound => Ok(HashMap::new()),
@@ -230,9 +233,6 @@ impl ApplicationLoader {
 fn should_ignore(ignore_apps: &[Pattern], app: &str) -> bool {
     let app_name = app.to_lowercase();
     ignore_apps.iter().any(|pattern| pattern.matches(&app_name))
-}
-pub fn parse_priority(priority: f32, count: u32, decimals: i32) -> f32 {
-    priority + 0.99 - count as f32 * 10f32.powi(-decimals)
 }
 
 pub fn file_has_changed(file_path: &Path, compare_to: &Path) -> bool {

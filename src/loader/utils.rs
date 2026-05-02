@@ -1,22 +1,14 @@
 use gpui::SharedString;
-use serde::{
-    Deserialize, Deserializer, Serialize,
-    de::{MapAccess, Visitor},
-};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::{
     collections::{BTreeSet, HashMap},
     fmt::Debug,
-    hash::{Hash, Hasher},
     path::{Path, PathBuf},
-    sync::Arc,
+    sync::{Arc, RwLock},
 };
 
 use crate::{
-    launcher::{
-        Launcher,
-        utils::binds::BindSerde,
-        variant_type::{LauncherType, LauncherVariant},
-    },
+    launcher::{Launcher, utils::binds::BindSerde, variant_type::LauncherVariant},
     loader::resolve_icon_path,
     sherlock_msg,
     ui::launcher::context_menu::ContextMenuAction,
@@ -30,6 +22,85 @@ use crate::{
         paths,
     },
 };
+
+#[derive(PartialEq, PartialOrd, Serialize, Deserialize, Copy, Clone, Debug)]
+pub struct Priority {
+    pub base: u16,
+    pub count: u16,
+}
+impl Priority {
+    pub fn new(base: u16, count: u16) -> Self {
+        Self { base, count }
+    }
+    pub fn new_with_launcher(launcher: &Launcher, count: u16) -> Self {
+        Self {
+            base: launcher.priority,
+            count,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct PriorityGuard(Arc<RwLock<Priority>>);
+
+impl PriorityGuard {
+    pub fn new(base: u16, count: u16) -> Self {
+        Self(Arc::new(RwLock::new(Priority::new(base, count))))
+    }
+    pub fn new_with_launcher(launcher: &Launcher, count: u16) -> Self {
+        Self(Arc::new(RwLock::new(Priority::new_with_launcher(
+            launcher, count,
+        ))))
+    }
+
+    pub fn get(&self) -> Priority {
+        *self.0.read().unwrap()
+    }
+
+    pub fn set_count(&self, count: u16) {
+        self.0.write().unwrap().count = count;
+    }
+
+    pub fn increment_count(&self) {
+        self.0.write().unwrap().count += 1;
+    }
+
+    pub fn set_launcher(&self, launcher: &Launcher, count: u16) {
+        let mut inner = self.0.write().unwrap();
+        inner.base = launcher.priority;
+        inner.count = count;
+    }
+}
+
+impl Default for PriorityGuard {
+    fn default() -> Self {
+        Self(Arc::new(RwLock::new(Priority { base: 1, count: 0 })))
+    }
+}
+
+impl PartialEq for PriorityGuard {
+    fn eq(&self, other: &Self) -> bool {
+        self.get() == other.get()
+    }
+}
+
+impl PartialOrd for PriorityGuard {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.get().partial_cmp(&other.get())
+    }
+}
+
+impl Serialize for PriorityGuard {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.get().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for PriorityGuard {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Priority::deserialize(deserializer).map(|inner| Self(Arc::new(RwLock::new(inner))))
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
 pub struct ApplicationAction {
@@ -73,145 +144,6 @@ impl ApplicationAction {
     pub fn exec(mut self, exec: String) -> Self {
         self.exec = Some(exec);
         self
-    }
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct AppData {
-    #[serde(default)]
-    pub name: Option<SharedString>,
-    pub exec: Option<String>,
-    pub search_string: String,
-    #[serde(default)]
-    pub priority: Option<f32>,
-    pub icon: Option<Arc<Path>>,
-    pub desktop_file: Option<PathBuf>,
-    #[serde(default)]
-    pub actions: Arc<[Arc<ContextMenuAction>]>,
-    #[serde(default)]
-    #[serde(rename = "variables")]
-    pub vars: Vec<ExecVariable>,
-    #[serde(default)]
-    pub terminal: bool,
-}
-impl Eq for AppData {}
-impl Hash for AppData {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        // Make more efficient and handle error using f32
-        self.exec.hash(state);
-        self.desktop_file.hash(state);
-    }
-}
-impl AppData {
-    pub fn new() -> Self {
-        Self {
-            name: None,
-            exec: None,
-            search_string: String::new(),
-            priority: None,
-            icon: None,
-            desktop_file: None,
-            actions: Arc::new([]),
-            vars: vec![],
-            terminal: false,
-        }
-    }
-    pub fn with_name(mut self, name: SharedString) -> Self {
-        self.name = Some(name);
-        self
-    }
-    pub fn with_icon_opt(mut self, icon: Option<Arc<Path>>) -> Self {
-        self.icon = icon;
-        self
-    }
-    pub fn with_search_string(mut self, search_str: &str) -> Self {
-        self.search_string = search_str.to_lowercase();
-        self
-    }
-
-    pub fn apply_alias(
-        &mut self,
-        launcher: &Arc<Launcher>,
-        alias: Option<SherlockAlias>,
-        use_keywords: bool,
-        mut buffer: Vec<Arc<ApplicationAction>>,
-    ) {
-        if let Some(alias) = alias {
-            if let Some(alias_name) = alias.name.as_ref() {
-                self.name = Some(SharedString::from(alias_name));
-            }
-
-            if let Some(alias_icon) = alias.icon.as_ref().map(|i| resolve_icon_path(i)) {
-                self.icon = alias_icon;
-            }
-
-            let name: Option<&str> = self
-                .name
-                .as_ref()
-                .map(|s| s.as_str())
-                .or(launcher.name.as_ref().map(|s| s.as_str()));
-            if let Some(alias_keywords) = alias.keywords.as_ref() {
-                self.search_string = construct_search(name, alias_keywords, use_keywords);
-            } else {
-                self.search_string = construct_search(name, &self.search_string, use_keywords);
-            }
-
-            if let Some(alias_exec) = alias.exec.as_ref() {
-                self.exec = Some(alias_exec.to_string());
-            }
-
-            if let Some(add_actions) = alias.add_actions {
-                add_actions.into_iter().for_each(|mut a| {
-                    if a.icon.is_none() {
-                        a.icon = self.icon.clone();
-                    }
-                    buffer.push(a.into());
-                });
-            }
-
-            if let Some(actions) = alias.actions {
-                self.actions = actions
-                    .into_iter()
-                    .map(|mut a| {
-                        if a.icon.is_none() {
-                            a.icon = self.icon.clone();
-                        }
-                        a.into()
-                    })
-                    .collect();
-            } else {
-                self.actions = buffer
-                    .into_iter()
-                    .map(|a| Arc::new(ContextMenuAction::App((*a).clone())))
-                    .collect::<Vec<_>>()
-                    .into();
-            }
-
-            if let Some(variables) = alias.variables {
-                self.vars.extend(variables);
-            }
-        } else {
-            let name: Option<&str> = self
-                .name
-                .as_ref()
-                .map(|s| s.as_str())
-                .or(launcher.name.as_ref().map(|s| s.as_str()));
-            self.search_string = construct_search(name, &self.search_string, use_keywords);
-            self.actions = buffer.into_iter().map(|a| (*a).clone().into()).collect();
-        }
-    }
-    pub fn get_exec(&self, launcher: &Arc<Launcher>) -> Option<String> {
-        match &launcher.launcher_type {
-            LauncherType::Web(web) => Some(format!("websearch-{}", web.engine)),
-
-            LauncherType::Apps(_) | LauncherType::Commands(_) | LauncherType::Categories(_) => {
-                self.exec.clone()
-            }
-
-            // None-Home Launchers
-            LauncherType::Calculator(_) => None,
-            _ => None,
-        }
     }
 }
 
@@ -294,7 +226,7 @@ pub struct RawLauncher {
     pub on_return: Option<String>,
     pub next_content: Option<String>,
     pub r#type: LauncherVariant,
-    pub priority: f32,
+    pub priority: u16,
 
     #[serde(default = "default_true")]
     pub exit: bool,
@@ -344,59 +276,30 @@ impl CounterReader {
     /// Re-ranks all existing counts to contiguous values before incrementing,
     /// so the ordering stays stable regardless of absolute hit counts.
     pub fn increment(&self, key: &str) -> Result<(), SherlockMessage> {
-        let mut content: HashMap<String, u32> = BinaryCache::read(&self.path)?;
-        let unique_values: HashMap<u32, u32> = content
-            .values()
-            .copied()
-            .collect::<BTreeSet<_>>()
-            .into_iter()
-            .enumerate()
-            .map(|(i, v)| (v, (i + 1) as u32))
-            .collect();
+        let mut content: HashMap<String, u16> = BinaryCache::read(&self.path)?;
 
-        content.iter_mut().for_each(|(_, v)| {
-            if let Some(new) = unique_values.get(v) {
-                *v = *new;
-            }
-        });
+        let val = content.entry(key.to_string()).or_insert(0);
 
-        *content.entry(key.to_string()).or_insert(0) += 1;
-        BinaryCache::write(&self.path, &content)?;
-        Ok(())
-    }
-}
-
-/// Deserializes a map of `{ "App Name": AppData }` where the key becomes
-/// `AppData.name`. This is needed because the app name lives as the map key
-/// in the config format, not as a field inside the value.
-pub fn deserialize_named_appdata<'de, D>(deserializer: D) -> Result<Vec<AppData>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    struct AppDataMapVisitor;
-    impl<'de> Visitor<'de> for AppDataMapVisitor {
-        type Value = Vec<AppData>;
-
-        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            formatter.write_str("a map of AppData keyed by 'name'")
+        if *val == u16::MAX {
+            // compress all values to 1..=n preserving relative order
+            let unique: Vec<u16> = content
+                .values()
+                .copied()
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect();
+            let rank: HashMap<u16, u16> = unique
+                .iter()
+                .enumerate()
+                .map(|(i, &v)| (v, (i + 1) as u16))
+                .collect();
+            content.values_mut().for_each(|v| *v = rank[v]);
+        } else {
+            *val += 1;
         }
-        fn visit_map<M>(self, mut map: M) -> Result<Self::Value, M::Error>
-        where
-            M: MapAccess<'de>,
-        {
-            let mut collection = Vec::new();
 
-            while let Some((key, mut value)) = map.next_entry::<String, AppData>()? {
-                value.name = Some(SharedString::from(key));
-                // Optional: Only push if not already present
-                if !collection.iter().any(|v: &AppData| v.name == value.name) {
-                    collection.push(value);
-                }
-            }
-            Ok(collection)
-        }
+        BinaryCache::write(&self.path, &content)
     }
-    deserializer.deserialize_map(AppDataMapVisitor)
 }
 
 /// Builds the search string used for fuzzy matching.

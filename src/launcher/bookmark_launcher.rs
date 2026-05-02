@@ -5,9 +5,10 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::launcher::Launcher;
+use crate::launcher::app_launcher::app_data::AppData;
 use crate::loader::application_loader::file_has_changed;
 use crate::loader::resolve_icon_path;
-use crate::loader::utils::{AppData, construct_search};
+use crate::loader::utils::{PriorityGuard, construct_search};
 use crate::ui::widgets::RenderableChild;
 use crate::utils::cache::BinaryCache;
 use crate::utils::config::{ConfigGuard, ConstantDefaults};
@@ -256,7 +257,7 @@ impl MozillaSqliteParser {
                         icon: resolve_icon_path("sherlock-bookmark"),
                         search_string: construct_search(Some(&row.0), &row.1, true),
                         exec: Some(row.1),
-                        priority: Some(launcher.priority as f32 + 1.0),
+                        priority: PriorityGuard::new_with_launcher(&launcher, 0),
                         ..AppData::new()
                     };
                     res.push(bookmark);
@@ -342,7 +343,7 @@ impl ChromeParser {
                             icon: resolve_icon_path("sherlock-bookmark"),
                             exec: Some(url.clone()),
                             search_string: construct_search(Some(&bookmark.name), &url, true),
-                            priority: Some(launcher.priority as f32 + 1.0),
+                            priority: PriorityGuard::new_with_launcher(&launcher, 0),
                             ..AppData::new()
                         });
                     }

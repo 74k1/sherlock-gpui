@@ -12,7 +12,7 @@ use crate::{
         Launcher, timer_launcher::TimerLauncherFunctions, utils::exec_mode::ExecMode,
         variant_type::InnerFunction,
     },
-    loader::utils::ExecVariable,
+    loader::utils::{ExecVariable, Priority},
     ui::{
         launcher::context_menu::{ContextMenuAction, DynamicFunctionAction},
         utils::{search::SherlockSearch, timeout::Timeout},
@@ -145,8 +145,8 @@ impl<'a> RenderableChildImpl<'a> for TimerChild {
         })
     }
     #[inline(always)]
-    fn priority(&self, _launcher: &Arc<Launcher>) -> f32 {
-        1.0
+    fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
+        Priority::new_with_launcher(launcher, 0)
     }
     #[inline(always)]
     fn search(&'a self, _launcher: &Arc<Launcher>) -> &'a str {

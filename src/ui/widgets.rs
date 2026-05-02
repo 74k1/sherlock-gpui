@@ -21,11 +21,12 @@ use crate::{
     app::theme::ThemeData,
     launcher::{
         ExecEffect, Launcher, LauncherValues,
+        app_launcher::app_data::AppData,
         emoji_launcher::EmojiData,
         utils::{binds::Bind, exec_mode::ExecMode},
         variant_type::{InnerFunction, LauncherType, LauncherVariant},
     },
-    loader::utils::{AppData, ExecVariable},
+    loader::utils::{ExecVariable, Priority},
     ui::{
         launcher::context_menu::ContextMenuAction,
         traits::{RenderableChildDelegate, RenderableChildImpl},
@@ -178,6 +179,12 @@ macro_rules! renderable_enum {
                     $(Self::$variant {inner, launcher} => inner.update_async(launcher.clone(), cx)),*
                 }
             }
+
+            fn increment_count(&self) {
+                match self {
+                    $(Self::$variant {inner, ..} => inner.increment_count()),*
+                }
+            }
         }
 
         impl<'a> LauncherValues<'a> for $name {
@@ -197,7 +204,7 @@ macro_rules! renderable_enum {
                 self.launcher().alias.as_deref()
             }
 
-            fn priority(&self) -> f32 {
+            fn priority(&self) -> Priority {
                 match self {
                     $(Self::$variant {inner, launcher} => inner.priority(launcher)),*
                 }

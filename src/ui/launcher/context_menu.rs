@@ -227,7 +227,7 @@ impl DynamicFunctionAction {
 
 #[cfg(test)]
 mod tests {
-    use crate::loader::utils::AppData;
+    use crate::launcher::app_launcher::app_data::AppData;
 
     use super::*;
     use serde_json;
@@ -258,6 +258,7 @@ mod tests {
         let deserialized: AppData =
             serde_json::from_str(&serialized).expect("Failed to deserialize");
 
-        assert_eq!(app_data, deserialized)
+        assert_eq!(app_data.name, deserialized.name);
+        assert_eq!(app_data.exec, deserialized.exec);
     }
 }

@@ -1,7 +1,10 @@
 use std::{collections::HashMap, path::PathBuf, process::Command};
 
 use crate::{
-    loader::application_loader::ApplicationLoader, sherlock_msg, ui::UIFunction, utils::{
+    loader::application_loader::ApplicationLoader,
+    sherlock_msg,
+    ui::UIFunction,
+    utils::{
         config::ConfigKeybinds,
         errors::{
             SherlockMessage,
@@ -9,7 +12,7 @@ use crate::{
         },
         files::read_lines,
         paths,
-    }
+    },
 };
 
 pub struct ConstantDefaults {}

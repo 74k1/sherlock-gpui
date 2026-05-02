@@ -8,6 +8,7 @@ use gpui::{
 use crate::{
     app::theme::ThemeData,
     launcher::{Launcher, utils::exec_mode::ExecMode},
+    loader::utils::Priority,
     ui::{traits::RenderableChildImpl, utils::selection::Selection},
     utils::intent::{Capabilities, Intent, IntentResult},
 };
@@ -49,8 +50,8 @@ impl<'a> RenderableChildImpl<'a> for CalcData {
         })
     }
     #[inline(always)]
-    fn priority(&self, launcher: &std::sync::Arc<crate::launcher::Launcher>) -> f32 {
-        launcher.priority as f32
+    fn priority(&self, launcher: &std::sync::Arc<crate::launcher::Launcher>) -> Priority {
+        Priority::new_with_launcher(launcher, 0)
     }
     fn render(
         &self,

@@ -11,6 +11,7 @@ mod utils;
 use crate::{
     app::theme::ThemeData,
     launcher::{Launcher, utils::exec_mode::ExecMode},
+    loader::utils::Priority,
     sherlock_msg,
     ui::{
         traits::RenderableChildImpl,
@@ -55,8 +56,8 @@ impl<'a> RenderableChildImpl<'a> for TranslationData {
         None
     }
     #[inline(always)]
-    fn priority(&self, launcher: &std::sync::Arc<crate::launcher::Launcher>) -> f32 {
-        launcher.priority as f32
+    fn priority(&self, launcher: &std::sync::Arc<crate::launcher::Launcher>) -> Priority {
+        Priority::new_with_launcher(launcher, 0)
     }
     fn render(
         &self,

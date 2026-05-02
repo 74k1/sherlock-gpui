@@ -4,10 +4,12 @@ use gpui::SharedString;
 use serde::Deserialize;
 
 use crate::{
-    launcher::{Launcher, LauncherProvider, variant_type::LauncherType},
+    launcher::{
+        Launcher, LauncherProvider, app_launcher::app_data::AppData, variant_type::LauncherType,
+    },
     loader::{
         resolve_icon_path,
-        utils::{AppData, RawLauncher},
+        utils::{PriorityGuard, RawLauncher},
     },
     ui::{model::file::FileSearchBackend, widgets::RenderableChild},
     utils::errors::SherlockMessage,
@@ -66,10 +68,13 @@ impl LauncherProvider for FileLauncher {
         _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, SherlockMessage> {
-        let mut inner = AppData::new();
-        inner.name = launcher.name.as_ref().map(SharedString::from);
-        inner.search_string = "file;file search".into();
-        inner.icon = resolve_icon_path("folder");
+        let inner = AppData {
+            name: launcher.name.as_ref().map(Into::into),
+            search_string: "file;file search".into(),
+            icon: resolve_icon_path("fold"),
+            priority: PriorityGuard::new_with_launcher(&launcher, 0),
+            ..AppData::new()
+        };
 
         let child = RenderableChild::App { launcher, inner };
 

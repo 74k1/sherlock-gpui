@@ -72,4 +72,7 @@ pub trait RenderableChildDelegate<'a> {
     /// This is used for items whose state depends on internal logic (e.g., a timer)
     /// or external factors (e.g., a weather API or file system change).
     fn update_async<C: AppContext>(&self, cx: &mut C);
+
+    /// Updates the execution count for supported children
+    fn increment_count(&self);
 }

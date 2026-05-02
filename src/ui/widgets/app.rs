@@ -7,8 +7,8 @@ use gpui::{
 
 use crate::{
     app::theme::ThemeData,
-    launcher::{Launcher, utils::exec_mode::ExecMode},
-    loader::utils::AppData,
+    launcher::{Launcher, app_launcher::app_data::AppData, utils::exec_mode::ExecMode},
+    loader::utils::Priority,
     ui::{
         launcher::context_menu::ContextMenuAction,
         utils::{render::substitute, selection::Selection},
@@ -76,8 +76,8 @@ impl<'a> RenderableChildImpl<'a> for AppData {
         Some(ExecMode::from_appdata(self, launcher))
     }
     #[inline(always)]
-    fn priority(&self, launcher: &Arc<Launcher>) -> f32 {
-        self.priority.unwrap_or(launcher.priority as f32)
+    fn priority(&self, _launcher: &Arc<Launcher>) -> Priority {
+        self.priority.get()
     }
     #[inline(always)]
     fn search(&'a self, _launcher: &Arc<Launcher>) -> &'a str {
@@ -98,5 +98,9 @@ impl<'a> RenderableChildImpl<'a> for AppData {
     #[inline(always)]
     fn vars(&self, _cx: &mut App) -> Option<&[crate::loader::utils::ExecVariable]> {
         Some(&self.vars) // Works for Vec or SmallVec
+    }
+    #[inline(always)]
+    fn increment_count(&self) {
+        self.priority.increment_count()
     }
 }

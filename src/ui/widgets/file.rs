@@ -1,7 +1,7 @@
 use crate::{
     app::theme::{ActiveTheme, ThemeData},
     launcher::{Launcher, utils::exec_mode::ExecMode},
-    loader::resolve_icon_path,
+    loader::{resolve_icon_path, utils::Priority},
     ui::{
         launcher::views::NavigationViewType, traits::RenderableChildImpl,
         utils::selection::Selection,
@@ -409,8 +409,8 @@ impl<'a> RenderableChildImpl<'a> for FileData {
     }
 
     #[inline(always)]
-    fn priority(&self, launcher: &Arc<Launcher>) -> f32 {
-        launcher.priority as f32
+    fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
+        Priority::new_with_launcher(launcher, 0)
     }
 
     #[inline(always)]

@@ -16,6 +16,7 @@ use crate::{
         },
         utils::exec_mode::ExecMode,
     },
+    loader::utils::Priority,
     ui::{
         launcher::context_menu::ContextMenuAction,
         widgets::{RenderableChildImpl, Selection},
@@ -138,8 +139,8 @@ impl<'a> RenderableChildImpl<'a> for EmojiData {
         })
     }
     #[inline(always)]
-    fn priority(&self, launcher: &Arc<Launcher>) -> f32 {
-        launcher.priority as f32
+    fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
+        Priority::new_with_launcher(launcher, 0)
     }
     #[inline(always)]
     fn search(&'a self, _launcher: &Arc<Launcher>) -> &'a str {

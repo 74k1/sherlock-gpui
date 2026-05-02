@@ -1,11 +1,12 @@
 use crate::app::{RenderableChildEntity, RenderableChildWeak};
 use crate::launcher::{Launcher, LauncherValues};
 use crate::ui::traits::RenderableChildDelegate;
+use crate::ui::utils::scoring::SortKey;
 use crate::ui::{
     launcher::context_menu::ContextMenuAction,
     launcher::views::{NavigationStack, NavigationViewType},
     model::Model,
-    utils::{scoring::make_prio, search::SherlockSearch},
+    utils::search::SherlockSearch,
 };
 use crate::utils::config::HomeType;
 use gpui::AsyncApp;
@@ -219,7 +220,7 @@ impl LauncherView {
                             let is_home = query.is_empty() && mode == "all";
 
                             // collects Vec<(index, priority)>
-                            let mut results: Vec<(usize, f32)> = (0..data_arc.len())
+                            let mut results: Vec<(usize, SortKey)> = (0..data_arc.len())
                                 .map(|i| (i, &data_arc[i]))
                                 .filter(|(_, data)| {
                                     let home = data.home();
@@ -227,7 +228,7 @@ impl LauncherView {
                                     // Case 1: Early return if mode applies but item is not assigned to that mode
                                     // Case 2: Early return if current mode is not required mode for item
                                     if Some(mode) != data.alias()
-                                        && (mode != "all" || data.priority() < 1.0)
+                                        && (mode != "all" || data.priority().base < 1)
                                     {
                                         return false;
                                     }
@@ -261,7 +262,7 @@ impl LauncherView {
                                     data.search().fuzzy_match(&query)
                                 })
                                 .map(|(i, data)| {
-                                    let prio = make_prio(data.priority(), &query, data.search());
+                                    let prio = data.priority().sort_key(&query, data.search());
                                     (i, prio)
                                 })
                                 .collect();
@@ -270,9 +271,7 @@ impl LauncherView {
                             drop(data_arc);
 
                             // sort based on priority
-                            results.sort_unstable_by(|a, b| {
-                                a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)
-                            });
+                            results.sort_unstable_by_key(|a| a.1);
 
                             // strip the priority from results
                             let results_arc: Arc<[usize]> = results

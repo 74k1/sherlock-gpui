@@ -9,7 +9,7 @@ use crate::{
         utils::{binds::Bind, exec_mode::ExecMode},
         variant_type::InnerFunction,
     },
-    loader::utils::ExecVariable,
+    loader::utils::{ExecVariable, Priority},
     ui::{launcher::context_menu::ContextMenuAction, utils::selection::Selection},
 };
 
@@ -25,7 +25,7 @@ pub trait RenderableChildImpl<'a> {
         cx: &mut App,
     ) -> AnyElement;
     fn build_exec(&self, launcher: &Arc<Launcher>, cx: &mut App) -> Option<ExecMode>;
-    fn priority(&self, launcher: &Arc<Launcher>) -> f32;
+    fn priority(&self, launcher: &Arc<Launcher>) -> Priority;
     fn search(&'a self, launcher: &Arc<Launcher>) -> &'a str;
     /// Will only get called once the context menu gets opened
     fn actions(
@@ -62,6 +62,7 @@ pub trait RenderableChildImpl<'a> {
     fn vars(&self, _cx: &mut App) -> Option<&[ExecVariable]> {
         None
     }
+    fn increment_count(&self) {}
 }
 
 // To make compatible with Boxed data

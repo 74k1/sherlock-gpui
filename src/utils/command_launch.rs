@@ -11,10 +11,12 @@ use gpui::SharedString;
 use regex::{Captures, Regex};
 
 use crate::{
-    loader::application_loader::ApplicationLoader, sherlock_msg, utils::{
+    loader::application_loader::ApplicationLoader,
+    sherlock_msg,
+    utils::{
         config::{ConfigGuard, SherlockConfig},
         errors::{SherlockMessage, types::SherlockErrorType},
-    }
+    },
 };
 
 /// Spawnes a command completely detatched from the current process.

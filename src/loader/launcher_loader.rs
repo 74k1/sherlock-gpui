@@ -21,27 +21,17 @@ use super::Loader;
 use super::utils::CounterReader;
 
 pub struct LoadContext {
-    pub counts: HashMap<String, u32>,
-    pub max_decimals: i32,
+    pub counts: HashMap<String, u16>,
     pub path: PathBuf,
 }
 impl LoadContext {
     fn new() -> Result<Self, SherlockMessage> {
         let counter_reader = CounterReader::new()?;
-        let counts: HashMap<String, u32> =
+        let counts: HashMap<String, u16> =
             BinaryCache::read(&counter_reader.path).unwrap_or_default();
-
-        // Construct max decimal count
-        let max_count = counts.values().max().cloned().unwrap_or(0);
-        let max_decimals = if max_count == 0 {
-            0
-        } else {
-            (max_count as f32).log10().floor() as i32 + 1
-        };
 
         Ok(Self {
             counts,
-            max_decimals,
             path: counter_reader.path,
         })
     }
@@ -135,7 +125,7 @@ impl Loader {
         warnings: &mut Vec<SherlockMessage>,
     ) {
         if ctx.counts.is_empty() {
-            let counts: HashMap<String, u32> = renders
+            let counts: HashMap<String, u16> = renders
                 .iter()
                 .filter_map(|render| render.get_exec())
                 .map(|exec| (exec, 0))

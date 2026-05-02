@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use serde::de::IntoDeserializer;
 
+use crate::launcher::app_launcher::app_serde::deserialize_named_appdata;
 use crate::launcher::{LauncherProvider, LauncherType};
-use crate::loader::application_loader::parse_priority;
 use crate::loader::resolve_icon_path;
-use crate::loader::utils::{ApplicationAction, RawLauncher, deserialize_named_appdata};
+use crate::loader::utils::{ApplicationAction, RawLauncher};
 use crate::sherlock_msg;
 use crate::ui::launcher::context_menu::ContextMenuAction;
 use crate::ui::widgets::RenderableChild;
@@ -34,8 +34,8 @@ impl LauncherProvider for CategoryLauncher {
                 "Category launcher does not contain any categories."
             )
         })?;
-        let app_data =
-            deserialize_named_appdata(cmds.clone().into_deserializer()).unwrap_or_default();
+        let app_data = deserialize_named_appdata(cmds.clone().into_deserializer(), &launcher)
+            .unwrap_or_default();
 
         let children: Vec<RenderableChild> = app_data
             .into_iter()
@@ -45,15 +45,11 @@ impl LauncherProvider for CategoryLauncher {
                     .as_deref()
                     .and_then(|exec| ctx.counts.get(exec))
                     .copied()
-                    .unwrap_or(0u32);
+                    .unwrap_or(0u16);
                 inner.icon = inner
                     .icon
                     .and_then(|i| i.to_str().and_then(resolve_icon_path));
-                inner.priority = Some(parse_priority(
-                    launcher.priority as f32,
-                    count,
-                    ctx.max_decimals,
-                ));
+                inner.priority.set_launcher(&launcher, count);
                 inner.actions = inner
                     .actions
                     .iter()

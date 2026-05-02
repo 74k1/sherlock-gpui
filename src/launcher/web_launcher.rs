@@ -1,8 +1,8 @@
 use crate::{
-    launcher::{LauncherProvider, LauncherType},
+    launcher::{LauncherProvider, LauncherType, app_launcher::app_data::AppData},
     loader::{
         resolve_icon_path,
-        utils::{AppData, RawLauncher},
+        utils::{PriorityGuard, RawLauncher},
     },
     ui::widgets::RenderableChild,
     utils::errors::SherlockMessage,
@@ -47,6 +47,7 @@ impl LauncherProvider for WebLauncher {
         let inner = AppData {
             name,
             icon,
+            priority: PriorityGuard::new_with_launcher(&launcher, 0),
             ..AppData::new()
         };
 

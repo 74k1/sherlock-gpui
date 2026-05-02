@@ -265,6 +265,8 @@ impl LauncherView {
                 };
 
                 spawn_detached(&cmd, keyword, variables)?;
+                self.navigation
+                    .with_selected_item(cx, |item, _| item.increment_count());
                 increment(&exec);
             }
             ExecMode::Category { category } => {
@@ -277,6 +279,8 @@ impl LauncherView {
             }
             ExecMode::Command { exec } => {
                 spawn_detached(&exec, keyword, variables)?;
+                self.navigation
+                    .with_selected_item(cx, |item, _| item.increment_count());
                 increment(&exec);
             }
             ExecMode::Copy { content } => {
@@ -586,7 +590,6 @@ impl LauncherView {
 
 #[inline(always)]
 fn increment(key: &str) {
-    if let Ok(count_reader) = CounterReader::new() {
-        let _ = count_reader.increment(key);
-    };
+    let r = CounterReader::new().map(|cr| cr.increment(key));
+    println!("{:?}", r);
 }

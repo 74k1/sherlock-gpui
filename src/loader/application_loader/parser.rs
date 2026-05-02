@@ -1,9 +1,21 @@
-use std::{collections::HashMap, path::Path, sync::{Arc, RwLock}};
+use std::{
+    collections::HashMap,
+    path::Path,
+    sync::{Arc, RwLock},
+};
 
 use glob::Pattern;
 use gpui::SharedString;
 
-use crate::{launcher::Launcher, loader::{application_loader::{parse_priority, should_ignore}, resolve_icon_path, utils::{AppData, ApplicationAction, SherlockAlias}}, utils::files::read_lines};
+use crate::{
+    launcher::{Launcher, app_launcher::app_data::AppData},
+    loader::{
+        application_loader::should_ignore,
+        resolve_icon_path,
+        utils::{ApplicationAction, SherlockAlias},
+    },
+    utils::files::read_lines,
+};
 
 #[derive(PartialEq, Eq)]
 enum Section {
@@ -26,8 +38,7 @@ impl Section {
 pub struct DesktopFileParser<'a> {
     launcher: &'a Arc<Launcher>,
     ignore: &'a [Pattern],
-    counts: &'a HashMap<String, u32>,
-    decimals: i32,
+    counts: &'a HashMap<String, u16>,
     use_keywords: bool,
 }
 
@@ -35,15 +46,13 @@ impl<'a> DesktopFileParser<'a> {
     pub fn new(
         launcher: &'a Arc<Launcher>,
         ignore: &'a [Pattern],
-        counts: &'a HashMap<String, u32>,
-        decimals: i32,
+        counts: &'a HashMap<String, u16>,
         use_keywords: bool,
     ) -> Self {
         Self {
             launcher,
             ignore,
             counts,
-            decimals,
             use_keywords,
         }
     }
@@ -126,11 +135,8 @@ impl<'a> DesktopFileParser<'a> {
             .and_then(|exec| self.counts.get(exec))
             .copied()
             .unwrap_or(0);
-        data.priority = Some(parse_priority(
-            self.launcher.priority as f32,
-            count,
-            self.decimals,
-        ));
+
+        data.priority.set_launcher(self.launcher, count);
 
         Some(data)
     }

@@ -7,6 +7,7 @@ use gpui::{
 use crate::{
     app::theme::ThemeData,
     launcher::{Launcher, utils::exec_mode::ExecMode},
+    loader::utils::Priority,
     ui::widgets::{RenderableChildImpl, Selection},
 };
 
@@ -51,8 +52,8 @@ impl<'a> RenderableChildImpl<'a> for DmenuData {
     fn build_exec(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
         None
     }
-    fn priority(&self, launcher: &Arc<Launcher>) -> f32 {
-        launcher.priority as f32
+    fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
+        Priority::new_with_launcher(launcher, 0)
     }
     #[inline(always)]
     fn search(&'a self, _launcher: &Arc<Launcher>) -> &'a str {

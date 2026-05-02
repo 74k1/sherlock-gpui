@@ -32,9 +32,8 @@ impl ConfigWatcher {
         let since = self.latest_audit;
 
         // check desktop files
-        let app_change = (!ApplicationLoader::get_new_apps(since)
-            .is_empty())
-            .then(|| ConfigFileChange::Apps);
+        let app_change =
+            (!ApplicationLoader::get_new_apps(since).is_empty()).then_some(ConfigFileChange::Apps);
 
         // get entries
         let entries = std::fs::read_dir(&self.root_dir).map_err(|e| {

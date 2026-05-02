@@ -9,6 +9,7 @@ use std::process::{Command, Stdio};
 
 use crate::{
     launcher::{Launcher, utils::exec_mode::ExecMode},
+    loader::utils::Priority,
     ui::{
         launcher::context_menu::ContextMenuAction,
         traits::RenderableChildImpl,
@@ -130,8 +131,8 @@ impl<'a> RenderableChildImpl<'a> for ScriptData {
             )
             .into_any_element()
     }
-    fn priority(&self, launcher: &std::sync::Arc<Launcher>) -> f32 {
-        launcher.priority as f32
+    fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
+        Priority::new_with_launcher(launcher, 0)
     }
     fn search(&'a self, _launcher: &std::sync::Arc<Launcher>) -> &'a str {
         ""

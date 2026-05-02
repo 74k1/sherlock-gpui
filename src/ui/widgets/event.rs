@@ -23,7 +23,7 @@ use suite_223b::{
 use crate::{
     app::{LAUNCH_GENERATION, theme::ThemeData},
     launcher::{Launcher, utils::exec_mode::ExecMode, variant_type::LauncherType},
-    loader::utils::ApplicationAction,
+    loader::utils::{ApplicationAction, Priority},
     sherlock_msg,
     ui::{
         launcher::context_menu::ContextMenuAction,
@@ -390,8 +390,8 @@ impl<'a> RenderableChildImpl<'a> for EventWidget {
         None
     }
     #[inline(always)]
-    fn priority(&self, launcher: &Arc<Launcher>) -> f32 {
-        launcher.priority as f32
+    fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
+        Priority::new_with_launcher(launcher, 0)
     }
     #[inline(always)]
     fn search(&'a self, _launcher: &Arc<Launcher>) -> &'a str {

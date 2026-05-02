@@ -5,10 +5,10 @@ use gpui::{App, SharedString};
 use crate::{
     launcher::{
         Launcher, LauncherValues,
+        app_launcher::app_data::AppData,
         utils::binds::Bind,
         variant_type::{InnerFunction, LauncherType},
     },
-    loader::utils::AppData,
     ui::{
         launcher::{LauncherMode, context_menu::ContextMenuAction, views::NavigationViewType},
         traits::RenderableChildDelegate,

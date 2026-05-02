@@ -7,11 +7,12 @@ use serde_json::Value;
 use crate::{
     ensure_func,
     launcher::{
-        ExecEffect, LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction,
+        ExecEffect, LauncherProvider, LauncherType, LoadContext, app_launcher::app_data::AppData,
+        variant_type::InnerFunction,
     },
     loader::{
         resolve_icon_path,
-        utils::{AppData, RawLauncher},
+        utils::{PriorityGuard, RawLauncher},
     },
     sherlock_msg, skip_func_if_nav,
     ui::widgets::RenderableChild,
@@ -62,6 +63,7 @@ impl LauncherProvider for ProcessLauncher {
                         .icon
                         .clone()
                         .or(resolve_icon_path("sherlock-process")),
+                    priority: PriorityGuard::new_with_launcher(&launcher, 0),
                     ..AppData::new()
                 },
                 launcher,

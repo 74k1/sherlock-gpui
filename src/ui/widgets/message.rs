@@ -8,6 +8,7 @@ use gpui::{
 use crate::{
     app::theme::ThemeData,
     launcher::{Launcher, utils::exec_mode::ExecMode},
+    loader::utils::Priority,
     ui::{traits::RenderableChildImpl, widgets::Selection},
     utils::errors::{SherlockMessage, SherlockMessageLevel},
 };
@@ -139,8 +140,8 @@ impl<'a> RenderableChildImpl<'a> for MessageChild {
         None
     }
     #[inline(always)]
-    fn priority(&self, _launcher: &Arc<Launcher>) -> f32 {
-        1.0
+    fn priority(&self, _launcher: &Arc<Launcher>) -> Priority {
+        Priority::new(1, 0)
     }
     #[inline(always)]
     fn search(&'a self, _launcher: &Arc<Launcher>) -> &'a str {

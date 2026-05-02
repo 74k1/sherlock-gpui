@@ -3,12 +3,10 @@ use std::sync::Arc;
 use serde::de::IntoDeserializer;
 
 use crate::{
-    launcher::{LauncherProvider, LauncherType},
-    loader::{
-        application_loader::parse_priority,
-        resolve_icon_path,
-        utils::{RawLauncher, deserialize_named_appdata},
+    launcher::{
+        LauncherProvider, LauncherType, app_launcher::app_serde::deserialize_named_appdata,
     },
+    loader::{resolve_icon_path, utils::RawLauncher},
     sherlock_msg,
     ui::{launcher::context_menu::ContextMenuAction, widgets::RenderableChild},
     utils::errors::{SherlockMessage, types::SherlockErrorType},
@@ -37,7 +35,8 @@ impl LauncherProvider for CommandLauncher {
                 "Command launcher does not contain any commands."
             )
         })?;
-        let app_data = deserialize_named_appdata(cmds.into_deserializer()).unwrap_or_default();
+        let app_data =
+            deserialize_named_appdata(cmds.into_deserializer(), &launcher).unwrap_or_default();
         let children: Vec<RenderableChild> = app_data
             .into_iter()
             .map(|mut inner| {
@@ -46,7 +45,7 @@ impl LauncherProvider for CommandLauncher {
                     .as_deref()
                     .and_then(|exec| ctx.counts.get(exec))
                     .copied()
-                    .unwrap_or(0u32);
+                    .unwrap_or(0u16);
 
                 let parent_icon = inner
                     .icon
@@ -73,11 +72,7 @@ impl LauncherProvider for CommandLauncher {
                     })
                     .collect();
 
-                inner.priority = Some(parse_priority(
-                    launcher.priority as f32,
-                    count,
-                    ctx.max_decimals,
-                ));
+                inner.priority.set_launcher(&launcher, count);
 
                 RenderableChild::App {
                     launcher: Arc::clone(&launcher),

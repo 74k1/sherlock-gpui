@@ -1,12 +1,14 @@
 use std::{fmt::Display, sync::Arc};
 
-use gpui::SharedString;
 use serde::{Deserialize, Serialize};
 use strum::FromRepr;
 
 use crate::{
-    launcher::{Launcher, LauncherProvider, LauncherType, emoji_launcher::data::EmojiEntry},
-    loader::{resolve_icon_path, utils::AppData},
+    launcher::{
+        Launcher, LauncherProvider, LauncherType, app_launcher::app_data::AppData,
+        emoji_launcher::data::EmojiEntry,
+    },
+    loader::{resolve_icon_path, utils::PriorityGuard},
     ui::widgets::{RenderableChild, emoji::set_selected_skin_tone},
     utils::errors::SherlockMessage,
 };
@@ -38,10 +40,13 @@ impl LauncherProvider for EmojiPicker {
         _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, SherlockMessage> {
-        let mut inner = AppData::new();
-        inner.name = launcher.name.as_ref().map(SharedString::from);
-        inner.search_string = "emoji".into();
-        inner.icon = resolve_icon_path("sherlock-emoji");
+        let inner = AppData {
+            name: launcher.name.as_ref().map(Into::into),
+            search_string: "emoji".into(),
+            icon: resolve_icon_path("sherlock-emoji"),
+            priority: PriorityGuard::new_with_launcher(&launcher, 0),
+            ..AppData::new()
+        };
 
         let default_skin_tone: SkinTone = opts
             .get("default_skin_tone")

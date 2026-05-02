@@ -4,7 +4,7 @@ use crate::{
         Launcher, process_launcher::ProcessLauncherFunctions, utils::exec_mode::ExecMode,
         variant_type::InnerFunction,
     },
-    loader::resolve_icon_path,
+    loader::{resolve_icon_path, utils::Priority},
     ui::widgets::{RenderableChildImpl, Selection},
 };
 use gpui::{
@@ -156,8 +156,8 @@ impl<'a> RenderableChildImpl<'a> for ProcessData {
     }
 
     #[inline(always)]
-    fn priority(&self, launcher: &Arc<Launcher>) -> f32 {
-        launcher.priority as f32
+    fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
+        Priority::new_with_launcher(launcher, 0)
     }
 
     #[inline(always)]
