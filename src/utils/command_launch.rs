@@ -11,12 +11,10 @@ use gpui::SharedString;
 use regex::{Captures, Regex};
 
 use crate::{
-    loader::application_loader::get_applications_dir,
-    sherlock_msg,
-    utils::{
+    loader::application_loader::ApplicationLoader, sherlock_msg, utils::{
         config::{ConfigGuard, SherlockConfig},
         errors::{SherlockMessage, types::SherlockErrorType},
-    },
+    }
 };
 
 /// Spawnes a command completely detatched from the current process.
@@ -323,9 +321,8 @@ mod tests {
 
 pub fn mime_lookup(mime: &str) -> Option<String> {
     fn find_desktop_file(name: &str) -> Option<PathBuf> {
-        let app_dirs = get_applications_dir();
-
-        for dir in app_dirs {
+        let app_dirs = ApplicationLoader::get_applications_dir();
+        for dir in app_dirs.iter() {
             let full_path = dir.join(name);
             if full_path.exists() {
                 return Some(full_path);

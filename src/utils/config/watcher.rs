@@ -1,7 +1,7 @@
-use std::{collections::HashSet, fs, path::Path, time::SystemTime};
+use std::{collections::HashSet, path::Path, time::SystemTime};
 
 use crate::{
-    loader::application_loader::get_applications_dir,
+    loader::application_loader::ApplicationLoader,
     sherlock_msg,
     utils::{
         config::ConfigGuard,
@@ -12,14 +12,8 @@ use crate::{
     },
 };
 
-/// **Unfinished**
 /// This struct aims at providing an audit function to check for config file changes and
 /// application data changes. This should be run on every startup.
-///
-/// TODO:
-/// Add functionality for .desktop files.
-/// Add audit file that contains last audit time.
-///
 pub struct ConfigWatcher {
     latest_audit: SystemTime,
     root_dir: Box<Path>,
@@ -37,6 +31,11 @@ impl ConfigWatcher {
         let current_audit_time = SystemTime::now();
         let since = self.latest_audit;
 
+        // check desktop files
+        let app_change = (!ApplicationLoader::get_new_apps(since)
+            .is_empty())
+            .then(|| ConfigFileChange::Apps);
+
         // get entries
         let entries = std::fs::read_dir(&self.root_dir).map_err(|e| {
             sherlock_msg!(
@@ -51,7 +50,7 @@ impl ConfigWatcher {
             .unwrap_or_default();
 
         // collect out-of-date entries
-        let mut changes: HashSet<ConfigFileChange> = entries
+        let changes: HashSet<ConfigFileChange> = entries
             .filter_map(|entry| entry.ok())
             .filter(|entry| {
                 entry
@@ -71,16 +70,8 @@ impl ConfigWatcher {
                     _ => ConfigFileChange::Other,
                 }
             })
+            .chain(app_change)
             .collect();
-
-        // check desktop files
-        let app_dirs = get_applications_dir();
-        let apps_have_changed = app_dirs
-            .into_iter()
-            .any(|dir| any_file_modified_after(&dir, since).is_ok_and(|c| c));
-        if apps_have_changed {
-            changes.insert(ConfigFileChange::Apps);
-        }
 
         self.latest_audit = current_audit_time;
 
@@ -97,38 +88,4 @@ pub enum ConfigFileChange {
     Ignore,
     Fallback,
     Other,
-}
-
-fn any_file_modified_after(dir: &Path, since: SystemTime) -> Result<bool, SherlockMessage> {
-    if !dir.exists() {
-        return Err(sherlock_msg!(
-            Warning,
-            SherlockErrorType::DirError(DirAction::Find, dir.to_path_buf()),
-            "Directory does not exist."
-        ));
-    }
-
-    let any_file = fs::read_dir(dir)
-        .map_err(|e| {
-            sherlock_msg!(
-                Warning,
-                SherlockErrorType::DirError(DirAction::Read, dir.to_path_buf()),
-                e
-            )
-        })?
-        .filter_map(Result::ok)
-        .filter_map(|e| {
-            let meta = e.metadata().ok()?;
-            let is_desktop = e
-                .path()
-                .extension()
-                .is_some_and(|ext| ext.eq_ignore_ascii_case("desktop"));
-
-            (meta.is_file() && is_desktop)
-                .then(|| meta.modified().ok())
-                .flatten()
-        })
-        .any(|m| m > since);
-
-    Ok(any_file)
 }

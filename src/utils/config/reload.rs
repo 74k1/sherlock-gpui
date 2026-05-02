@@ -38,7 +38,7 @@ pub fn reload(
     }
 
     // Reload launchers
-    let modes = if needs.launchers {
+    let modes = if needs.launchers || needs.apps {
         let result = match cx.update(|cx| Loader::load_launchers(cx, data.clone())) {
             Ok(result) => result,
             Err(e) => {

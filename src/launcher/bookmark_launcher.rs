@@ -256,11 +256,8 @@ impl MozillaSqliteParser {
                         icon: resolve_icon_path("sherlock-bookmark"),
                         search_string: construct_search(Some(&row.0), &row.1, true),
                         exec: Some(row.1),
-                        desktop_file: None,
                         priority: Some(launcher.priority as f32 + 1.0),
-                        actions: Arc::new([]),
-                        vars: vec![],
-                        terminal: false,
+                        ..AppData::new()
                     };
                     res.push(bookmark);
                 }
@@ -345,11 +342,8 @@ impl ChromeParser {
                             icon: resolve_icon_path("sherlock-bookmark"),
                             exec: Some(url.clone()),
                             search_string: construct_search(Some(&bookmark.name), &url, true),
-                            desktop_file: None,
                             priority: Some(launcher.priority as f32 + 1.0),
-                            actions: Arc::new([]),
-                            vars: vec![],
-                            terminal: false,
+                            ..AppData::new()
                         });
                     }
                 }

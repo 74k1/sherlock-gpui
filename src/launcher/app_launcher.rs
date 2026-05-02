@@ -5,7 +5,7 @@ use serde_json::Value;
 
 use crate::{
     launcher::{LauncherProvider, LauncherType, LoadContext},
-    loader::{Loader, utils::RawLauncher},
+    loader::{application_loader::ApplicationLoader, utils::RawLauncher},
     ui::widgets::RenderableChild,
     utils::errors::SherlockMessage,
 };
@@ -31,14 +31,15 @@ impl LauncherProvider for AppLauncher {
         _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
-        Loader::load_applications(
+        ApplicationLoader::load_applications(
             Arc::clone(&launcher),
             &ctx.counts,
             ctx.max_decimals,
             self.use_keywords,
         )
-        .map(|ad| {
-            ad.into_iter()
+        .map(|apps| {
+            Arc::unwrap_or_clone(apps)
+                .into_iter()
                 .map(|inner| RenderableChild::App {
                     launcher: Arc::clone(&launcher),
                     inner,

@@ -1,10 +1,7 @@
 use std::{collections::HashMap, path::PathBuf, process::Command};
 
 use crate::{
-    loader::application_loader::{get_applications_dir, get_desktop_files},
-    sherlock_msg,
-    ui::UIFunction,
-    utils::{
+    loader::application_loader::ApplicationLoader, sherlock_msg, ui::UIFunction, utils::{
         config::ConfigKeybinds,
         errors::{
             SherlockMessage,
@@ -12,7 +9,7 @@ use crate::{
         },
         files::read_lines,
         paths,
-    },
+    }
 };
 
 pub struct ConstantDefaults {}
@@ -96,8 +93,7 @@ impl ConstantDefaults {
                 "Command 'xdg-settings get default-web-browser' failed to produce a valid output."
             ));
         };
-        let desktop_dirs = get_applications_dir();
-        let desktop_files = get_desktop_files(desktop_dirs);
+        let desktop_files = ApplicationLoader::get_desktop_files();
         let browser_file = desktop_files
             .iter()
             .find(|f| f.ends_with(&desktop_file))
