@@ -33,7 +33,7 @@ pub enum EventLauncherFunctions {
 /// The following inner functions are available:
 /// - `HardRefresh`: Not yet implemented on server-side
 /// - `JoinMeeting`: Only available if its actually a meeting, will join a meeting using mime-type
-/// lookup
+///   lookup
 #[derive(Clone, Debug, Deserialize)]
 pub struct EventLauncher {
     pub look_back: Duration,
