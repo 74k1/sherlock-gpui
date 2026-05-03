@@ -10,6 +10,7 @@ use crate::{
     utils::errors::SherlockMessage,
 };
 
+/// No user-side arguments
 #[derive(Clone, Debug, Deserialize)]
 pub struct Translator {}
 

@@ -26,6 +26,14 @@ pub enum EventLauncherFunctions {
     JoinMeeting,
 }
 
+/// The following arguments are available to users:
+/// - `look_back`: Time the events should be shown at after already having started
+/// - `look_ahead`: Time the events shuold be shown before they have started
+///
+/// The following inner functions are available:
+/// - `HardRefresh`: Not yet implemented on server-side
+/// - `JoinMeeting`: Only available if its actually a meeting, will join a meeting using mime-type
+/// lookup
 #[derive(Clone, Debug, Deserialize)]
 pub struct EventLauncher {
     pub look_back: Duration,

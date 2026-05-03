@@ -267,7 +267,9 @@ impl LauncherView {
                 spawn_detached(&cmd, keyword, variables)?;
                 self.navigation
                     .with_selected_item(cx, |item, _| item.increment_count());
-                increment(&exec);
+                if let Err(e) = increment(&exec) {
+                    self.navigation.push_message(e, cx);
+                }
             }
             ExecMode::Category { category } => {
                 self.navigation.current_mut().mode = category;
@@ -281,7 +283,9 @@ impl LauncherView {
                 spawn_detached(&exec, keyword, variables)?;
                 self.navigation
                     .with_selected_item(cx, |item, _| item.increment_count());
-                increment(&exec);
+                if let Err(e) = increment(&exec) {
+                    self.navigation.push_message(e, cx);
+                }
             }
             ExecMode::Copy { content } => {
                 cx.write_to_clipboard(ClipboardItem::new_string(content.to_string()));
@@ -589,7 +593,7 @@ impl LauncherView {
 }
 
 #[inline(always)]
-fn increment(key: &str) {
-    let r = CounterReader::new().map(|cr| cr.increment(key));
-    println!("{:?}", r);
+fn increment(key: &str) -> Result<(), SherlockMessage> {
+    let reader = CounterReader::new()?;
+    reader.increment(key)
 }

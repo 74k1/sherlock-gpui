@@ -3,26 +3,34 @@ use serde_json::Value;
 use std::sync::Arc;
 
 use crate::{
-    ensure_func,
+    define_inner_functions, ensure_func,
     launcher::{
         Bind, ExecEffect, LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction,
     },
     loader::utils::RawLauncher,
     sherlock_msg, skip_func_if_nav,
-    ui::traits::RenderableChildImpl,
-    ui::widgets::{
-        RenderableChild,
-        script::{ScriptData, ScriptDataUpdateEntity},
+    ui::{
+        traits::RenderableChildImpl,
+        widgets::{
+            RenderableChild,
+            script::{ScriptData, ScriptDataUpdateEntity},
+        },
     },
     utils::errors::{SherlockMessage, types::SherlockErrorType},
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, strum::VariantNames, strum::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum ScriptFunctions {
-    Run,
+define_inner_functions! {
+    pub enum ScriptFunctions {
+        Run,
+    }
 }
 
+/// The following arguments are available to users:
+/// - `exec`: The script to be executed
+/// - `exec-args`: The arguments to the command
+///
+/// The following inner functions are available:
+/// - `Run`: Runs the current script (if not async)
 #[derive(Clone, Debug)]
 pub struct ScriptLauncher {
     binds: Option<Arc<Vec<Bind>>>,

@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
-    ensure_func,
+    define_inner_functions, ensure_func,
     launcher::{
         ExecEffect, LauncherProvider, LauncherType, LoadContext, app_launcher::app_data::AppData,
         variant_type::InnerFunction,
@@ -22,12 +22,18 @@ use crate::{
 use nix::sys::signal::{Signal, kill};
 use nix::unistd::Pid;
 
-#[derive(Debug, Clone, Copy, PartialEq, strum::VariantNames, strum::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum ProcessLauncherFunctions {
-    Quit { pid: i32 },
+define_inner_functions! {
+    pub enum ProcessLauncherFunctions {
+        Quit { pid: i32 },
+    }
 }
 
+/// The following arguments are available to users:
+/// - `max_results`: Maximum number of search results displayed in the view
+/// - `show_tile`: Wheather a tile should be displayed or the user only wants to use the alias
+///
+/// The following inner functions are available:
+/// - `Quit`: Only internal for now.
 #[derive(Clone, Debug, Deserialize)]
 pub struct ProcessLauncher {
     pub max_results: usize,

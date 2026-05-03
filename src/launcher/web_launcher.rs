@@ -11,6 +11,9 @@ use gpui::SharedString;
 use serde::Deserialize;
 use serde_json::Value;
 
+/// The following arguments are available to users:
+/// - `engine`: The engine to be used for the query
+/// - `browser`: The browser to be used for opening the query, defaults
 #[derive(Clone, Debug, Deserialize)]
 pub struct WebLauncher {
     #[serde(rename = "search_engine")]

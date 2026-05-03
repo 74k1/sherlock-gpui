@@ -6,6 +6,7 @@ use crate::{
     utils::errors::SherlockMessage,
 };
 
+/// No user-side arguments
 #[derive(Clone, Debug, Default)]
 pub struct DmenuLauncher {}
 

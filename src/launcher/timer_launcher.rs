@@ -15,6 +15,8 @@ use crate::{
     utils::errors::{SherlockMessage, types::SherlockErrorType},
 };
 
+/// The following arguments are available to users:
+/// - `exec`: Default command to execute on timer end
 #[derive(Clone, Debug, Deserialize)]
 pub struct TimerLauncher {
     command: Option<SharedString>,

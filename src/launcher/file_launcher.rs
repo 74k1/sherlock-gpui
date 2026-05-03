@@ -15,6 +15,11 @@ use crate::{
     utils::errors::SherlockMessage,
 };
 
+/// The following arguments are available to users:
+/// - `backend`: The backend used for the filesearch, `rg`, `fd`, `walkdir`
+/// - `poll_interval`: Time between backend calls
+/// - `max_results`: The maximum number of search results, displayed,
+/// - `path`: The root path for the file search
 #[derive(Clone, Debug, Deserialize)]
 pub struct FileLauncher {
     pub loc: SharedString,
@@ -71,7 +76,7 @@ impl LauncherProvider for FileLauncher {
         let inner = AppData {
             name: launcher.name.as_ref().map(Into::into),
             search_string: "file;file search".into(),
-            icon: resolve_icon_path("fold"),
+            icon: launcher.icon.clone().or(resolve_icon_path("folder")),
             priority: PriorityGuard::new_with_launcher(&launcher, 0),
             ..AppData::new()
         };

@@ -13,6 +13,8 @@ use crate::{
 pub mod app_data;
 pub mod app_serde;
 
+/// The following arguments are available to users:
+/// - `use_keywords`: Whether the search should use the keywords or only the app name
 #[derive(Clone, Debug, Deserialize)]
 pub struct AppLauncher {
     #[serde(default)]
