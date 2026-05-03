@@ -11,7 +11,6 @@ use crate::{
     launcher::{Launcher, utils::binds::BindSerde, variant_type::LauncherVariant},
     loader::resolve_icon_path,
     sherlock_msg,
-    ui::launcher::context_menu::ContextMenuAction,
     utils::{
         cache::BinaryCache,
         config::HomeType,
@@ -153,6 +152,36 @@ impl ApplicationAction {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+pub struct ApplicationActionSerde {
+    pub name: SharedString,
+
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exec: Option<String>,
+
+    #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+
+    pub method: String,
+
+    #[serde(default = "default_true")]
+    pub exit: bool,
+}
+
+impl From<ApplicationActionSerde> for ApplicationAction {
+    fn from(value: ApplicationActionSerde) -> Self {
+        Self {
+            name: value.name,
+            exec: value.exec,
+            icon: value.icon.as_deref().and_then(resolve_icon_path),
+            method: value.method,
+            exit: value.exit,
+        }
+    }
+}
+
 #[derive(Deserialize, Clone, Debug)]
 pub struct SherlockAlias {
     pub name: Option<String>,
@@ -256,10 +285,6 @@ pub struct RawLauncher {
 
     #[serde(default)]
     #[serde(skip_serializing_if = "is_default")]
-    pub r#async: bool,
-
-    #[serde(default)]
-    #[serde(skip_serializing_if = "is_default")]
     pub home: HomeType,
 
     #[serde(default)]
@@ -271,11 +296,11 @@ pub struct RawLauncher {
 
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub actions: Option<Arc<[Arc<ContextMenuAction>]>>,
+    pub actions: Option<Vec<ApplicationActionSerde>>,
 
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub add_actions: Option<Arc<[Arc<ContextMenuAction>]>>,
+    pub add_actions: Option<Vec<ApplicationActionSerde>>,
 
     #[serde(default)]
     #[serde(skip_serializing_if = "Option::is_none")]

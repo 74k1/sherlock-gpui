@@ -30,7 +30,7 @@ use crate::{
     },
     loader::{
         LoadContext, resolve_icon_path,
-        utils::{Priority, RawLauncher},
+        utils::{ApplicationAction, ApplicationActionSerde, Priority, RawLauncher},
     },
     sherlock_msg,
     ui::{launcher::context_menu::ContextMenuAction, widgets::RenderableChild},
@@ -91,9 +91,6 @@ pub struct Launcher {
     /// Sorting weight for display order. Lower values appear first, 0 appears only in alias mode
     pub priority: u16,
 
-    /// If true, this item will receive async updates
-    pub r#async: bool,
-
     /// Determines when to show the widgets
     pub home: HomeType,
 
@@ -128,20 +125,36 @@ pub trait LauncherValues<'a> {
 
 impl Launcher {
     pub fn from_raw(raw: RawLauncher, launcher_type: LauncherType, icon: Option<String>) -> Self {
+        let icon = icon.as_deref().and_then(resolve_icon_path);
+
+        // build actions
+        type ActionType = Option<Arc<[Arc<ContextMenuAction>]>>;
+        let from_action = |field: Option<Vec<ApplicationActionSerde>>| -> ActionType {
+            field.map(|a| {
+                a.into_iter()
+                    .map(|action| {
+                        let mut app_action: ApplicationAction = action.into();
+                        app_action.icon = app_action.icon.or_else(|| icon.clone());
+                        Arc::new(ContextMenuAction::App(app_action))
+                    })
+                    .collect::<Vec<_>>()
+                    .into()
+            })
+        };
+
         Self {
+            actions: from_action(raw.actions),
+            add_actions: from_action(raw.add_actions),
             name: raw.name.map(|n| n.into()),
-            icon: icon.as_deref().and_then(resolve_icon_path),
+            icon,
             alias: raw.alias,
             on_return: raw.on_return,
             exit: raw.exit,
             priority: raw.priority,
-            r#async: raw.r#async,
             home: raw.home,
             launcher_type,
             shortcut: raw.shortcut,
             spawn_focus: raw.spawn_focus,
-            actions: raw.actions,
-            add_actions: raw.add_actions,
         }
     }
     pub fn default_dmenu() -> Self {

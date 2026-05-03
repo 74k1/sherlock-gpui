@@ -33,6 +33,7 @@ define_inner_functions! {
 /// - `Run`: Runs the current script (if not async)
 #[derive(Clone, Debug)]
 pub struct ScriptLauncher {
+    pub r#async: bool,
     binds: Option<Arc<Vec<Bind>>>,
 }
 
@@ -42,7 +43,14 @@ impl LauncherProvider for ScriptLauncher {
             .binds
             .as_ref()
             .map(|vec| Arc::new(vec.iter().filter_map(|b| Bind::try_from(b).ok()).collect()));
-        LauncherType::Script(ScriptLauncher { binds })
+
+        let r#async = raw
+            .args
+            .get("async")
+            .and_then(Value::as_bool)
+            .unwrap_or(true);
+
+        LauncherType::Script(ScriptLauncher { r#async, binds })
     }
     fn objects(
         &self,

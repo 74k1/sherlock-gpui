@@ -5,8 +5,7 @@ use serde_json::{Value, json};
 
 use crate::{
     launcher::{utils::binds::BindSerde, variant_type::LauncherVariant},
-    loader::utils::{ExecVariable, RawLauncher},
-    ui::launcher::context_menu::ContextMenuAction,
+    loader::utils::{ApplicationActionSerde, ExecVariable, RawLauncher},
     utils::config::HomeType,
 };
 
@@ -46,9 +45,9 @@ pub struct LegacyRawLauncher {
     #[serde(default)]
     pub binds: Option<Vec<BindSerde>>,
     #[serde(default)]
-    pub actions: Option<Arc<[Arc<ContextMenuAction>]>>,
+    pub actions: Option<Vec<ApplicationActionSerde>>,
     #[serde(default)]
-    pub add_actions: Option<Arc<[Arc<ContextMenuAction>]>>,
+    pub add_actions: Option<Vec<ApplicationActionSerde>>,
     #[serde(default)]
     pub variables: Option<Vec<LegacyExecVariable>>,
 }
@@ -209,6 +208,27 @@ impl LegacyRawLauncher {
             return Err(logs);
         };
 
+        // drop async for all other types execpt script, because its automatic
+        if new_type == LauncherVariant::Script
+            && let Some(obj) = self.args.as_object_mut()
+        {
+            logs.push("[{name}] Moved `async` field into `args`".into());
+            obj.insert("async".to_string(), json!(self.r#async));
+        }
+
+        // notify for async drop for all other types
+        if self.r#async {
+            logs.push("[{name}] Removed `async` field. It's not required anymore".into());
+        }
+
+        // move display_name into args
+        if let Some(dis) = &self.display_name
+            && let Some(obj) = self.args.as_object_mut()
+        {
+            logs.push("[{name}] Moved `display_name` field into `args`".into());
+            obj.insert("display_name".to_string(), json!(dis));
+        }
+
         let launcher = RawLauncher {
             name: self.name,
             alias: self.alias,
@@ -219,7 +239,6 @@ impl LegacyRawLauncher {
             exit: self.exit,
             shortcut: self.shortcut,
             spawn_focus: self.spawn_focus,
-            r#async: self.r#async,
             home: self.home,
             binds: self.binds,
             args: Arc::new(self.args),

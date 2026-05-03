@@ -197,7 +197,20 @@ macro_rules! renderable_enum {
             }
 
             fn is_async(&self) -> bool {
-                self.launcher().r#async
+                if matches!(
+                    self.launcher_variant(),
+                    LauncherVariant::Weather
+                        | LauncherVariant::MusicPlayer
+                        | LauncherVariant::Clipboard
+                        | LauncherVariant::Event
+                ) {
+                    return true;
+                }
+
+                match self.launcher_type() {
+                    LauncherType::Script(scr) => scr.r#async,
+                    _ => false,
+                }
             }
 
             fn alias(&'a self) -> Option<&'a str> {

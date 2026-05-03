@@ -26,7 +26,6 @@ impl MessageView {
             on_return: None,
             exit: false,
             priority: 1,
-            r#async: false,
             home: HomeType::Home,
             launcher_type: LauncherType::Message(MessageLauncher {}),
             shortcut: false,

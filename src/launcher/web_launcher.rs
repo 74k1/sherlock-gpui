@@ -1,8 +1,6 @@
 use crate::{
     launcher::{LauncherProvider, LauncherType, app_launcher::app_data::AppData},
-    loader::{
-        utils::{PriorityGuard, RawLauncher},
-    },
+    loader::utils::{PriorityGuard, RawLauncher},
     ui::widgets::RenderableChild,
     utils::errors::SherlockMessage,
 };

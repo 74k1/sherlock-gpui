@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::process::{Command, Stdio};
 
 use crate::{
-    launcher::{Launcher, utils::exec_mode::ExecMode},
+    launcher::{Launcher, utils::exec_mode::ExecMode, variant_type::LauncherType},
     loader::utils::Priority,
     ui::{
         launcher::context_menu::ContextMenuAction,
@@ -202,7 +202,9 @@ impl<'a> RenderableChildImpl<'a> for ScriptData {
             this.last_query = query.clone();
         });
 
-        if launcher.r#async {
+        if let LauncherType::Script(scr) = &launcher.launcher_type
+            && scr.r#async
+        {
             self.update_async(launcher.clone(), cx);
         }
     }
