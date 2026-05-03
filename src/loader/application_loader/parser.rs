@@ -105,7 +105,7 @@ impl<'a> DesktopFileParser<'a> {
                     }
                 }
                 Section::Action => {
-                    self.handle_action_field(key, value, &data, &mut current_action);
+                    self.handle_action_field(&key_buf, value, &data, &mut current_action);
                     if current_action.is_full() {
                         actions.push(Arc::new(current_action));
                         current_action = ApplicationAction::new("app_launcher", "");
