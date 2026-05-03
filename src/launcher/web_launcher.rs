@@ -1,7 +1,6 @@
 use crate::{
     launcher::{LauncherProvider, LauncherType, app_launcher::app_data::AppData},
     loader::{
-        resolve_icon_path,
         utils::{PriorityGuard, RawLauncher},
     },
     ui::widgets::RenderableChild,
