@@ -12,14 +12,20 @@ use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::{DirAction, FileAction, SherlockErrorType};
 use crate::utils::files::{expand_path, home_dir};
 use crate::utils::format::make_title_case;
-use crate::{ensure_func, sherlock_msg};
+use crate::{define_inner_functions, ensure_func, sherlock_msg};
 
-#[derive(Debug, Clone, PartialEq, strum::VariantNames, strum::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum ThemePickerFunctions {
-    Pick { theme: Arc<ThemeData> },
+define_inner_functions! {
+    pub enum ThemePickerFunctions {
+        Pick { theme: Arc<ThemeData> },
+    }
 }
 
+/// The following arguments are available to users:
+/// - `path`: The path to look for themes in
+/// - TODO: `short_defaults`: Wheather default themes should be shown.
+///
+/// The following inner functions are available:
+/// - `Pick`: Pick a theme, not user-facing yet
 #[derive(Clone, Debug)]
 pub struct ThemePicker {}
 

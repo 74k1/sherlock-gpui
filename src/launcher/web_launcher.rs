@@ -11,6 +11,10 @@ use gpui::SharedString;
 use serde::Deserialize;
 use serde_json::Value;
 
+/// The following arguments are available to users:
+/// - `engine`: The engine to be used for the query
+/// - `browser`: The browser to be used for opening the query, defaults
+/// - `display_name`: The display name for this tile, replacing `{keyword}` with query
 #[derive(Clone, Debug, Deserialize)]
 pub struct WebLauncher {
     #[serde(rename = "search_engine")]
@@ -33,11 +37,6 @@ impl LauncherProvider for WebLauncher {
         _messages: &mut Vec<SherlockMessage>,
         _cx: &mut gpui::App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
-        let icon = opts
-            .get("icon")
-            .and_then(Value::as_str)
-            .and_then(resolve_icon_path);
-
         let name: Option<SharedString> = opts
             .get("display_name")
             .and_then(Value::as_str)
@@ -46,7 +45,7 @@ impl LauncherProvider for WebLauncher {
 
         let inner = AppData {
             name,
-            icon,
+            icon: launcher.icon.clone(),
             priority: PriorityGuard::new_with_launcher(&launcher, 0),
             ..AppData::new()
         };

@@ -25,6 +25,7 @@ define_inner_functions! {
     }
 }
 
+/// No user-side arguments
 #[derive(Clone, Debug)]
 pub struct DebugLauncher {}
 

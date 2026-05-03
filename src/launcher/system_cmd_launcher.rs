@@ -12,6 +12,8 @@ use crate::{
     utils::errors::{SherlockMessage, types::SherlockErrorType},
 };
 
+/// The following arguments are available to users:
+/// - `commands`: Named AppData containing executable commands
 #[derive(Clone, Debug)]
 pub struct CommandLauncher {}
 

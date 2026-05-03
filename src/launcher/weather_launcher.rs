@@ -24,17 +24,27 @@ use crate::{
 mod utils;
 mod wttr_serde;
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Default)]
 pub enum WeatherIconTheme {
     Sherlock,
+    #[default]
     None,
 }
 
+/// The following arguments are available to users:
+/// - `locatoin`: The location for the weather
+/// - `update_interval`: Time in minutes when the weather should be updated again
+/// - `icon_theme`: The icon theme used for weather icons
+/// - `show_datetime`: Whether or not to show the current date and time
 #[derive(Clone, Debug, Deserialize)]
 pub struct WeatherLauncher {
     pub location: String,
+
     pub update_interval: u64,
+
+    #[serde(default)]
     pub icon_theme: WeatherIconTheme,
+
     #[serde(default)]
     pub show_datetime: bool,
 }

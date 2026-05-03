@@ -12,6 +12,9 @@ use crate::ui::widgets::RenderableChild;
 use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::SherlockErrorType;
 
+/// The following arguments are available to users:
+/// - `categories`: The available categories. Is a named AppData. On execution, will apply the
+/// alias, provided as the `exec` field.
 #[derive(Clone, Debug)]
 pub struct CategoryLauncher {}
 

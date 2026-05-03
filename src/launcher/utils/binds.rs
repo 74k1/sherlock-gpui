@@ -1,7 +1,7 @@
 use gpui::{InvalidKeystrokeError, Keystroke};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Bind {
     pub exit: bool,
     pub bind: Keystroke,

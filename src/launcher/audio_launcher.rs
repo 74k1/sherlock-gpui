@@ -18,7 +18,7 @@ use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::{
     DBusAction, DirAction, FileAction, SherlockErrorType, SocketAction,
 };
-use crate::{ensure_func, sherlock_msg, skip_func_if_nav};
+use crate::{define_inner_functions, ensure_func, sherlock_msg, skip_func_if_nav};
 
 pub mod utils;
 
@@ -27,17 +27,24 @@ use utils::MprisData;
 use crate::launcher::{ExecEffect, LauncherProvider, LauncherType};
 use crate::loader::utils::RawLauncher;
 
+/// The following arguments are available to users:
+/// - `use_keywords`: Whether the search should use the keywords or only the app name
+///
+/// The following inner functions are available:
+/// - `TogglePlayback`: Toggles current media playback
+/// - `Previous`: Skips to previous song
+/// - `Next`: Skips to next song
 #[derive(Debug, Clone, Default)]
 pub struct MusicPlayerLauncher {
     binds: Option<Arc<Vec<Bind>>>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, strum::VariantNames, strum::EnumString)]
-#[strum(serialize_all = "snake_case")]
-pub enum MusicPlayerFunctions {
-    TogglePlayback,
-    Previous,
-    Next,
+define_inner_functions! {
+    pub enum MusicPlayerFunctions {
+        TogglePlayback,
+        Previous,
+        Next,
+    }
 }
 
 impl LauncherProvider for MusicPlayerLauncher {

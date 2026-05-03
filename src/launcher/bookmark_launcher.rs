@@ -21,6 +21,8 @@ use crate::{sher_log, sherlock_msg};
 use crate::launcher::{LauncherProvider, LauncherType};
 use crate::loader::utils::RawLauncher;
 
+/// The following arguments are available to users:
+/// - `browser`: The browser from which the bookmarks should be parsed
 #[derive(Clone, Debug)]
 pub struct BookmarkLauncher {
     pub target_browser: String,

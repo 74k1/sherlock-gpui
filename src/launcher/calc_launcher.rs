@@ -14,6 +14,9 @@ pub use currency::Currency;
 
 pub static CURRENCIES: OnceLock<Option<Currency>> = OnceLock::new();
 
+/// The following arguments are available to users:
+/// - `currency_update_interval`
+/// - `capabilities`
 #[derive(Clone, Debug)]
 pub struct CalculatorLauncher {}
 

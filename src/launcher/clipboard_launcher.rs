@@ -7,6 +7,8 @@ use crate::{
     utils::{errors::SherlockMessage, intent::Capabilities},
 };
 
+/// The following arguments are available to users:
+/// - `capabilities`
 #[derive(Clone, Debug)]
 pub struct ClipboardLauncher {
     pub capabilities: Capabilities,

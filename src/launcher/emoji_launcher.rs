@@ -24,6 +24,8 @@ pub static ALL_SKIN_TONES: [SkinTone; 6] = [
     SkinTone::Dark,
 ];
 
+/// The following arguments are available to users:
+/// - `default_skin_tone`: The skin tone that should be used as default
 #[derive(Clone, Debug, Default)]
 pub struct EmojiPicker {}
 
