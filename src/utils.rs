@@ -9,4 +9,5 @@ pub mod intent;
 pub mod logging;
 pub mod networking;
 pub mod paths;
+pub mod sized_message_sync;
 pub mod websearch;

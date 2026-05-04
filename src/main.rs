@@ -9,7 +9,9 @@ use crate::{
     loader::{CustomIconTheme, Loader, assets::Assets, pipe::read_stdin_piped},
     tokio_utils::{AsyncSizedMessage, SizedMessageObj},
     utils::{
-        clipboard::spawn_clipboard_watcher, config::SherlockConfig, networking::ClientMessage,
+        clipboard::spawn_clipboard_watcher,
+        config::SherlockConfig,
+        networking::{ClientMessage, ServerResponse},
     },
 };
 
@@ -36,6 +38,7 @@ static SOCKET_PATH: &str = "/tmp/sherlock.sock";
 async fn main() {
     let socket_path = "/tmp/sherlock.sock";
     if let Ok(mut stream) = UnixStream::connect(socket_path).await {
+        let mut wait_for_response = false;
         // update flags
         let config_update = ClientMessage::ConfigUpdate(Box::new(Loader::load_flags()));
         if let Ok(config_bin) = SizedMessageObj::from_struct(&config_update) {
@@ -55,12 +58,19 @@ async fn main() {
 
             if let Ok(payload_bin) = SizedMessageObj::from_struct(&payload) {
                 let _ = stream.write_sized(payload_bin).await;
+                wait_for_response = true;
             }
         }
 
         let payload = ClientMessage::Open;
         if let Ok(payload_bin) = SizedMessageObj::from_struct(&payload) {
             let _ = stream.write_sized(payload_bin).await;
+        }
+
+        if wait_for_response
+            && let Ok(ServerResponse::Print(response)) = stream.read_sized::<ServerResponse>().await
+        {
+            println!("{response}");
         }
 
         stream.shutdown().await.ok();

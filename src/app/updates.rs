@@ -1,5 +1,6 @@
 use gpui::{AppContext, AsyncApp, Focusable, WindowHandle};
 use serde::de::DeserializeOwned;
+use std::os::unix::net::UnixStream as StdUnixStream;
 use std::{
     collections::VecDeque,
     fmt::Debug,
@@ -52,8 +53,11 @@ pub(super) async fn run_event_loop(
     // Can be verified by running:
     // ```for i in {1..1024}; do target/release/sherlock; done```
     // against a running sherlock instance.
-    let slot: Arc<Mutex<VecDeque<Result<ClientMessage, SherlockMessage>>>> =
-        Arc::new(Mutex::new(VecDeque::new()));
+    type ListenerServerResponse = (
+        Result<ClientMessage, SherlockMessage>,
+        Option<Arc<StdUnixStream>>,
+    );
+    let slot: Arc<Mutex<VecDeque<ListenerServerResponse>>> = Arc::new(Mutex::new(VecDeque::new()));
     let notify = Arc::new(Notify::new());
 
     tokio::spawn({
@@ -63,13 +67,23 @@ pub(super) async fn run_event_loop(
             loop {
                 match listener.accept().await {
                     Ok((stream, _)) => {
-                        // Process all messages until the client disconnects
-                        let _ = process_connection(stream, |msg| {
-                            let mut q = slot.lock().unwrap();
-                            q.push_back(msg);
-                            notify.notify_one();
-                        })
-                        .await;
+                        // convert to std stream to get clonable handle
+                        let std_stream = stream.into_std().ok();
+                        let writer = std_stream
+                            .as_ref()
+                            .and_then(|s| s.try_clone().ok())
+                            .map(Arc::new);
+
+                        let tokio_stream = std_stream.and_then(|s| UnixStream::from_std(s).ok());
+                        if let Some(stream) = tokio_stream {
+                            // Process all messages until the client disconnects
+                            let _ = process_connection(stream, |msg| {
+                                let mut q = slot.lock().unwrap();
+                                q.push_back((msg, writer.clone()));
+                                notify.notify_one();
+                            })
+                            .await;
+                        }
                     }
                     Err(e) => eprintln!("Socket error: {e}"),
                 }
@@ -80,7 +94,8 @@ pub(super) async fn run_event_loop(
     loop {
         notify.notified().await;
         for result in slot.lock().unwrap().drain(..) {
-            let msg = match result {
+            let (msg_res, response_socket) = result;
+            let msg = match msg_res {
                 Ok(m) => m,
                 Err(e) => {
                     initial_messages.push(e);
@@ -113,6 +128,7 @@ pub(super) async fn run_event_loop(
                     data.clone(),
                     Arc::clone(&modes),
                     &initial_messages,
+                    response_socket,
                     &mut win,
                     &mut cx,
                 );
@@ -196,6 +212,7 @@ fn refresh_launcher_view(
     data: RenderableChildEntity,
     modes: Arc<[LauncherMode]>,
     initial_messages: &[SherlockMessage],
+    response_socket: Option<Arc<StdUnixStream>>,
     win: &mut Option<WindowHandle<LauncherView>>,
     cx: &mut AsyncApp,
 ) {
@@ -207,7 +224,15 @@ fn refresh_launcher_view(
     });
 
     // create new window
-    *win = Some(cx.update(|cx| spawn_launcher(cx, data, modes, initial_messages.to_owned())));
+    *win = Some(cx.update(|cx| {
+        spawn_launcher(
+            cx,
+            data,
+            modes,
+            initial_messages.to_owned(),
+            response_socket,
+        )
+    }));
 }
 
 fn open_window(win: &Option<WindowHandle<LauncherView>>, cx: &mut AsyncApp) {

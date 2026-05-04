@@ -1,4 +1,4 @@
-use std::{io::Write, path::PathBuf};
+use std::path::PathBuf;
 
 use gpui::{
     App, AppContext, ClipboardItem, Context, Focusable, KeyUpEvent, SharedString, Window, actions,
@@ -292,6 +292,7 @@ impl LauncherView {
             }
             ExecMode::Print { content } => {
                 println!("{content}");
+                self.write_response(content, cx);
             }
             ExecMode::CreateView { mode, launcher } => {
                 self.text_input.update(cx, |this, _| this.reset());

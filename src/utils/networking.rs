@@ -16,3 +16,14 @@ impl PartialEq for ClientMessage {
         discriminant(self) == discriminant(other)
     }
 }
+
+#[derive(Deserialize, Serialize, Debug)]
+pub enum ServerResponse {
+    Print(String),
+}
+
+impl PartialEq for ServerResponse {
+    fn eq(&self, other: &Self) -> bool {
+        discriminant(self) == discriminant(other)
+    }
+}

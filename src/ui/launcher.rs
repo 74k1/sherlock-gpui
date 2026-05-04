@@ -1,5 +1,6 @@
 use crate::app::{RenderableChildEntity, RenderableChildWeak};
 use crate::launcher::{Launcher, LauncherValues};
+use crate::tokio_utils::SizedMessageObj;
 use crate::ui::traits::RenderableChildDelegate;
 use crate::ui::utils::scoring::SortKey;
 use crate::ui::{
@@ -9,9 +10,12 @@ use crate::ui::{
     utils::search::SherlockSearch,
 };
 use crate::utils::config::HomeType;
+use crate::utils::networking::ServerResponse;
+use crate::utils::sized_message_sync::SizedMessage;
 use gpui::AsyncApp;
 use gpui::WeakEntity;
 use gpui::{App, Context, Entity, FocusHandle, Focusable, SharedString, Subscription};
+use std::os::unix::net::UnixStream;
 use std::sync::Arc;
 
 use crate::ui::search_bar::TextInput;
@@ -48,6 +52,9 @@ pub struct LauncherView {
 
     // State
     pub config_initialized: bool,
+
+    // Responses
+    pub response_socket: Option<Arc<UnixStream>>,
 }
 
 impl Focusable for LauncherView {
@@ -57,6 +64,21 @@ impl Focusable for LauncherView {
 }
 
 impl LauncherView {
+    pub fn write_response(&self, what: String, cx: &mut App) {
+        if let Some(stream) = self.response_socket.as_ref() {
+            let mut stream = &**stream;
+            let response = match SizedMessageObj::from_struct(&ServerResponse::Print(what)) {
+                Ok(r) => r,
+                Err(e) => {
+                    self.navigation.push_message(e, cx);
+                    return;
+                }
+            };
+
+            let _ = stream.write_sized(response);
+        }
+    }
+
     pub fn apply_results(
         &mut self,
         results: Arc<[usize]>,

@@ -5,6 +5,7 @@ use gpui::{
     point, px,
 };
 use std::{
+    os::unix::net::UnixStream,
     rc::Rc,
     sync::{
         Arc,
@@ -103,6 +104,7 @@ fn spawn_launcher(
     data: RenderableChildEntity,
     modes: Arc<[LauncherMode]>,
     initial_messages: Vec<SherlockMessage>,
+    response_socket: Option<Arc<UnixStream>>,
 ) -> WindowHandle<LauncherView> {
     cx.open_window(get_window_options(), |_, cx| {
         let text_input = cx.new(|cx| TextInput::builder().placeholder("Search").build(cx));
@@ -171,6 +173,7 @@ fn spawn_launcher(
                 active_bar: 0,
                 navigation,
                 config_initialized: ConfigGuard::is_initialized(),
+                response_socket,
             }
         })
     })
