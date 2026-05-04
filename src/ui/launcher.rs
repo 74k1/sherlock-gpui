@@ -63,6 +63,14 @@ impl Focusable for LauncherView {
     }
 }
 
+impl Drop for LauncherView {
+    fn drop(&mut self) {
+        if let Some(socket) = self.response_socket.take() {
+            let _ = socket.shutdown(std::net::Shutdown::Both);
+        }
+    }
+}
+
 impl LauncherView {
     pub fn write_response(&self, what: String, cx: &mut App) {
         if let Some(stream) = self.response_socket.as_ref() {

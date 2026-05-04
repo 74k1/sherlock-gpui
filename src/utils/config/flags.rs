@@ -32,6 +32,7 @@ pub struct SherlockFlags {
     pub photo_mode: bool,
     pub input: Option<bool>,
     pub placeholder: Option<String>,
+    pub wait: bool,
 }
 
 impl SherlockFlags {

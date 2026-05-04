@@ -60,9 +60,12 @@ impl SherlockFlags {
         // Helper closure to extract flag values
         let extract_path_value =
             |flag: &str| Self::extract_flag_value::<PathBuf>(&args, flag, None);
-        let check_flag_existence = |flag: &str| args.iter().any(|arg| arg == flag);
+        let check_flag_existence = |flag: &str, short: Option<&str>| {
+            args.iter()
+                .any(|arg| arg == flag || short.is_some_and(|s| arg == s))
+        };
 
-        if check_flag_existence("init") {
+        if check_flag_existence("init", None) {
             let path = extract_path_value("init").unwrap_or(PathBuf::from("~/.config/sherlock/"));
             let extension = Self::extract_flag_value::<String>(&args, "--file-type", Some("-f"))
                 .unwrap_or(String::from("toml"));
@@ -77,19 +80,20 @@ impl SherlockFlags {
             style: extract_path_value("--style"),
             ignore: extract_path_value("--ignore"),
             alias: extract_path_value("--alias"),
-            display_raw: check_flag_existence("--display-raw"),
-            center_raw: check_flag_existence("--center"),
+            display_raw: check_flag_existence("--display-raw", None),
+            center_raw: check_flag_existence("--center", None),
             cache: extract_path_value("--cache"),
             sub_menu: Self::extract_flag_value::<String>(&args, "--sub-menu", Some("-sm")),
             method: Self::extract_flag_value::<String>(&args, "--method", None),
             field: Self::extract_flag_value::<String>(&args, "--field", None),
-            multi: check_flag_existence("--multi"),
-            photo_mode: check_flag_existence("--photo"),
+            multi: check_flag_existence("--multi", None),
+            photo_mode: check_flag_existence("--photo", None),
             input: Self::extract_flag_value::<bool>(&args, "--input", None),
             placeholder: Self::extract_flag_value::<String>(&args, "--placeholder", Some("-p")),
+            wait: check_flag_existence("--wait", Some("-w")),
         };
 
-        if check_flag_existence("repair") {
+        if check_flag_existence("repair", None) {
             repair_config(flags);
             exit(0)
         }
