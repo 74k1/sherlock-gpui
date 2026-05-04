@@ -21,7 +21,7 @@ impl Ord for SortKey {
     fn cmp(&self, other: &Self) -> Ordering {
         self.base
             .cmp(&other.base)
-            .then(other.score.cmp(&self.score))
+            .then(self.score.cmp(&other.score))
             .then(other.count.cmp(&self.count))
     }
 }
