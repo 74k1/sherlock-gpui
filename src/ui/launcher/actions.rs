@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{io::Write, path::PathBuf};
 
 use gpui::{
     App, AppContext, ClipboardItem, Context, Focusable, KeyUpEvent, SharedString, Window, actions,
@@ -290,6 +290,9 @@ impl LauncherView {
             ExecMode::Copy { content } => {
                 cx.write_to_clipboard(ClipboardItem::new_string(content.to_string()));
             }
+            ExecMode::Print { content } => {
+                println!("{content}");
+            }
             ExecMode::CreateView { mode, launcher } => {
                 self.text_input.update(cx, |this, _| this.reset());
                 self.navigation.push(mode.create_view(launcher, cx));
@@ -374,7 +377,7 @@ impl LauncherView {
         {
             let what = self
                 .navigation
-                .with_selected_item(cx, move |child, _| ExecMode::from_bind(pressed, child))
+                .with_selected_item(cx, move |child, cx| ExecMode::from_bind(pressed, child, cx))
                 .and_then(|f| f);
 
             let query = self.text_input.read(cx).content.clone();
@@ -421,8 +424,7 @@ impl LauncherView {
             if let Some(action) = self.context_actions.get(idx) {
                 if let Some(what) = self
                     .navigation
-                    .selected_item_ref(cx)
-                    .map(|i| i.build_action_exec(action.clone()))
+                    .with_selected_item(cx, |item, cx| item.build_action_exec(action.clone(), cx))
                 {
                     match self.execute_helper(what, "", cx) {
                         Ok(exit) if exit => self.close_window(win, cx),

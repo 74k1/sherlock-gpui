@@ -139,6 +139,14 @@ impl<'a> RenderableChildImpl<'a> for EmojiData {
         })
     }
     #[inline(always)]
+    fn get_content(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<String> {
+        Some(
+            get_emoji(self.entry, &get_selected_skin_tones())
+                .as_str()
+                .to_string(),
+        )
+    }
+    #[inline(always)]
     fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
         Priority::new_with_launcher(launcher, 0)
     }

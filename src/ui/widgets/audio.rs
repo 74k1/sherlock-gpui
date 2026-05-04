@@ -142,6 +142,13 @@ impl<'a> RenderableChildImpl<'a> for MusicPlayerWidget {
         })
     }
     #[inline(always)]
+    fn get_content(&self, _launcher: &Arc<Launcher>, cx: &mut App) -> Option<String> {
+        let Ok(Some(inner)) = self.entity.read(cx) else {
+            return None;
+        };
+        inner.raw.as_ref().and_then(|m| m.metadata.title.clone())
+    }
+    #[inline(always)]
     fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
         Priority::new_with_launcher(launcher, 0)
     }

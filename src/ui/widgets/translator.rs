@@ -56,6 +56,17 @@ impl<'a> RenderableChildImpl<'a> for TranslationData {
         None
     }
     #[inline(always)]
+    fn get_content(&self, _launcher: &Arc<Launcher>, cx: &mut App) -> Option<String> {
+        if let TranslationResult { api, .. } = self.update_entity.read(cx)
+            && let ApiStatus::Done { res } = api
+            && let IntentResult::String(st) = res
+        {
+            return Some(st.to_string());
+        }
+
+        None
+    }
+    #[inline(always)]
     fn priority(&self, launcher: &std::sync::Arc<crate::launcher::Launcher>) -> Priority {
         Priority::new_with_launcher(launcher, 0)
     }

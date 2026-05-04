@@ -14,6 +14,7 @@ use crate::{
         utils::{render::substitute, selection::Selection},
         widgets::RenderableChildImpl,
     },
+    utils::config::ConfigGuard,
 };
 
 impl<'a> RenderableChildImpl<'a> for AppData {
@@ -74,6 +75,15 @@ impl<'a> RenderableChildImpl<'a> for AppData {
     #[inline(always)]
     fn build_exec(&self, launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
         Some(ExecMode::from_appdata(self, launcher))
+    }
+    #[inline(always)]
+    fn get_content(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<String> {
+        let config = ConfigGuard::read().ok();
+        let field = config.as_ref().and_then(|c| c.runtime.field.as_deref());
+        match field {
+            Some("exec") => self.exec.clone(),
+            _ => self.name.as_ref().map(|n| n.to_string()),
+        }
     }
     #[inline(always)]
     fn priority(&self, _launcher: &Arc<Launcher>) -> Priority {

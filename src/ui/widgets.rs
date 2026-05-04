@@ -93,8 +93,8 @@ macro_rules! renderable_enum {
                 }
             }
 
-            fn build_action_exec(&self, action: Arc<ContextMenuAction>) -> ExecMode {
-                ExecMode::from_app_action(action, &self)
+            fn build_action_exec(&self, action: Arc<ContextMenuAction>, cx: &mut App) -> ExecMode {
+                ExecMode::from_app_action(action, &self, cx)
             }
 
             fn build_exec(&self, cx: &mut App) -> Option<ExecMode> {
@@ -108,6 +108,14 @@ macro_rules! renderable_enum {
             fn search(&'a self) -> &'a str {
                 match self {
                     $(Self::$variant {inner, launcher} => inner.search(launcher)),*
+                }
+            }
+
+            fn get_content(&self, cx: &mut App) -> Option<String> {
+                match self {
+                    $(Self::$variant {launcher, inner} => {
+                        inner.get_content(launcher, cx)
+                    }),*
                 }
             }
 

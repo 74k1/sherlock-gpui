@@ -49,8 +49,13 @@ impl<'a> RenderableChildImpl<'a> for DmenuData {
             )
             .into_any_element()
     }
-    fn build_exec(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
-        None
+    fn build_exec(&self, launcher: &Arc<Launcher>, cx: &mut App) -> Option<ExecMode> {
+        self.get_content(launcher, cx)
+            .map(|content| ExecMode::Print { content })
+    }
+    #[inline(always)]
+    fn get_content(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<String> {
+        Some(self.name.to_string())
     }
     fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
         Priority::new_with_launcher(launcher, 0)

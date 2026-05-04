@@ -160,6 +160,26 @@ impl<'a> RenderableChildImpl<'a> for ClipWidget {
 
         None
     }
+
+    #[inline(always)]
+    fn get_content(&self, _launcher: &Arc<Launcher>, cx: &mut App) -> Option<String> {
+        let (intent, result) = self
+            .entity
+            .read(cx)
+            .as_ref()
+            .ok()
+            .and_then(|data| data.as_ref())
+            .and_then(|d| d.result.as_ref())?;
+
+        match (intent, result) {
+            (Intent::Url { url }, _) => Some(url.to_string()),
+            (Intent::Conversion { .. }, IntentResult::String(s)) => Some(s.to_string()),
+            (Intent::ColorConvert { .. }, IntentResult::String(s)) => Some(s.to_string()),
+            (Intent::ColorDisplay { .. }, IntentResult::Color(c)) => Some(format!("#{:06X}", c)),
+            _ => None,
+        }
+    }
+
     #[inline(always)]
     fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
         Priority::new_with_launcher(launcher, 0)

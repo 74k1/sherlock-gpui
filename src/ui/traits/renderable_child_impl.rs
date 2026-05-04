@@ -63,6 +63,7 @@ pub trait RenderableChildImpl<'a> {
         None
     }
     fn increment_count(&self) {}
+    fn get_content(&self, launcher: &Arc<Launcher>, cx: &mut App) -> Option<String>;
 }
 
 // To make compatible with Boxed data

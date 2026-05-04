@@ -28,7 +28,7 @@ pub trait RenderableChildDelegate<'a> {
     ) -> AnyElement;
 
     /// Generates an execution path based on the child and the context menu action
-    fn build_action_exec(&'a self, action: Arc<ContextMenuAction>) -> ExecMode;
+    fn build_action_exec(&'a self, action: Arc<ContextMenuAction>, cx: &mut App) -> ExecMode;
 
     /// Generates an execution path when pressing return on this widget
     fn build_exec(&self, cx: &mut App) -> Option<ExecMode>;
@@ -75,4 +75,7 @@ pub trait RenderableChildDelegate<'a> {
 
     /// Updates the execution count for supported children
     fn increment_count(&self);
+
+    /// Gets content to be copied, or printet on return
+    fn get_content(&self, cx: &mut App) -> Option<String>;
 }

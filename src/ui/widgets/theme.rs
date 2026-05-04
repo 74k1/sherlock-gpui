@@ -148,6 +148,11 @@ impl<'a> RenderableChildImpl<'a> for ThemeWidget {
     }
 
     #[inline(always)]
+    fn get_content(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<String> {
+        Some(self.name.to_string())
+    }
+
+    #[inline(always)]
     fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
         Priority::new_with_launcher(launcher, 0)
     }

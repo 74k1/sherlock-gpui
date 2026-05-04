@@ -17,6 +17,7 @@ use crate::{
             emoji::{get_emoji, get_selected_skin_tones},
         },
     },
+    utils::config::ConfigGuard,
 };
 
 #[derive(Default)]
@@ -53,6 +54,9 @@ pub enum ExecMode {
     Copy {
         content: String,
     },
+    Print {
+        content: String,
+    },
     #[default]
     None,
 }
@@ -65,6 +69,7 @@ impl ExecMode {
         exec: Option<impl Into<String>>,
         launcher_type: &LauncherType,
         exit: bool,
+        content: impl FnOnce() -> Option<String>,
     ) -> Option<Self> {
         let exec = exec.map(Into::into);
 
@@ -79,31 +84,40 @@ impl ExecMode {
                 exec,
             }),
 
+            "copy" => content().map(|content| Self::Copy { content }),
+            "print" => content().map(|content| Self::Print { content }),
+
             k if k.starts_with("inner.") => {
                 let func = InnerFunction::from_str(launcher_type, k.trim_start_matches("inner."));
                 (func != InnerFunction::Empty).then_some(Self::Inner { func, exit })
             }
 
-            _ => None,
+            _ => content().map(|content| Self::Print { content }),
         }
     }
 
-    pub fn from_bind(bind: &Bind, child: &RenderableChild) -> Option<Self> {
+    pub fn from_bind(bind: &Bind, child: &RenderableChild, cx: &mut App) -> Option<Self> {
         Self::from_method(
             &bind.callback,
             child.get_exec(),
             child.launcher_type(),
             bind.exit,
+            || child.get_content(cx),
         )
     }
 
-    pub fn from_app_action(action: Arc<ContextMenuAction>, data: &RenderableChild) -> Self {
+    pub fn from_app_action(
+        action: Arc<ContextMenuAction>,
+        data: &RenderableChild,
+        cx: &mut App,
+    ) -> Self {
         match action.as_ref() {
             ContextMenuAction::App(action) => Self::from_method(
                 &action.method,
                 action.exec.clone(),
                 data.launcher_type(),
                 action.exit,
+                || data.get_content(cx),
             )
             .unwrap_or_default(),
 
@@ -145,6 +159,7 @@ impl ExecMode {
             LauncherType::Commands(_) => Self::Command {
                 exec: app_data.exec.clone().unwrap_or_default(),
             },
+            LauncherType::Debug(_) => Self::None,
             LauncherType::Emoji(_) => Self::CreateView {
                 mode: NavigationViewType::Emoji,
                 launcher: Arc::clone(launcher),
@@ -163,7 +178,20 @@ impl ExecMode {
                 browser: web.browser.clone(),
                 exec: app_data.exec.clone(),
             },
-            _ => Self::None,
+            _ => {
+                if let Ok(config) = ConfigGuard::read()
+                    && let Some(field) = match config.runtime.field.as_deref() {
+                        Some("exec") => app_data.exec.as_deref(),
+                        _ => app_data.name.as_ref().map(|n| n.as_str()),
+                    }
+                {
+                    Self::Print {
+                        content: field.to_string(),
+                    }
+                } else {
+                    Self::None
+                }
+            }
         }
     }
     pub fn from_child(data: &RenderableChild, cx: &mut App) -> Option<Self> {
@@ -174,6 +202,7 @@ impl ExecMode {
                 data.get_exec(),
                 data.launcher_type(),
                 launcher.exit,
+                || data.get_content(cx),
             )
         {
             return Some(result);

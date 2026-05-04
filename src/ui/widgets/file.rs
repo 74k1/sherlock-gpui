@@ -409,6 +409,11 @@ impl<'a> RenderableChildImpl<'a> for FileData {
     }
 
     #[inline(always)]
+    fn get_content(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<String> {
+        None
+    }
+
+    #[inline(always)]
     fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
         Priority::new_with_launcher(launcher, 0)
     }

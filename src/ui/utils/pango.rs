@@ -214,6 +214,73 @@ fn push_run(
     });
 }
 
+pub fn strip_pango(content: &str) -> String {
+    let mut out = String::with_capacity(content.len());
+    let mut rest = content;
+
+    while !rest.is_empty() {
+        match rest.find('<') {
+            Some(0) => match rest.find('>') {
+                Some(end) => {
+                    let inner = rest[1..end].trim();
+                    if matches!(inner, s if s.eq_ignore_ascii_case("br") || s.eq_ignore_ascii_case("br/") || s.eq_ignore_ascii_case("br /"))
+                    {
+                        out.push_str("\n\n");
+                    }
+                    rest = &rest[end + 1..];
+                }
+                None => {
+                    unescape_into(rest, &mut out);
+                    break;
+                }
+            },
+            Some(tag_start) => {
+                unescape_into(&rest[..tag_start], &mut out);
+                rest = &rest[tag_start..];
+            }
+            None => {
+                unescape_into(rest, &mut out);
+                break;
+            }
+        }
+    }
+    out
+}
+
+#[inline]
+fn unescape_into(s: &str, out: &mut String) {
+    let mut rest = s;
+    while !rest.is_empty() {
+        match rest.find('&') {
+            None => {
+                out.push_str(rest);
+                break;
+            }
+            Some(0) => {
+                let end = rest.find(';').unwrap_or(rest.len());
+                match &rest[..=end] {
+                    "&quot;" => out.push('"'),
+                    "&amp;" => out.push('&'),
+                    "&lt;" => out.push('<'),
+                    "&gt;" => out.push('>'),
+                    "&nbsp;" => out.push(' '),
+                    "&apos;" => out.push('\''),
+                    other => out.push_str(other),
+                }
+                rest = if end < rest.len() {
+                    &rest[end + 1..]
+                } else {
+                    ""
+                };
+            }
+            Some(amp) => {
+                out.push_str(&rest[..amp]);
+                rest = &rest[amp..];
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -375,5 +442,36 @@ mod tests {
         assert_eq!(runs[0].font.family.as_ref(), "A");
         assert_eq!(runs[1].font.family.as_ref(), "B");
         assert_eq!(runs[2].font.family.as_ref(), "A");
+    }
+
+    #[test]
+    fn strip_pango_comprehensive() {
+        let cases = [
+            ("hello world", "hello world"),
+            ("<b>bold</b>", "bold"),
+            ("<i>italic</i>", "italic"),
+            ("a<br/>b", "a\n\nb"),
+            ("a<br>b", "a\n\nb"),
+            ("a<br />b", "a\n\nb"),
+            ("&amp;", "&"),
+            ("&lt;", "<"),
+            ("&gt;", ">"),
+            ("&quot;", "\""),
+            ("&apos;", "'"),
+            ("&nbsp;", " "),
+            ("<b>a &amp; b</b>", "a & b"),
+            ("<span font_desc='monospace'>code</span>", "code"),
+            ("<b><i>both</i></b>", "both"),
+            ("", ""),
+            ("just plain text", "just plain text"),
+            (
+                "<b>Name</b>: foo &amp; bar<br/>second line",
+                "Name: foo & bar\n\nsecond line",
+            ),
+        ];
+
+        for (input, expected) in &cases {
+            assert_eq!(strip_pango(input), *expected, "failed for: {input:?}");
+        }
     }
 }

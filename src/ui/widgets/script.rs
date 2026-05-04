@@ -13,7 +13,10 @@ use crate::{
     ui::{
         launcher::context_menu::ContextMenuAction,
         traits::RenderableChildImpl,
-        utils::{pango::render_pango, selection::Selection},
+        utils::{
+            pango::{render_pango, strip_pango},
+            selection::Selection,
+        },
     },
     utils::command_launch::split_as_command,
 };
@@ -139,6 +142,14 @@ impl<'a> RenderableChildImpl<'a> for ScriptData {
     }
     fn build_exec(&self, _launcher: &std::sync::Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
         None
+    }
+    fn get_content(&self, _launcher: &Arc<Launcher>, cx: &mut App) -> Option<String> {
+        self.update_entity
+            .read(cx)
+            .result
+            .as_ref()
+            .and_then(|r| r.content.as_ref())
+            .map(|c| strip_pango(c))
     }
     fn based_show<C: AppContext>(&self, _keyword: &str, _cx: &mut C) -> Option<bool> {
         Some(true)

@@ -50,6 +50,14 @@ impl<'a> RenderableChildImpl<'a> for CalcData {
         })
     }
     #[inline(always)]
+    fn get_content(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<String> {
+        if let (_, IntentResult::String(s)) = self.result.read().unwrap().as_ref()? {
+            Some(s.to_string())
+        } else {
+            None
+        }
+    }
+    #[inline(always)]
     fn priority(&self, launcher: &std::sync::Arc<crate::launcher::Launcher>) -> Priority {
         Priority::new_with_launcher(launcher, 0)
     }

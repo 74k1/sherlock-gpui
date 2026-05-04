@@ -147,4 +147,8 @@ impl<'a> RenderableChildImpl<'a> for MessageChild {
     fn search(&'a self, _launcher: &Arc<Launcher>) -> &'a str {
         &self.message.traceback
     }
+    #[inline(always)]
+    fn get_content(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<String> {
+        Some(self.message.traceback.to_string())
+    }
 }

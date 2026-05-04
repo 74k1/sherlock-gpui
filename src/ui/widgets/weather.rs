@@ -234,6 +234,21 @@ impl<'a> RenderableChildImpl<'a> for WeatherWidget {
         None
     }
     #[inline(always)]
+    fn get_content(&self, _launcher: &Arc<Launcher>, cx: &mut App) -> Option<String> {
+        let Ok(Some(entity_inner)) = self.entity.read(cx) else {
+            return None;
+        };
+
+        if !entity_inner.init {
+            return None;
+        };
+
+        Some(format!(
+            "{}, {}, {}",
+            entity_inner.location, entity_inner.condition, entity_inner.temperature
+        ))
+    }
+    #[inline(always)]
     fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
         Priority::new_with_launcher(launcher, 0)
     }

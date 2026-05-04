@@ -1,3 +1,4 @@
+use std::fmt::Write;
 use std::{
     cell::Cell,
     rc::Rc,
@@ -388,6 +389,33 @@ impl<'a> RenderableChildImpl<'a> for EventWidget {
     #[inline(always)]
     fn build_exec(&self, _launcher: &Arc<Launcher>, _cx: &mut App) -> Option<ExecMode> {
         None
+    }
+    #[inline(always)]
+    fn get_content(&self, _launcher: &Arc<Launcher>, cx: &mut App) -> Option<String> {
+        let Ok(Some(event_outer)) = self.entity.read(cx) else {
+            return None;
+        };
+        let event = event_outer.event.as_ref()?;
+
+        let mut out = String::new();
+
+        out.push_str(&event.title);
+        match (event.start_utc(), event.end_utc()) {
+            (Some(start), Some(end)) => {
+                let _ = write!(
+                    out,
+                    "\n{} → {}",
+                    start.with_timezone(&Local).format("%H:%M"),
+                    end.with_timezone(&Local).format("%H:%M")
+                );
+            }
+            (Some(start), None) => {
+                let _ = write!(out, "{}", start.with_timezone(&Local).format("%H:%M"),);
+            }
+            _ => {}
+        }
+
+        Some(out)
     }
     #[inline(always)]
     fn priority(&self, launcher: &Arc<Launcher>) -> Priority {
