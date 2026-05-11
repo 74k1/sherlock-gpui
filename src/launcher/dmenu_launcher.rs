@@ -1,12 +1,14 @@
 use std::sync::Arc;
 
 use crate::{
+    display_name,
     launcher::{
         Launcher, LauncherProvider, LauncherType,
         docs::{LauncherDoc, LauncherDocEntry},
     },
     ui::widgets::RenderableChild,
     utils::errors::SherlockMessage,
+    variant_name,
 };
 
 /// No user-side arguments
@@ -35,8 +37,8 @@ impl LauncherProvider for DmenuLauncher {
 impl LauncherDoc for DmenuLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry::new_hidden(
-            "Dmenu",
-            "dmenu",
+            display_name!(DmenuLauncher),
+            variant_name!(Dmenu),
             "The launcher to handle Dmenu-style piping",
         )
     }

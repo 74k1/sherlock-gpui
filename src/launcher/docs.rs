@@ -153,6 +153,7 @@ pub struct InnerFunctionDoc {
     pub name: &'static str,
     pub identifier: &'static str,
     pub description: &'static str,
+    pub user_facing: bool,
 }
 
 pub struct FieldDoc {
@@ -223,7 +224,7 @@ pub fn to_markdown(entries: &[LauncherDocEntry]) -> String {
                             .child(Heading::new(3, "Inner Functions"))
                             .child(table()
                                 .headers(["Name", "Identifier", "Description"])
-                                .rows(e.inner_functions.iter().map(|f| [
+                                .rows(e.inner_functions.iter().filter(|f| f.user_facing).map(|f| [
                                     f.name.into(),
                                     format!("`{}`", f.identifier),
                                     f.description.into()

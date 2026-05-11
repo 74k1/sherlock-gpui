@@ -18,7 +18,7 @@ use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::{DbAction, FileAction, SherlockErrorType};
 use crate::utils::files::home_dir;
 use crate::utils::paths::get_cache_dir;
-use crate::{sher_log, sherlock_msg};
+use crate::{display_name, sher_log, sherlock_msg, variant_name};
 
 use crate::launcher::{LauncherProvider, LauncherType};
 use crate::loader::utils::RawLauncher;
@@ -373,8 +373,8 @@ impl ChromeParser {
 impl LauncherDoc for BookmarkLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Bookmark Launcher",
-            variant_name: "bookmarks",
+            name: display_name!(BookmarkLauncher),
+            variant_name: variant_name!(Bookmarks),
             description: "Launches browser bookmarks in your default browser.",
             args: &[FieldDoc {
                 name: "browser",
@@ -392,7 +392,7 @@ impl LauncherDoc for BookmarkLauncher {
                         "type": "bookmarks",
                         "alias": "bm",
                         "args": {
-                            "browser": "brave",
+                            "browser": "brave"
                         },
                         "priority": 7
                     }"#

@@ -1,4 +1,5 @@
 use crate::{
+    display_name,
     launcher::{
         LauncherProvider, LauncherType,
         docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
@@ -6,6 +7,7 @@ use crate::{
     loader::utils::RawLauncher,
     ui::widgets::{RenderableChild, calculator::CalcData},
     utils::{errors::SherlockMessage, intent::Capabilities},
+    variant_name,
 };
 use indoc::indoc;
 use serde_json::Value;
@@ -72,8 +74,8 @@ impl LauncherProvider for CalculatorLauncher {
 impl LauncherDoc for CalculatorLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Calculator",
-            variant_name: "calculator",
+            name: display_name!(CalculatorLauncher),
+            variant_name: variant_name!(Calculator),
             description: "Allowes math calculations and different unit conversions.",
             args: &[
                 FieldDoc {

@@ -14,7 +14,7 @@ use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::{DirAction, FileAction, SherlockErrorType};
 use crate::utils::files::{expand_path, home_dir};
 use crate::utils::format::make_title_case;
-use crate::{define_inner_functions, ensure_func, sherlock_msg};
+use crate::{define_inner_functions, display_name, ensure_func, sherlock_msg, variant_name};
 
 define_inner_functions! {
     pub enum ThemePickerFunctions {
@@ -133,8 +133,8 @@ impl LauncherProvider for ThemePicker {
 impl LauncherDoc for ThemePicker {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Theme Picker",
-            variant_name: "themes",
+            name: display_name!(ThemePicker),
+            variant_name: variant_name!(Theme),
             description: "Preview and select Sherlock themes.",
             args: &[FieldDoc {
                 name: "path",
@@ -147,6 +147,7 @@ impl LauncherDoc for ThemePicker {
                 name: "Pick",
                 identifier: "inner.pick",
                 description: "Apply a the selected theme as the active theme. (Not user-facing yet)",
+                user_facing: false, // TODO
             }],
             examples: &[Example {
                 description: "Basic process terminator",

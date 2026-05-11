@@ -8,11 +8,11 @@ use crate::launcher::docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::{LauncherProvider, LauncherType};
 use crate::loader::resolve_icon_path;
 use crate::loader::utils::{ApplicationAction, RawLauncher};
-use crate::sherlock_msg;
 use crate::ui::launcher::context_menu::ContextMenuAction;
 use crate::ui::widgets::RenderableChild;
 use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::SherlockErrorType;
+use crate::{display_name, sherlock_msg, variant_name};
 
 /// The following arguments are available to users:
 /// - `categories`: The available categories. Is a named AppData. On execution, will apply the
@@ -91,8 +91,8 @@ impl LauncherProvider for CategoryLauncher {
 impl LauncherDoc for CategoryLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Category Launcher",
-            variant_name: "categories",
+            name: display_name!(CategoryLauncher),
+            variant_name: variant_name!(Categories),
             description: "Applies aliases to restrict search to certain launchers.",
             args: &[FieldDoc {
                 name: "categories",

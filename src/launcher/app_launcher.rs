@@ -5,6 +5,7 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
+    display_name,
     launcher::{
         LauncherProvider, LauncherType, LoadContext,
         docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
@@ -12,6 +13,7 @@ use crate::{
     loader::{application_loader::ApplicationLoader, utils::RawLauncher},
     ui::widgets::RenderableChild,
     utils::errors::SherlockMessage,
+    variant_name,
 };
 
 pub mod app_data;
@@ -57,8 +59,8 @@ impl LauncherProvider for AppLauncher {
 impl LauncherDoc for AppLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "App Launcher",
-            variant_name: "apps",
+            name: display_name!(AppLauncher),
+            variant_name: variant_name!(Apps),
             description: "Launches installed desktop applications",
             args: &[FieldDoc {
                 name: "use_keywords",
@@ -76,7 +78,6 @@ impl LauncherDoc for AppLauncher {
                         "alias": "app",
                         "type": "apps",
                         "args": {
-                            "icon_class": "reactive",
                             "use_keywords": false
                         },
                         "priority": 4,

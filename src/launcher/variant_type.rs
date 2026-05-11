@@ -158,6 +158,19 @@ macro_rules! create_variants {
         }
 
         impl LauncherVariant {
+            #[cfg(test)]
+            pub fn supports_functions(&self) -> bool {
+                match self {
+                    $(
+                        Self::$variant => {
+                            let _has_extra = false;
+                            $( let _has_extra = { let _ = std::marker::PhantomData::<$extra>::default(); true }; )?
+                            _has_extra
+                        }
+                    )*
+                    Self::Empty => false,
+                }
+            }
             pub fn into_launcher_type(self, raw: &RawLauncher) -> $name {
                 match self {
                     $(
@@ -188,6 +201,50 @@ macro_rules! create_variants {
         impl AsRef<$name> for $name {
             fn as_ref(&self) -> &$name {
                 self
+            }
+        }
+
+        #[cfg(test)]
+        mod launcher_doc_tests {
+            use super::*;
+
+            #[tokio::test]
+            async fn test_all_docs_valid() {
+                let pairs: &[(LauncherVariant, fn() -> LauncherDocEntry)] = &[
+                    $(
+                        (LauncherVariant::$variant, <$inner>::doc),
+                    )*
+                ];
+
+                for (var, doc_fn) in pairs {
+                    let doc = doc_fn();
+
+                    // check functions match
+                    if var.supports_functions() {
+                        assert!(
+                            !doc.inner_functions.is_empty(),
+                            "{:?} supports functions but doc lists none", var
+                        );
+                    } else {
+                        assert!(
+                            doc.inner_functions.is_empty(),
+                            "{:?} has no functions but doc lists some", var
+                        );
+                    }
+
+                    // parse every example
+                    for example in doc.examples {
+                        let raw: RawLauncher = serde_json::from_str(example.json)
+                            .unwrap_or_else(|e| panic!(
+                                "{:?} example '{}' is not valid RawLauncher: {}", var, example.description, e
+                            ));
+                        let launcher = var.into_launcher_type(&raw);
+                        assert!(
+                            !matches!(launcher, LauncherType::Empty),
+                            "{:?} example '{}' parsed to Empty — args schema mismatch", var, example.description
+                        );
+                    }
+                }
             }
         }
     };
@@ -244,4 +301,27 @@ macro_rules! skip_func_if_nav {
             return Ok(ExecEffect::None);
         }
     };
+}
+
+#[macro_export]
+macro_rules! variant_name {
+    ($variant:ident) => {{
+        const _: $crate::launcher::variant_type::LauncherVariant =
+            $crate::launcher::variant_type::LauncherVariant::$variant;
+        const NAME: &'static str = const_str::convert_ascii_case!(snake, stringify!($variant));
+        NAME
+    }};
+}
+
+#[macro_export]
+macro_rules! display_name {
+    ($t:ty) => {{
+        type _Check = $t;
+        const NAME: &'static str = const_str::replace!(
+            const_str::convert_ascii_case!(title, stringify!($t)),
+            "_",
+            " "
+        );
+        NAME
+    }};
 }

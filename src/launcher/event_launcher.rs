@@ -5,7 +5,7 @@ use indoc::indoc;
 use serde::Deserialize;
 
 use crate::{
-    ensure_func,
+    display_name, ensure_func,
     launcher::{
         ExecEffect, LauncherProvider,
         docs::{Example, FieldDoc, InnerFunctionDoc, LauncherDoc, LauncherDocEntry},
@@ -19,6 +19,7 @@ use crate::{
         errors::{SherlockMessage, types::SherlockErrorType},
         websearch::websearch,
     },
+    variant_name,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, strum::VariantNames, strum::EnumString)]
@@ -210,9 +211,9 @@ mod tests {
 impl LauncherDoc for EventLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Event Launcher",
-            variant_name: "event",
-            description: "A emoji picker allowing for skin tone selection.",
+            name: display_name!(EventLauncher),
+            variant_name: variant_name!(Event),
+            description: "Shows upcoming events and joins them on return.",
             args: &[
                 FieldDoc {
                     name: "look_back",
@@ -234,11 +235,13 @@ impl LauncherDoc for EventLauncher {
                     name: "Hard Refresh",
                     identifier: "inner.hard_refresh",
                     description: "Refetch the events from the server.",
+                    user_facing: true,
                 },
                 InnerFunctionDoc {
                     name: "Join Meeting",
                     identifier: "inner.join_meeting",
                     description: "Only acailable if its actually a meeting. Will join a meeting using the application provided by a mime-type lookup.",
+                    user_facing: true,
                 },
             ],
             examples: &[Example {

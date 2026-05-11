@@ -20,7 +20,9 @@ use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::{
     DBusAction, DirAction, FileAction, SherlockErrorType, SocketAction,
 };
-use crate::{define_inner_functions, ensure_func, sherlock_msg, skip_func_if_nav};
+use crate::{
+    define_inner_functions, display_name, ensure_func, sherlock_msg, skip_func_if_nav, variant_name,
+};
 
 pub mod utils;
 
@@ -330,29 +332,32 @@ pub fn identify_image_type(bytes: &[u8]) -> &'static str {
 impl LauncherDoc for MusicPlayerLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Bookmark Launcher",
-            variant_name: "bookmarks",
-            description: "Launches browser bookmarks in your default browser.",
+            name: display_name!(MusicPlayerLauncher),
+            variant_name: variant_name!(MusicPlayer),
+            description: "Shows the currently played song or video with thumbnail, title, and artists.",
             args: &[],
             inner_functions: &[
                 InnerFunctionDoc {
                     name: "Toggle Playback",
                     identifier: "inner.toggle_playback",
                     description: "Toggles current media playback status (playing/paused).",
+                    user_facing: true,
                 },
                 InnerFunctionDoc {
                     name: "Previous",
                     identifier: "inner.previous",
                     description: "Skips to the previous audio element (song, video).",
+                    user_facing: true,
                 },
                 InnerFunctionDoc {
                     name: "Next",
                     identifier: "inner.next",
                     description: "Skips to the next audio element (song, video).",
+                    user_facing: true,
                 },
             ],
             examples: &[Example {
-                description: "Basic bookmarks launcher",
+                description: "Basic music player",
                 json: indoc! {
                     r#"{
                         "name": "Spotify",

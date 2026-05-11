@@ -5,6 +5,7 @@ use indoc::indoc;
 use serde::Deserialize;
 
 use crate::{
+    display_name,
     launcher::{
         Launcher, LauncherProvider,
         app_launcher::app_data::AppData,
@@ -17,6 +18,7 @@ use crate::{
     },
     ui::{model::file::FileSearchBackend, widgets::RenderableChild},
     utils::errors::SherlockMessage,
+    variant_name,
 };
 
 /// The following arguments are available to users:
@@ -95,8 +97,8 @@ impl LauncherProvider for FileLauncher {
 impl LauncherDoc for FileLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "File Search",
-            variant_name: "files",
+            name: display_name!(FileLauncher),
+            variant_name: variant_name!(Files),
             description: "A file search. Allows you to search for files and directories from within Sherlock.",
             args: &[
                 FieldDoc {

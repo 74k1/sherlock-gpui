@@ -6,7 +6,7 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
-    define_inner_functions, ensure_func,
+    define_inner_functions, display_name, ensure_func,
     launcher::{
         ExecEffect, LauncherProvider, LauncherType, LoadContext,
         app_launcher::app_data::AppData,
@@ -20,6 +20,7 @@ use crate::{
     sherlock_msg, skip_func_if_nav,
     ui::widgets::RenderableChild,
     utils::errors::{SherlockMessage, types::SherlockErrorType},
+    variant_name,
 };
 
 use nix::sys::signal::{Signal, kill};
@@ -108,8 +109,8 @@ fn kill_process(pid: i32) -> Result<(), SherlockMessage> {
 impl LauncherDoc for ProcessLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Process Terminator",
-            variant_name: "process",
+            name: display_name!(ProcessLauncher),
+            variant_name: variant_name!(Process),
             description: "Searches and terminates processes from within Sherlock.",
             args: &[
                 FieldDoc {
@@ -131,6 +132,7 @@ impl LauncherDoc for ProcessLauncher {
                 name: "Quit",
                 identifier: "inner.quit",
                 description: "Quit the current process",
+                user_facing: true,
             }],
             examples: &[Example {
                 description: "Basic process terminator",

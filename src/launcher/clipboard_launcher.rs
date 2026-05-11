@@ -2,6 +2,7 @@ use indoc::indoc;
 use serde_json::Value;
 
 use crate::{
+    display_name,
     launcher::{
         LauncherProvider, LauncherType,
         docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
@@ -9,6 +10,7 @@ use crate::{
     loader::utils::RawLauncher,
     ui::widgets::{RenderableChild, clipboard::ClipWidget},
     utils::{errors::SherlockMessage, intent::Capabilities},
+    variant_name,
 };
 
 /// The following arguments are available to users:
@@ -48,8 +50,8 @@ impl LauncherProvider for ClipboardLauncher {
 impl LauncherDoc for ClipboardLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Clipboard Launcher",
-            variant_name: "clipboard",
+            name: display_name!(ClipboardLauncher),
+            variant_name: variant_name!(Clipboard),
             description: "Executes commands based on the clipboard content.",
             args: &[FieldDoc {
                 name: "capabilities",

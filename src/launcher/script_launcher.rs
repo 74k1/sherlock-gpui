@@ -4,7 +4,7 @@ use serde_json::Value;
 use std::sync::Arc;
 
 use crate::{
-    define_inner_functions, ensure_func,
+    define_inner_functions, display_name, ensure_func,
     launcher::{
         Bind, ExecEffect, LauncherProvider, LauncherType, LoadContext,
         docs::{Example, FieldDoc, InnerFunctionDoc, LauncherDoc, LauncherDocEntry},
@@ -20,6 +20,7 @@ use crate::{
         },
     },
     utils::errors::{SherlockMessage, types::SherlockErrorType},
+    variant_name,
 };
 
 define_inner_functions! {
@@ -118,9 +119,9 @@ impl LauncherProvider for ScriptLauncher {
 impl LauncherDoc for ScriptLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Script Launcher",
-            variant_name: "script",
-            description: "Searches and terminates processes from within Sherlock.",
+            name: display_name!(ScriptLauncher),
+            variant_name: variant_name!(Script),
+            description: "Executes commands either on keypress (async) or on return. The results will be displayed within Sherlock.",
             args: &[
                 FieldDoc {
                     name: "async",
@@ -148,6 +149,7 @@ impl LauncherDoc for ScriptLauncher {
                 name: "Run",
                 identifier: "inner.run",
                 description: "Run the current script. (Required if `async = false`)",
+                user_facing: true,
             }],
             examples: &[Example {
                 description: "Basic process terminator",

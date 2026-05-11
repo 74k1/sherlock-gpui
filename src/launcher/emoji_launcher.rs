@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use strum::FromRepr;
 
 use crate::{
+    display_name,
     launcher::{
         Launcher, LauncherProvider, LauncherType,
         app_launcher::app_data::AppData,
@@ -14,6 +15,7 @@ use crate::{
     loader::{resolve_icon_path, utils::PriorityGuard},
     ui::widgets::{RenderableChild, emoji::set_selected_skin_tone},
     utils::errors::SherlockMessage,
+    variant_name,
 };
 
 pub mod data;
@@ -125,8 +127,8 @@ impl SkinTone {
 impl LauncherDoc for EmojiPicker {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Emoji Picker",
-            variant_name: "emoji",
+            name: display_name!(EmojiPicker),
+            variant_name: variant_name!(Emoji),
             description: "A emoji picker allowing for skin tone selection.",
             args: &[FieldDoc {
                 name: "default_skin_tone",

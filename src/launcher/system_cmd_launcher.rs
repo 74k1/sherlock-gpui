@@ -4,6 +4,7 @@ use indoc::indoc;
 use serde::de::IntoDeserializer;
 
 use crate::{
+    display_name,
     launcher::{
         LauncherProvider, LauncherType,
         app_launcher::app_serde::deserialize_named_appdata,
@@ -13,6 +14,7 @@ use crate::{
     sherlock_msg,
     ui::{launcher::context_menu::ContextMenuAction, widgets::RenderableChild},
     utils::errors::{SherlockMessage, types::SherlockErrorType},
+    variant_name,
 };
 
 /// The following arguments are available to users:
@@ -94,8 +96,8 @@ impl LauncherProvider for CommandLauncher {
 impl LauncherDoc for CommandLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Command Launcher",
-            variant_name: "commands",
+            name: display_name!(CommandLauncher),
+            variant_name: variant_name!(Commands),
             description: "Launches user-specified commands.",
             args: &[FieldDoc {
                 name: "commands",

@@ -1,4 +1,5 @@
 use crate::{
+    display_name,
     launcher::{
         LauncherProvider, LauncherType,
         app_launcher::app_data::AppData,
@@ -7,6 +8,7 @@ use crate::{
     loader::utils::{PriorityGuard, RawLauncher},
     ui::widgets::RenderableChild,
     utils::errors::SherlockMessage,
+    variant_name,
 };
 use gpui::SharedString;
 use indoc::indoc;
@@ -64,8 +66,8 @@ impl LauncherProvider for WebLauncher {
 impl LauncherDoc for WebLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Web Launcher",
-            variant_name: "web",
+            name: display_name!(WebLauncher),
+            variant_name: variant_name!(Web),
             description: "Seach the current query in the specified engine using the specified browser.",
             args: &[
                 FieldDoc {

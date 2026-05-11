@@ -5,6 +5,7 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
+    display_name,
     launcher::{
         LauncherProvider, LauncherType, LoadContext,
         docs::{Example, LauncherDoc, LauncherDocEntry},
@@ -12,6 +13,7 @@ use crate::{
     loader::utils::RawLauncher,
     ui::widgets::{RenderableChild, translator::TranslationData},
     utils::errors::SherlockMessage,
+    variant_name,
 };
 
 /// No user-side arguments
@@ -41,8 +43,8 @@ impl LauncherProvider for Translator {
 impl LauncherDoc for Translator {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Translator",
-            variant_name: "translator",
+            name: display_name!(Translator),
+            variant_name: variant_name!(Translator),
             description: "Translate your queries into other languages.",
             args: &[],
             inner_functions: &[],

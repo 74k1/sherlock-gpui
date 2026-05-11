@@ -12,12 +12,12 @@ use crate::launcher::docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::weather_launcher::utils::transform_weather;
 use crate::launcher::weather_launcher::wttr_serde::WttrResponse;
 use crate::loader::resolve_icon_path;
-use crate::sherlock_msg;
 use crate::ui::widgets::RenderableChild;
 use crate::ui::widgets::weather::WeatherWidget;
 use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::{NetworkAction, SherlockErrorType};
 use crate::utils::files::home_dir;
+use crate::{display_name, sherlock_msg, variant_name};
 use crate::{
     launcher::{LauncherProvider, LauncherType},
     loader::utils::RawLauncher,
@@ -288,8 +288,8 @@ impl WeatherClass {
 impl LauncherDoc for WeatherLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry {
-            name: "Weather Launcher",
-            variant_name: "weather",
+            name: display_name!(WeatherLauncher),
+            variant_name: variant_name!(Weather),
             description: "Display the weather and time in Sherlock.",
             args: &[
                 FieldDoc {

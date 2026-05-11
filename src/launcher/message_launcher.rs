@@ -3,6 +3,7 @@ use std::sync::Arc;
 use serde::Deserialize;
 
 use crate::{
+    display_name,
     launcher::{
         LauncherProvider,
         app_launcher::app_data::AppData,
@@ -15,6 +16,7 @@ use crate::{
     },
     ui::widgets::RenderableChild,
     utils::errors::SherlockMessage,
+    variant_name,
 };
 
 #[derive(Clone, Debug, Deserialize)]
@@ -49,8 +51,8 @@ impl LauncherProvider for MessageLauncher {
 impl LauncherDoc for MessageLauncher {
     fn doc() -> LauncherDocEntry {
         LauncherDocEntry::new_hidden(
-            "Messages",
-            "messages",
+            display_name!(MessageLauncher),
+            variant_name!(Message),
             "The launcher to provide the message view",
         )
     }
