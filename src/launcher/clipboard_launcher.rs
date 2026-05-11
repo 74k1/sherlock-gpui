@@ -1,7 +1,11 @@
+use indoc::indoc;
 use serde_json::Value;
 
 use crate::{
-    launcher::{LauncherProvider, LauncherType},
+    launcher::{
+        LauncherProvider, LauncherType,
+        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
+    },
     loader::utils::RawLauncher,
     ui::widgets::{RenderableChild, clipboard::ClipWidget},
     utils::{errors::SherlockMessage, intent::Capabilities},
@@ -37,5 +41,49 @@ impl LauncherProvider for ClipboardLauncher {
             launcher,
             inner: ClipWidget::new(cx),
         }])
+    }
+}
+
+// DOCS
+impl LauncherDoc for ClipboardLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Clipboard Launcher",
+            variant_name: "clipboard",
+            description: "Executes commands based on the clipboard content.",
+            args: &[FieldDoc {
+                name: "capabilities",
+                ty: "Capabilities[]",
+                required: false,
+                default: Some(
+                    r#"[
+                    "calc.units",
+                    "calc.math"
+                ]"#,
+                ),
+                description: "The capabilities the clipboard executor should have.",
+            }],
+            inner_functions: &[],
+            examples: &[Example {
+                description: "Power Menu Example",
+                json: indoc! {
+                    r#" {
+                        "name": "Clipboard",
+                        "type": "clipboard",
+                        "args": {
+                            "capabilities": [
+                                "url",
+                                "colors",
+                                "calc.math"
+                            ]
+                        },
+                        "on_return": "copy",
+                        "priority": 3,
+                        "home": "OnlyHome"
+                    } "#
+                },
+            }],
+            hidden: false,
+        }
     }
 }

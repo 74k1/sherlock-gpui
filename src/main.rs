@@ -39,7 +39,10 @@ async fn main() {
     let socket_path = "/tmp/sherlock.sock";
     if let Ok(mut stream) = UnixStream::connect(socket_path).await {
         // update flags
-        let config_update = ClientMessage::ConfigUpdate(Box::new(Loader::load_flags()));
+        let Some(flags) = Loader::load_flags() else {
+            return;
+        };
+        let config_update = ClientMessage::ConfigUpdate(Box::new(flags));
         if let Ok(config_bin) = SizedMessageObj::from_struct(&config_update) {
             let _ = stream.write_sized(config_bin).await;
         }

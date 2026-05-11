@@ -1,13 +1,16 @@
 use std::{sync::Arc, time::Duration};
 
 use gpui::{App, SharedString};
+use indoc::indoc;
 use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
     ensure_func,
     launcher::{
-        ExecEffect, LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction,
+        ExecEffect, LauncherProvider, LauncherType, LoadContext,
+        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
+        variant_type::InnerFunction,
     },
     loader::utils::RawLauncher,
     sherlock_msg, skip_func_if_nav,
@@ -86,4 +89,38 @@ pub enum TimerLauncherFunctions {
     Toggle,
     Reset,
     NewTimer { duration: Duration },
+}
+
+// DOCS
+impl LauncherDoc for TimerLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Timer Launcher",
+            variant_name: "timer",
+            description: "Start and run up to four timers concurrently. Each timer can have a unique action to be run at completion.",
+            args: &[FieldDoc {
+                name: "exec",
+                ty: "command",
+                required: false,
+                default: Some(""),
+                description: "The command to execute on timer completion.",
+            }],
+            inner_functions: &[],
+            examples: &[Example {
+                description: "Basic process terminator",
+                json: indoc! {
+                    r#"{
+                        "name": "Timer",
+                        "type": "timer",
+                        "args": {
+                            "exec": "notify-send \"hello\""
+                        },
+                        "priority": 1,
+                        "shortcut": false
+                    }"#
+                },
+            }],
+            hidden: false,
+        }
+    }
 }

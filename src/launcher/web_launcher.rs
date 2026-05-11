@@ -1,10 +1,15 @@
 use crate::{
-    launcher::{LauncherProvider, LauncherType, app_launcher::app_data::AppData},
+    launcher::{
+        LauncherProvider, LauncherType,
+        app_launcher::app_data::AppData,
+        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
+    },
     loader::utils::{PriorityGuard, RawLauncher},
     ui::widgets::RenderableChild,
     utils::errors::SherlockMessage,
 };
 use gpui::SharedString;
+use indoc::indoc;
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -16,6 +21,7 @@ use serde_json::Value;
 pub struct WebLauncher {
     #[serde(rename = "search_engine")]
     pub engine: String,
+    #[serde(default)]
     pub browser: Option<String>,
 }
 
@@ -48,5 +54,61 @@ impl LauncherProvider for WebLauncher {
         };
 
         Ok(vec![RenderableChild::App { launcher, inner }])
+    }
+}
+
+// DOCS
+/// - `engine`: The engine to be used for the query
+/// - `browser`: The browser to be used for opening the query, defaults
+/// - `display_name`: The display name for this tile, replacing `{keyword}` with query
+impl LauncherDoc for WebLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Web Launcher",
+            variant_name: "web",
+            description: "Seach the current query in the specified engine using the specified browser.",
+            args: &[
+                FieldDoc {
+                    name: "search_engine",
+                    ty: "string",
+                    required: true,
+                    default: None,
+                    description: "The search engine used for the query.",
+                },
+                FieldDoc {
+                    name: "browser",
+                    ty: "u64",
+                    required: false,
+                    default: Some("Default Browser"),
+                    description: "The browser in which to open the query.",
+                },
+                FieldDoc {
+                    name: "display_name",
+                    ty: "string",
+                    required: false,
+                    default: None,
+                    description: "The display name for this tile, replacing `{keyword}` with the actual contents of the search bar.",
+                },
+            ],
+            inner_functions: &[],
+            examples: &[Example {
+                description: "Basic web launcher",
+                json: indoc! {
+                    r#"{
+                        "name": "Web Search",
+                        "alias": "gg",
+                        "type": "web",
+                        "args": {
+                            "search_engine": "google",
+                            "icon": "google",
+                            "display_name": "Google Search {keyword}"
+                        },
+                        "home": "Persist",
+                        "priority": 100
+                    }"#
+                },
+            }],
+            hidden: false,
+        }
     }
 }

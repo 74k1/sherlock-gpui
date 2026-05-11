@@ -16,6 +16,7 @@ use crate::{
         clipboard_launcher::ClipboardLauncher,
         debug_launcher::{DebugFunctions, DebugLauncher},
         dmenu_launcher::DmenuLauncher,
+        docs::{LauncherDoc, LauncherDocEntry},
         emoji_launcher::EmojiPicker,
         event_launcher::{EventLauncher, EventLauncherFunctions},
         file_launcher::FileLauncher,
@@ -40,6 +41,15 @@ macro_rules! create_variants {
             $( $variant:ident( $inner:ty $(, $extra:ty)* ) ),* $(,)?
         }
     ) => {
+        //trait enforced
+        #[allow(dead_code)]
+        fn _assert_launcher_docs() {
+            fn assert_launcher_doc<T: LauncherDoc>() {}
+            $(
+                assert_launcher_doc::<$inner>();
+            )*
+        }
+
         #[derive(Clone, Debug, Default)]
         pub enum $name {
             $($variant($inner),)*
@@ -102,6 +112,12 @@ macro_rules! create_variants {
         }
 
         impl $name {
+            pub fn all_docs() -> Vec<LauncherDocEntry> {
+                vec![
+                    $( <$inner>::doc(),)*
+                ]
+            }
+
             pub fn get_render_obj(
                 &self,
                 launcher: std::sync::Arc<crate::launcher::Launcher>,

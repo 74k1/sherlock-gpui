@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::launcher::app_launcher::app_data::AppData;
+use crate::launcher::docs::{Example, InnerFunctionDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::variant_type::InnerFunction;
 use crate::launcher::{ExecEffect, LauncherProvider, LauncherType};
 use crate::loader::resolve_icon_path;
@@ -15,6 +16,7 @@ use crate::utils::errors::types::{DirAction, FileAction, SherlockErrorType};
 use crate::utils::paths;
 use crate::{define_inner_functions, ensure_func, sherlock_msg, skip_func_if_nav};
 use gpui::App;
+use indoc::indoc;
 
 define_inner_functions! {
     pub enum DebugFunctions {
@@ -165,5 +167,53 @@ impl DebugFunctions {
                 e
             )
         })
+    }
+}
+
+// DOCS
+impl LauncherDoc for DebugLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Debug Launcher",
+            variant_name: "debug",
+            description: "Execute different debug functions like clearing the cache or app counts.",
+            args: &[],
+            inner_functions: &[
+                InnerFunctionDoc {
+                    name: "Clear Cache",
+                    identifier: "inner.clear_cache",
+                    description: "Clears the entire ~/.cache/sherlock/ directory.",
+                },
+                InnerFunctionDoc {
+                    name: "Clear App Counts",
+                    identifier: "inner.clear_app_counts",
+                    description: "Clears the app count file to reset the sorting based on execution counts.",
+                },
+                InnerFunctionDoc {
+                    name: "Clear Errors",
+                    identifier: "inner.clear_errors",
+                    description: "Clears the messages from the message view",
+                },
+                InnerFunctionDoc {
+                    name: "Insert Test Errors",
+                    identifier: "inner.insert_test_errors",
+                    description: "Inserts test messages for each message type: Info, Warning, and Error.",
+                },
+            ],
+            examples: &[Example {
+                description: "Basic app launcher",
+                json: indoc! {
+                    r#"{
+                        "name": "Debug",
+                        "type": "debug",
+                        "alias": "debug",
+                        "args": {},
+                        "priority": 1,
+                        "exit": false
+                    }"#
+                },
+            }],
+            hidden: false,
+        }
     }
 }

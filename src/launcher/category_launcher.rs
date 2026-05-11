@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
+use indoc::indoc;
 use serde::de::IntoDeserializer;
 
 use crate::launcher::app_launcher::app_serde::deserialize_named_appdata;
+use crate::launcher::docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::{LauncherProvider, LauncherType};
 use crate::loader::resolve_icon_path;
 use crate::loader::utils::{ApplicationAction, RawLauncher};
@@ -82,5 +84,79 @@ impl LauncherProvider for CategoryLauncher {
             .collect();
 
         Ok(children)
+    }
+}
+
+// DOCS
+impl LauncherDoc for CategoryLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Category Launcher",
+            variant_name: "categories",
+            description: "Applies aliases to restrict search to certain launchers.",
+            args: &[FieldDoc {
+                name: "categories",
+                ty: "{Name: AppData}",
+                required: true,
+                default: None,
+                description: "The available categories. On execution, will apply the aslias, privodes as the `exec` field.",
+            }],
+            inner_functions: &[],
+            examples: &[Example {
+                description: "Power Menu Example",
+                json: indoc! {
+                    r#" {
+                        "name": "Categories",
+                        "alias": "cat",
+                        "type": "categories",
+                        "args": {
+                            "categories": {
+                                "Power Menu": {
+                                    "icon": "battery-full-symbolic",
+                                    "icon_class": "reactive",
+                                    "exec": "pm",
+                                    "search_string": "powermenu;",
+                                    "actions": [
+                                        {
+                                            "name": "Shutdown",
+                                            "icon": "system-shutdown",
+                                            "exec": "systemctl poweroff",
+                                            "method": "command"
+                                        },
+                                        {
+                                            "name": "Sleep",
+                                            "icon": "system-suspend",
+                                            "exec": "systemctl suspend",
+                                            "method": "command"
+                                        },
+                                        {
+                                            "name": "Lock",
+                                            "icon": "system-lock-screen",
+                                            "exec": "systemctl suspend & swaylock",
+                                            "method": "command"
+                                        },
+                                        {
+                                            "name": "Reboot",
+                                            "icon": "system-reboot",
+                                            "exec": "systemctl reboot",
+                                            "method": "command"
+                                        },
+                                        {
+                                            "name": "Log Out",
+                                            "icon": "system-log-out",
+                                            "exec": "hyprctl dispatch exit",
+                                            "method": "command"
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "priority": 4,
+                        "home": "Home"
+                    } "#
+                },
+            }],
+            hidden: false,
+        }
     }
 }

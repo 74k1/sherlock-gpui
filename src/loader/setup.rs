@@ -35,9 +35,9 @@ impl Loader {
     /// - Initialize the global icon cache and register custom icon paths
     /// - Set the global CONFIG static
     /// - Resolve the config root directory, falling back to XDG config dir or `/tmp/sherlock`
-    pub fn setup() -> SetupResult {
+    pub fn setup() -> Option<SetupResult> {
         let mut messages: Vec<SherlockMessage> = Vec::new();
-        let mut flags = Self::load_flags();
+        let mut flags = Self::load_flags()?;
 
         let config = match flags.get_config() {
             Err(e) => {
@@ -82,9 +82,9 @@ impl Loader {
             }
         };
 
-        SetupResult {
+        Some(SetupResult {
             config_dir,
             messages,
-        }
+        })
     }
 }

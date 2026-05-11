@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
 use crate::{
-    launcher::{Launcher, LauncherProvider, LauncherType},
+    launcher::{
+        Launcher, LauncherProvider, LauncherType,
+        docs::{LauncherDoc, LauncherDocEntry},
+    },
     ui::widgets::RenderableChild,
     utils::errors::SherlockMessage,
 };
@@ -25,5 +28,16 @@ impl LauncherProvider for DmenuLauncher {
     ) -> Result<Vec<RenderableChild>, SherlockMessage> {
         // Should never be called! This is only from piped input.
         unimplemented!()
+    }
+}
+
+// DOCS
+impl LauncherDoc for DmenuLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry::new_hidden(
+            "Dmenu",
+            "dmenu",
+            "The launcher to handle Dmenu-style piping",
+        )
     }
 }

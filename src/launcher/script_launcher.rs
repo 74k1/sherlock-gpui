@@ -1,11 +1,14 @@
 use gpui::{App, AppContext, SharedString};
+use indoc::indoc;
 use serde_json::Value;
 use std::sync::Arc;
 
 use crate::{
     define_inner_functions, ensure_func,
     launcher::{
-        Bind, ExecEffect, LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction,
+        Bind, ExecEffect, LauncherProvider, LauncherType, LoadContext,
+        docs::{Example, FieldDoc, InnerFunctionDoc, LauncherDoc, LauncherDocEntry},
+        variant_type::InnerFunction,
     },
     loader::utils::RawLauncher,
     sherlock_msg, skip_func_if_nav,
@@ -28,6 +31,7 @@ define_inner_functions! {
 /// The following arguments are available to users:
 /// - `exec`: The script to be executed
 /// - `exec-args`: The arguments to the command
+/// - `async`: Whether to wait for execution of the `inner.run` command or to run on keypress.
 ///
 /// The following inner functions are available:
 /// - `Run`: Runs the current script (if not async)
@@ -60,26 +64,23 @@ impl LauncherProvider for ScriptLauncher {
         _messages: &mut Vec<SherlockMessage>,
         cx: &mut App,
     ) -> Result<Vec<RenderableChild>, crate::utils::errors::SherlockMessage> {
-        let exec_command: Option<SharedString> = opts
+        let command: SharedString = opts
             .get("exec")
             .and_then(|v| v.as_str())
-            .map(|s| SharedString::from(s.to_owned()));
+            .map(|s| SharedString::from(s.to_owned()))
+            .ok_or(sherlock_msg!(
+                Warning,
+                SherlockErrorType::ConfigError(format!(
+                    "Failed to parse command from launcher configuration of launcher: {launcher}"
+                )),
+                format!("`exec` key is required. Received arguments: {:?}", opts)
+            ))?;
 
         let args: SharedString = opts
             .get("exec-args")
             .and_then(|v| v.as_str())
             .map(|s| SharedString::from(s.to_owned()))
             .unwrap_or_default();
-
-        let Some(command) = exec_command else {
-            return Err(sherlock_msg!(
-                Warning,
-                SherlockErrorType::ConfigError(format!(
-                    "Failed to parse command from launcher configuration of launcher: {launcher}"
-                )),
-                format!("`exec` key is required. Received arguments: {:?}", opts)
-            ));
-        };
 
         Ok(vec![RenderableChild::Script {
             launcher,
@@ -110,5 +111,62 @@ impl LauncherProvider for ScriptLauncher {
     }
     fn binds(&self) -> Option<Arc<Vec<Bind>>> {
         self.binds.clone()
+    }
+}
+
+// DOCS
+impl LauncherDoc for ScriptLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Script Launcher",
+            variant_name: "script",
+            description: "Searches and terminates processes from within Sherlock.",
+            args: &[
+                FieldDoc {
+                    name: "async",
+                    ty: "bool",
+                    required: false,
+                    default: Some("true"),
+                    description: "If set to true, will run the script on every keypress. If set to false, will wait for the execution of the `inner.run` command.",
+                },
+                FieldDoc {
+                    name: "exec",
+                    ty: "command",
+                    required: false,
+                    default: Some("false"),
+                    description: "Wheather a tile should be displayed of the user only wants the alias-based execution.",
+                },
+                FieldDoc {
+                    name: "exec",
+                    ty: "string",
+                    required: false,
+                    default: Some(""),
+                    description: "The arguments to the command. Will replace `{keyword}` with the actual contents of the search bar.",
+                },
+            ],
+            inner_functions: &[InnerFunctionDoc {
+                name: "Run",
+                identifier: "inner.run",
+                description: "Run the current script. (Required if `async = false`)",
+            }],
+            examples: &[Example {
+                description: "Basic process terminator",
+                json: indoc! {
+                    r#"{
+                        "name": "Wikipedia Search",
+                        "alias": "wiki",
+                        "type": "script",
+                        "args": {
+                            "icon": "wikipedia",
+                            "exec": "sherlock-wiki",
+                            "exec-args": "'{keyword}'"
+                        },
+                        "priority": 0,
+                        "shortcut": false
+                    }"#
+                },
+            }],
+            hidden: false,
+        }
     }
 }

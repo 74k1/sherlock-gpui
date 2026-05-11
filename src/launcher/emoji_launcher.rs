@@ -1,11 +1,14 @@
 use std::{fmt::Display, sync::Arc};
 
+use indoc::indoc;
 use serde::{Deserialize, Serialize};
 use strum::FromRepr;
 
 use crate::{
     launcher::{
-        Launcher, LauncherProvider, LauncherType, app_launcher::app_data::AppData,
+        Launcher, LauncherProvider, LauncherType,
+        app_launcher::app_data::AppData,
+        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
         emoji_launcher::data::EmojiEntry,
     },
     loader::{resolve_icon_path, utils::PriorityGuard},
@@ -114,6 +117,41 @@ impl SkinTone {
             Self::MediumDark => "\u{1F3FE}",
             Self::Dark => "\u{1F3FF}",
             Self::Simpsons => "",
+        }
+    }
+}
+
+// DOCS
+impl LauncherDoc for EmojiPicker {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Emoji Picker",
+            variant_name: "emoji",
+            description: "A emoji picker allowing for skin tone selection.",
+            args: &[FieldDoc {
+                name: "default_skin_tone",
+                ty: "SkinTone",
+                required: false,
+                default: Some("Simpsons"),
+                description: "The skin tone to use as the default. Can be either: Light, MediumLight, Medium, MediumDark, Dark, or Simpsons",
+            }],
+            inner_functions: &[],
+            examples: &[Example {
+                description: "Basic emoji picker",
+                json: indoc! {
+                    r#"{
+                        "name": "Emoji Picker",
+                        "alias": "emj",
+                        "type": "emoji",
+                        "args": {
+                            "default_skin_tone": "Simpsons"
+                        },
+                        "priority": 5,
+                        "home": "Home"
+                    }"#
+                },
+            }],
+            hidden: false,
         }
     }
 }

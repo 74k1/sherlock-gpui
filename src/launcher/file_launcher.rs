@@ -1,11 +1,15 @@
 use std::sync::Arc;
 
 use gpui::SharedString;
+use indoc::indoc;
 use serde::Deserialize;
 
 use crate::{
     launcher::{
-        Launcher, LauncherProvider, app_launcher::app_data::AppData, variant_type::LauncherType,
+        Launcher, LauncherProvider,
+        app_launcher::app_data::AppData,
+        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
+        variant_type::LauncherType,
     },
     loader::{
         resolve_icon_path,
@@ -84,5 +88,66 @@ impl LauncherProvider for FileLauncher {
         let child = RenderableChild::App { launcher, inner };
 
         Ok(vec![child])
+    }
+}
+
+// DOCS
+impl LauncherDoc for FileLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "File Search",
+            variant_name: "files",
+            description: "A file search. Allows you to search for files and directories from within Sherlock.",
+            args: &[
+                FieldDoc {
+                    name: "backend",
+                    ty: "string",
+                    required: false,
+                    default: Some("fd"),
+                    description: "The backend to be used by the file search. Can be either of: `Fd`, `Rg`, or `WalkDir`",
+                },
+                FieldDoc {
+                    name: "poll_interval",
+                    ty: "u64",
+                    required: false,
+                    default: Some("50"),
+                    description: "The time in milliseconds between backend calls.",
+                },
+                FieldDoc {
+                    name: "max_results",
+                    ty: "usize",
+                    required: false,
+                    default: Some("50"),
+                    description: "The maximum number of results to show in the file search.",
+                },
+                FieldDoc {
+                    name: "path",
+                    ty: "path",
+                    required: false,
+                    default: Some("~/"),
+                    description: "The root path from which to start the file search.",
+                },
+            ],
+            inner_functions: &[],
+            examples: &[Example {
+                description: "Basic event launcher",
+                json: indoc! {
+                    r#"{
+                        "name": "File Search",
+                        "type": "files",
+                        "alias": "fs",
+                        "args": {
+                            "max_results": 50,
+                            "poll_interval": 50,
+                            "backend": "fd",
+                            "path": "~/"
+                        },
+                        "priority": 5,
+                        "home": "Home"
+                    }"#
+                },
+            }],
+            hidden: false,
+        }
     }
 }

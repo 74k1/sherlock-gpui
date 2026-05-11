@@ -1,4 +1,5 @@
 use gpui::SharedString;
+use indoc::indoc;
 use rusqlite::Connection;
 use std::fs;
 use std::path::PathBuf;
@@ -6,6 +7,7 @@ use std::sync::Arc;
 
 use crate::launcher::Launcher;
 use crate::launcher::app_launcher::app_data::AppData;
+use crate::launcher::docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry};
 use crate::loader::application_loader::file_has_changed;
 use crate::loader::resolve_icon_path;
 use crate::loader::utils::{PriorityGuard, construct_search};
@@ -364,5 +366,39 @@ impl ChromeParser {
         }
 
         Ok(bookmarks)
+    }
+}
+
+// DOCS
+impl LauncherDoc for BookmarkLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Bookmark Launcher",
+            variant_name: "bookmarks",
+            description: "Launches browser bookmarks in your default browser.",
+            args: &[FieldDoc {
+                name: "browser",
+                ty: "string",
+                required: false,
+                default: Some("Default browser"),
+                description: "The browser from which the bookmarks should be parsed",
+            }],
+            inner_functions: &[],
+            examples: &[Example {
+                description: "Basic bookmarks launcher",
+                json: indoc! {
+                    r#"{
+                        "name": "Bookmarks",
+                        "type": "bookmarks",
+                        "alias": "bm",
+                        "args": {
+                            "browser": "brave",
+                        },
+                        "priority": 7
+                    }"#
+                },
+            }],
+            hidden: false,
+        }
     }
 }

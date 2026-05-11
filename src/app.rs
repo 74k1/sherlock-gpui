@@ -45,11 +45,14 @@ pub fn reset_generation() {
 pub type RenderableChildEntity = Entity<Rc<Vec<RenderableChild>>>;
 pub type RenderableChildWeak = WeakEntity<Rc<Vec<RenderableChild>>>;
 
-pub fn run_app(cx: &mut App, result: SetupResult) {
-    let SetupResult {
+pub fn run_app(cx: &mut App, result: Option<SetupResult>) {
+    let Some(SetupResult {
         config_dir,
         mut messages,
-    } = result;
+    }) = result
+    else {
+        return;
+    };
     let watcher = ConfigWatcher::new(config_dir);
 
     bindings::register_bindings(cx);

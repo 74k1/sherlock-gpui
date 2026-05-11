@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
+use indoc::indoc;
 use serde::de::IntoDeserializer;
 
 use crate::{
     launcher::{
-        LauncherProvider, LauncherType, app_launcher::app_serde::deserialize_named_appdata,
+        LauncherProvider, LauncherType,
+        app_launcher::app_serde::deserialize_named_appdata,
+        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
     },
     loader::{resolve_icon_path, utils::RawLauncher},
     sherlock_msg,
@@ -84,5 +87,44 @@ impl LauncherProvider for CommandLauncher {
             .collect();
 
         Ok(children)
+    }
+}
+
+// DOCS
+impl LauncherDoc for CommandLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Command Launcher",
+            variant_name: "commands",
+            description: "Launches user-specified commands.",
+            args: &[FieldDoc {
+                name: "commands",
+                ty: "{Name: AppData}",
+                required: true,
+                default: None,
+                description: "The commands to show in Sherlock.",
+            }],
+            inner_functions: &[],
+            examples: &[Example {
+                description: "Basic command launcher",
+                json: indoc! {
+                    r#"{
+                        "name": "Throw Confetti",
+                        "type": "commands",
+                        "args": {
+                            "commands": {
+                                "Confetti": {
+                                    "icon": "sherlock-confetti",
+                                    "exec": "confetti",
+                                    "search_string": "confetti;party"
+                                }
+                            }
+                        },
+                        "priority": 4
+                    }"#
+                },
+            }],
+            hidden: false,
+        }
     }
 }

@@ -1,5 +1,6 @@
 use bytes::Bytes;
 use gpui::{App, Image, ImageFormat, SharedString};
+use indoc::indoc;
 use serde_json::Value;
 use simd_json::prelude::ArrayTrait;
 use std::env;
@@ -9,6 +10,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use zbus::blocking::{Connection, Proxy};
 
+use crate::launcher::docs::{Example, InnerFunctionDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::utils::binds::Bind;
 use crate::launcher::variant_type::InnerFunction;
 use crate::ui::widgets::RenderableChild;
@@ -27,9 +29,6 @@ use utils::MprisData;
 use crate::launcher::{ExecEffect, LauncherProvider, LauncherType};
 use crate::loader::utils::RawLauncher;
 
-/// The following arguments are available to users:
-/// - `use_keywords`: Whether the search should use the keywords or only the app name
-///
 /// The following inner functions are available:
 /// - `TogglePlayback`: Toggles current media playback
 /// - `Previous`: Skips to previous song
@@ -324,5 +323,61 @@ pub fn identify_image_type(bytes: &[u8]) -> &'static str {
         [0x42, 0x4D, _, _] => "image/bmp",
         [0x52, 0x49, 0x46, 0x46] if &bytes[8..12] == b"WEBP" => "image/webp",
         _ => "image/png",
+    }
+}
+
+// DOCS
+impl LauncherDoc for MusicPlayerLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Bookmark Launcher",
+            variant_name: "bookmarks",
+            description: "Launches browser bookmarks in your default browser.",
+            args: &[],
+            inner_functions: &[
+                InnerFunctionDoc {
+                    name: "Toggle Playback",
+                    identifier: "inner.toggle_playback",
+                    description: "Toggles current media playback status (playing/paused).",
+                },
+                InnerFunctionDoc {
+                    name: "Previous",
+                    identifier: "inner.previous",
+                    description: "Skips to the previous audio element (song, video).",
+                },
+                InnerFunctionDoc {
+                    name: "Next",
+                    identifier: "inner.next",
+                    description: "Skips to the next audio element (song, video).",
+                },
+            ],
+            examples: &[Example {
+                description: "Basic bookmarks launcher",
+                json: indoc! {
+                    r#"{
+                        "name": "Spotify",
+                        "type": "music_player",
+                        "args": {},
+                        "priority": 2,
+                        "home": "OnlyHome",
+                        "spawn_focus": false,
+                        "exit": false,
+                        "binds": [
+                            {
+                                "bind": "ctrl-l",
+                                "callback": "next",
+                                "exit": false
+                            },
+                            {
+                                "bind": "ctrl-h",
+                                "callback": "previous",
+                                "exit": false
+                            }
+                        ]
+                    }"#
+                },
+            }],
+            hidden: false,
+        }
     }
 }

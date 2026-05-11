@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
 use gpui::App;
+use indoc::indoc;
 
 use crate::app::theme::{ActiveTheme, ThemeData};
+use crate::launcher::docs::{Example, FieldDoc, InnerFunctionDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::variant_type::InnerFunction;
 use crate::launcher::{ExecEffect, LauncherProvider, LauncherType};
 use crate::loader::utils::RawLauncher;
@@ -124,5 +126,41 @@ impl LauncherProvider for ThemePicker {
         }
 
         Ok(ExecEffect::None)
+    }
+}
+
+// DOCS
+impl LauncherDoc for ThemePicker {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Theme Picker",
+            variant_name: "themes",
+            description: "Preview and select Sherlock themes.",
+            args: &[FieldDoc {
+                name: "path",
+                ty: "path",
+                required: false,
+                default: Some("~/.config/sherlock/themes/"),
+                description: "The path to the Sherlock themes directory.",
+            }],
+            inner_functions: &[InnerFunctionDoc {
+                name: "Pick",
+                identifier: "inner.pick",
+                description: "Apply a the selected theme as the active theme. (Not user-facing yet)",
+            }],
+            examples: &[Example {
+                description: "Basic process terminator",
+                json: indoc! {
+                    r#"{
+                        "name": "Theme Picker",
+                        "type": "theme",
+                        "alias": "themes",
+                        "priority": 0,
+                        "exit": false
+                    }"#
+                },
+            }],
+            hidden: false,
+        }
     }
 }

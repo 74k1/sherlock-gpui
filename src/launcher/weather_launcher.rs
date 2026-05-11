@@ -1,5 +1,6 @@
 use chrono::NaiveTime;
 use gpui::{Hsla, LinearColorStop, SharedString, linear_color_stop, rgb};
+use indoc::indoc;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
@@ -7,6 +8,7 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use strum::Display;
 
+use crate::launcher::docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::weather_launcher::utils::transform_weather;
 use crate::launcher::weather_launcher::wttr_serde::WttrResponse;
 use crate::loader::resolve_icon_path;
@@ -32,7 +34,7 @@ pub enum WeatherIconTheme {
 }
 
 /// The following arguments are available to users:
-/// - `locatoin`: The location for the weather
+/// - `location`: The location for the weather
 /// - `update_interval`: Time in minutes when the weather should be updated again
 /// - `icon_theme`: The icon theme used for weather icons
 /// - `show_datetime`: Whether or not to show the current date and time
@@ -278,6 +280,76 @@ impl WeatherClass {
             | Self::SnowScatteredStorm => rgb(0xffffff),
             Self::FreezingScatteredRain | Self::SnowScatteredDay => rgb(0xffffff),
             Self::None => rgb(0xffffff),
+        }
+    }
+}
+
+// DOCS
+impl LauncherDoc for WeatherLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Weather Launcher",
+            variant_name: "weather",
+            description: "Display the weather and time in Sherlock.",
+            args: &[
+                FieldDoc {
+                    name: "location",
+                    ty: "string",
+                    required: true,
+                    default: None,
+                    description: "The location for the weather.",
+                },
+                FieldDoc {
+                    name: "update_interval",
+                    ty: "u64",
+                    required: true,
+                    default: None,
+                    description: "The time in minutes after which to invalidate the cached weather condition.",
+                },
+                FieldDoc {
+                    name: "icon_theme",
+                    ty: "string",
+                    required: false,
+                    default: None,
+                    description: "The weather icon theme. Can be either `None` or `Sherlock`",
+                },
+                FieldDoc {
+                    name: "show_datetime",
+                    ty: "bool",
+                    required: false,
+                    default: Some("false"),
+                    description: "Whether to show a tile with the current date and time.",
+                },
+            ],
+            inner_functions: &[],
+            examples: &[Example {
+                description: "Basic weather launcher",
+                json: indoc! {
+                    r#"{
+                        "name": "Weather",
+                        "type": "weather",
+                        "args": {
+                            "location": "berlin",
+                            "update_interval": 120,
+                            "show_datetime": true,
+                            "icon_theme": "Sherlock"
+                        },
+                        "actions": [
+                            {
+                                "name": "Show in Web",
+                                "exec": "https://www.wttr.in/berlin",
+                                "icon": "sherlock-link",
+                                "method": "web_launcher"
+                            }
+                        ],
+                        "priority": 1,
+                        "home": "OnlyHome",
+                        "shortcut": false,
+                        "spawn_focus": false
+                    }"#
+                },
+            }],
+            hidden: false,
         }
     }
 }

@@ -1,13 +1,16 @@
 use std::sync::Arc;
 
 use gpui::App;
+use indoc::indoc;
 use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
     define_inner_functions, ensure_func,
     launcher::{
-        ExecEffect, LauncherProvider, LauncherType, LoadContext, app_launcher::app_data::AppData,
+        ExecEffect, LauncherProvider, LauncherType, LoadContext,
+        app_launcher::app_data::AppData,
+        docs::{Example, FieldDoc, InnerFunctionDoc, LauncherDoc, LauncherDocEntry},
         variant_type::InnerFunction,
     },
     loader::{
@@ -24,7 +27,7 @@ use nix::unistd::Pid;
 
 define_inner_functions! {
     pub enum ProcessLauncherFunctions {
-        Quit { pid: i32 },
+        Quit { pid: i32 }, // TODO strip the pid to make compatible with `inner.` notation
     }
 }
 
@@ -99,4 +102,52 @@ impl LauncherProvider for ProcessLauncher {
 fn kill_process(pid: i32) -> Result<(), SherlockMessage> {
     let child = Pid::from_raw(pid);
     kill(child, Signal::SIGKILL).map_err(|e| sherlock_msg!(Warning, SherlockErrorType::IO, e))
+}
+
+// DOCS
+impl LauncherDoc for ProcessLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Process Terminator",
+            variant_name: "process",
+            description: "Searches and terminates processes from within Sherlock.",
+            args: &[
+                FieldDoc {
+                    name: "max_results",
+                    ty: "usize",
+                    required: false,
+                    default: Some("50"),
+                    description: "The maximum number of results to show in the process search.",
+                },
+                FieldDoc {
+                    name: "show_tile",
+                    ty: "bool",
+                    required: false,
+                    default: Some("false"),
+                    description: "Wheather a tile should be displayed of the user only wants the alias-based execution.",
+                },
+            ],
+            inner_functions: &[InnerFunctionDoc {
+                name: "Quit",
+                identifier: "inner.quit",
+                description: "Quit the current process",
+            }],
+            examples: &[Example {
+                description: "Basic process terminator",
+                json: indoc! {
+                    r#"{
+                        "name": "Processes",
+                        "type": "process",
+                        "alias": "kill",
+                        "args": {},
+                        "priority": 1,
+                        "home": "Home",
+                        "shortcut": false,
+                        "exit": false
+                    }"#
+                },
+            }],
+            hidden: false,
+        }
+    }
 }

@@ -3,7 +3,12 @@ use std::sync::Arc;
 use serde::Deserialize;
 
 use crate::{
-    launcher::{LauncherProvider, app_launcher::app_data::AppData, variant_type::LauncherType},
+    launcher::{
+        LauncherProvider,
+        app_launcher::app_data::AppData,
+        docs::{LauncherDoc, LauncherDocEntry},
+        variant_type::LauncherType,
+    },
     loader::{
         resolve_icon_path,
         utils::{PriorityGuard, RawLauncher},
@@ -37,5 +42,16 @@ impl LauncherProvider for MessageLauncher {
             launcher: Arc::clone(&launcher),
             inner,
         }])
+    }
+}
+
+// DOCS
+impl LauncherDoc for MessageLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry::new_hidden(
+            "Messages",
+            "messages",
+            "The launcher to provide the message view",
+        )
     }
 }

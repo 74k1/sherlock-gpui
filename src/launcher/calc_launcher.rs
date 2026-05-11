@@ -1,9 +1,13 @@
 use crate::{
-    launcher::{LauncherProvider, LauncherType},
+    launcher::{
+        LauncherProvider, LauncherType,
+        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
+    },
     loader::utils::RawLauncher,
     ui::widgets::{RenderableChild, calculator::CalcData},
     utils::{errors::SherlockMessage, intent::Capabilities},
 };
+use indoc::indoc;
 use serde_json::Value;
 use std::sync::OnceLock;
 
@@ -27,7 +31,7 @@ impl LauncherProvider for CalculatorLauncher {
             .args
             .get("currency_update_interval")
             .and_then(|interval| interval.as_u64())
-            .unwrap_or(60 * 60 * 24);
+            .unwrap_or(1440);
 
         tokio::spawn(async move {
             match Currency::get_exchange(update_interval).await {
@@ -61,5 +65,60 @@ impl LauncherProvider for CalculatorLauncher {
         let inner = CalcData::new(caps);
 
         Ok(vec![RenderableChild::Calc { launcher, inner }])
+    }
+}
+
+// DOCS
+impl LauncherDoc for CalculatorLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "Calculator",
+            variant_name: "calculator",
+            description: "Allowes math calculations and different unit conversions.",
+            args: &[
+                FieldDoc {
+                    name: "capabilities",
+                    ty: "Capability[]",
+                    required: false,
+                    default: Some(
+                        r#"[
+                            "calc.units",
+                            "calc.math"
+                        ]"#,
+                    ),
+                    description: "The capabilies the calculator should have.",
+                },
+                FieldDoc {
+                    name: "currency_update_interval",
+                    ty: "u64",
+                    required: false,
+                    default: Some("1440"),
+                    description: "Number of minutes to keep the currency cache alive.",
+                },
+            ],
+            inner_functions: &[],
+            examples: &[Example {
+                description: "Basic calculator config",
+                json: indoc! {
+                    r#" {
+                        "name": "Calculator",
+                        "type": "calculator",
+                        "alias": "calc",
+                        "args": {
+                            "currecny_update_interval": 60,
+                            "capabilities": [
+                                "calc.math",
+                                "calc.units",
+                                "calc.currencies",
+                                "colors"
+                            ]
+                        },
+                        "priority": 1,
+                        "on_return": "copy"
+                    } "#
+                },
+            }],
+            hidden: false,
+        }
     }
 }

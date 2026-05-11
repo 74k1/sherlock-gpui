@@ -1,33 +1,33 @@
-use std::{env, path::PathBuf, process::exit, str::FromStr};
+use std::{env, path::PathBuf, str::FromStr};
 
 use super::Loader;
-use crate::utils::{
-    config::{SherlockConfig, SherlockFlags, repair_config},
-    errors::SherlockMessage,
+use crate::{
+    launcher::{docs::to_markdown, variant_type::LauncherType},
+    utils::{
+        config::{SherlockConfig, SherlockFlags, repair_config},
+        errors::SherlockMessage,
+    },
 };
 
 impl Loader {
     /// This loads the application flags.
-    /// ### Returns:
-    /// **Error**
-    ///
-    pub fn load_flags() -> SherlockFlags {
+    pub fn load_flags() -> Option<SherlockFlags> {
         let args: Vec<String> = env::args().collect();
         if args.contains(&"--help".to_string()) {
             let _ = flag_documentation();
-            std::process::exit(0);
+            return None;
         }
         if args.contains(&"-h".to_string()) {
             let _ = flag_documentation();
-            std::process::exit(0);
+            return None;
         }
         if args.contains(&"--version".to_string()) {
             let _ = print_version();
-            std::process::exit(0);
+            return None;
         }
         if args.contains(&"-v".to_string()) {
             let _ = print_version();
-            std::process::exit(0);
+            return None;
         }
 
         SherlockFlags::new(args)
@@ -56,7 +56,7 @@ impl SherlockFlags {
             _ => long,
         }
     }
-    fn new(args: Vec<String>) -> Self {
+    fn new(args: Vec<String>) -> Option<Self> {
         // Helper closure to extract flag values
         let extract_path_value =
             |flag: &str| Self::extract_flag_value::<PathBuf>(&args, flag, None);
@@ -71,6 +71,14 @@ impl SherlockFlags {
                 .unwrap_or(String::from("toml"));
             let x = SherlockConfig::to_file(path, &extension);
             eprintln!("{:?}", x);
+            return None;
+        }
+
+        if check_flag_existence("docs", None) {
+            let docs = LauncherType::all_docs();
+            let doc_string = to_markdown(&docs);
+            println!("{doc_string}");
+            return None;
         }
 
         let flags = SherlockFlags {
@@ -95,10 +103,10 @@ impl SherlockFlags {
 
         if check_flag_existence("repair", None) {
             repair_config(flags);
-            exit(0)
+            return None;
         }
 
-        flags
+        Some(flags)
     }
 }
 

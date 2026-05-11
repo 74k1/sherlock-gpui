@@ -1,10 +1,14 @@
 use std::sync::Arc;
 
+use indoc::indoc;
 use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
-    launcher::{LauncherProvider, LauncherType, LoadContext},
+    launcher::{
+        LauncherProvider, LauncherType, LoadContext,
+        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
+    },
     loader::{application_loader::ApplicationLoader, utils::RawLauncher},
     ui::widgets::RenderableChild,
     utils::errors::SherlockMessage,
@@ -46,5 +50,41 @@ impl LauncherProvider for AppLauncher {
                     })
                     .collect()
             })
+    }
+}
+
+// DOCS
+impl LauncherDoc for AppLauncher {
+    fn doc() -> LauncherDocEntry {
+        LauncherDocEntry {
+            name: "App Launcher",
+            variant_name: "apps",
+            description: "Launches installed desktop applications",
+            args: &[FieldDoc {
+                name: "use_keywords",
+                ty: "bool",
+                required: false,
+                default: Some("true"),
+                description: "Whether the search should use the keywords defined in the .desktop file.",
+            }],
+            inner_functions: &[],
+            examples: &[Example {
+                description: "Basic app launcher",
+                json: indoc! {
+                    r#"{
+                        "name": "App Launcher",
+                        "alias": "app",
+                        "type": "apps",
+                        "args": {
+                            "icon_class": "reactive",
+                            "use_keywords": false
+                        },
+                        "priority": 4,
+                        "home": "Home"
+                    }"#
+                },
+            }],
+            hidden: false,
+        }
     }
 }
