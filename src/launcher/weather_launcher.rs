@@ -151,10 +151,21 @@ impl WeatherData {
             })?
             .bytes()
             .await
-            .map_err(|e| sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e))?;
+            .map_err(|e| {
+                sherlock_msg!(
+                    Warning,
+                    SherlockErrorType::DeserializationError("Wttr.in Response".into()),
+                    e
+                )
+            })?;
 
-        let raw: WttrResponse = simd_json::from_slice(&mut bytes.to_vec())
-            .map_err(|e| sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e))?;
+        let raw: WttrResponse = simd_json::from_slice(&mut bytes.to_vec()).map_err(|e| {
+            sherlock_msg!(
+                Warning,
+                SherlockErrorType::DeserializationError("Weather Data".into()),
+                e
+            )
+        })?;
 
         let data = transform_weather(raw, launcher)?;
         data.cache();

@@ -85,7 +85,9 @@ impl LauncherProvider for ThemePicker {
                         .map_err(|e| {
                             messages.push(sherlock_msg!(
                                 Warning,
-                                SherlockErrorType::DeserializationError,
+                                SherlockErrorType::DeserializationError(
+                                    file.path().to_string_lossy().into()
+                                ),
                                 e
                             ))
                         })

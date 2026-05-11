@@ -84,7 +84,11 @@ impl SherlockFlags {
                     "json" => {
                         let mut bytes = config_str.into_bytes();
                         simd_json::from_slice(&mut bytes).map_err(|e| {
-                            sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e)
+                            sherlock_msg!(
+                                Warning,
+                                SherlockErrorType::DeserializationError("Json Config".into()),
+                                e
+                            )
                         })
                     }
                     "toml" => {
@@ -110,7 +114,11 @@ impl SherlockFlags {
                                 });
                         }
                         toml::de::from_str(&config_str).map_err(|e| {
-                            sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e)
+                            sherlock_msg!(
+                                Warning,
+                                SherlockErrorType::DeserializationError("Toml Config".into()),
+                                e
+                            )
                         })
                     }
                     _ => {

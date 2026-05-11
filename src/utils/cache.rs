@@ -69,7 +69,7 @@ impl BinaryCache {
             Ok(decoded) => Ok(decoded.0),
             Err(e) => Err(sherlock_msg!(
                 Warning,
-                SherlockErrorType::DeserializationError,
+                SherlockErrorType::DeserializationError(cache.to_string_lossy().to_string()),
                 e
             )),
         }
@@ -92,8 +92,13 @@ pub trait JsonCache: Serialize + DeserializeOwned + Default + Clone + Debug {
             })?;
         }
 
-        let content = simd_json::to_string(self)
-            .map_err(|e| sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e))?;
+        let content = simd_json::to_string(self).map_err(|e| {
+            sherlock_msg!(
+                Warning,
+                SherlockErrorType::DeserializationError(path.to_string_lossy().to_string()),
+                e
+            )
+        })?;
 
         fs::write(&path, content).map_err(|e| {
             sherlock_msg!(
@@ -134,7 +139,13 @@ pub trait JsonCache: Serialize + DeserializeOwned + Default + Clone + Debug {
             })?;
 
             return simd_json::from_reader(reader)
-                .map_err(|e| sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e))
+                .map_err(|e| {
+                    sherlock_msg!(
+                        Warning,
+                        SherlockErrorType::DeserializationError(path.to_string_lossy().to_string()),
+                        e
+                    )
+                })
                 .map(Some);
         }
 

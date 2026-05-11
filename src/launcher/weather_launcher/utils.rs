@@ -79,14 +79,14 @@ pub(super) fn transform_weather(
     let sunset = parse_time(&astro.sunset).ok_or_else(|| {
         sherlock_msg!(
             Warning,
-            SherlockErrorType::DeserializationError,
+            SherlockErrorType::DeserializationError("Weather Data".into()),
             "Failed to parse sunset time from string"
         )
     })?;
     let sunrise = parse_time(&astro.sunrise).ok_or_else(|| {
         sherlock_msg!(
             Warning,
-            SherlockErrorType::DeserializationError,
+            SherlockErrorType::DeserializationError("Weather Data".into()),
             "Failed to parse sunrise time from string"
         )
     })?;

@@ -155,7 +155,7 @@ impl AsyncSizedMessage for UnixStream {
                 .map_err(|e| {
                     sherlock_msg!(
                         Warning,
-                        SherlockErrorType::DeserializationError,
+                        SherlockErrorType::DeserializationError("Socket Message".into()),
                         e.to_string()
                     )
                 })
@@ -209,7 +209,7 @@ impl AsyncSizedMessage for OwnedReadHalf {
                 .map_err(|e| {
                     sherlock_msg!(
                         Warning,
-                        SherlockErrorType::DeserializationError,
+                        SherlockErrorType::DeserializationError("Socket Message".into()),
                         e.to_string()
                     )
                 })

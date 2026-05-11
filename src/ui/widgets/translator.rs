@@ -311,12 +311,20 @@ pub async fn translate(
     })?;
 
     // Response parsing
-    let text = response
-        .text()
-        .await
-        .map_err(|e| sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e))?;
-    let data: MyMemoryResponse = serde_json::from_str(&text)
-        .map_err(|e| sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e))?;
+    let text = response.text().await.map_err(|e| {
+        sherlock_msg!(
+            Warning,
+            SherlockErrorType::DeserializationError("Translation Response".into()),
+            e
+        )
+    })?;
+    let data: MyMemoryResponse = serde_json::from_str(&text).map_err(|e| {
+        sherlock_msg!(
+            Warning,
+            SherlockErrorType::DeserializationError("Translation Data".into()),
+            e
+        )
+    })?;
 
     Ok(IntentResult::String(data.response_data.translated_text))
 }

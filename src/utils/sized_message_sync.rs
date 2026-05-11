@@ -104,7 +104,7 @@ impl<S: Read + Write> SizedMessage for S {
             .map_err(|e| {
                 sherlock_msg!(
                     Warning,
-                    SherlockErrorType::DeserializationError,
+                    SherlockErrorType::DeserializationError("Socket Message".into()),
                     e.to_string()
                 )
             })

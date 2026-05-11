@@ -322,8 +322,13 @@ impl ChromeParser {
         }
 
         let mut bookmarks = Vec::new();
-        let file = serde_json::from_str::<parser::ChromeFile>(&data)
-            .map_err(|e| sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e))?;
+        let file = serde_json::from_str::<parser::ChromeFile>(&data).map_err(|e| {
+            sherlock_msg!(
+                Warning,
+                SherlockErrorType::DeserializationError("Chrome Bookmarks".into()),
+                e
+            )
+        })?;
 
         fn process_bookmark(
             launcher: Arc<Launcher>,

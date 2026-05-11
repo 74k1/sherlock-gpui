@@ -52,7 +52,7 @@ pub fn migrate_fallback<P: AsRef<Path>>(path: P) -> Result<(), SherlockMessage> 
     let legacy_configs: Vec<LegacyRawLauncher> = serde_json::from_str(&content).map_err(|e| {
         sherlock_msg!(
             Warning,
-            SherlockErrorType::DeserializationError,
+            SherlockErrorType::DeserializationError("Legacy Launcher".into()),
             format!("File is neither modern nor legacy format: {e}")
         )
     })?;

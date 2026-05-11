@@ -88,7 +88,13 @@ impl Fetchable for EventData {
             )
         })?;
         let (resp, _): (Response, _) = bincode::serde::decode_from_slice(&resp_bin, config)
-            .map_err(|e| sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e))?;
+            .map_err(|e| {
+                sherlock_msg!(
+                    Warning,
+                    SherlockErrorType::DeserializationError("Events".into()),
+                    e
+                )
+            })?;
 
         if let Response::Events(mut events) = resp {
             let now = Local::now();

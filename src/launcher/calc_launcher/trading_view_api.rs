@@ -84,8 +84,15 @@ impl TradingViewApiRequest {
             .map_err(|e| sherlock_msg!(Warning, SherlockErrorType::IO, e))?
             .to_vec();
 
-        simd_json::from_slice(&mut bytes)
-            .map_err(|e| sherlock_msg!(Warning, SherlockErrorType::DeserializationError, e))
+        simd_json::from_slice(&mut bytes).map_err(|e| {
+            sherlock_msg!(
+                Warning,
+                SherlockErrorType::DeserializationError(
+                    "TradingView Currency Response".to_string()
+                ),
+                e
+            )
+        })
     }
 }
 

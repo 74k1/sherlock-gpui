@@ -14,7 +14,7 @@ pub enum SherlockErrorType {
     /// Failure while converting internal data structures to a string/byte format.
     SerializationError,
     /// Failure while parsing external data (JSON/YAML) into internal structures.
-    DeserializationError,
+    DeserializationError(String),
     /// Failure regarding provided data
     InvalidData,
     /// The provided launcher does not have this functionality
@@ -133,6 +133,9 @@ impl Display for SherlockErrorType {
             }
             Self::DatabaseError(act) => {
                 write!(f, "Database failure during operation: {act}")
+            }
+            Self::DeserializationError(msg) => {
+                write!(f, "Failed to deserialize: {msg}")
             }
             // Fallback for simple variants
             _ => write!(f, "{}", self.as_ref()),

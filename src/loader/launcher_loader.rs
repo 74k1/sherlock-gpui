@@ -177,7 +177,7 @@ fn parse_launcher_configs(path: &PathBuf) -> (Vec<RawLauncher>, Vec<SherlockMess
         Err(e) => {
             warnings.push(sherlock_msg!(
                 Warning,
-                SherlockErrorType::DeserializationError,
+                SherlockErrorType::DeserializationError(path.to_string_lossy().to_string()),
                 e
             ));
             return (launchers, warnings);
