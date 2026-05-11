@@ -138,23 +138,23 @@ impl LegacyRawLauncher {
             return new_type;
         }
         match self.r#type.as_str() {
-            "app_launcher" => Some(LauncherVariant::Apps),
-            "audio_sink" => Some(LauncherVariant::MusicPlayer),
+            "app_launcher" | "apps" => Some(LauncherVariant::Apps),
+            "audio_sink" | "music_player" => Some(LauncherVariant::MusicPlayer),
             "bookmarks" => Some(LauncherVariant::Bookmarks),
             "categories" | "category" => Some(LauncherVariant::Categories),
             "clipboard-execution" | "clipboard" => Some(LauncherVariant::Clipboard),
-            "command" => Some(LauncherVariant::Commands),
+            "command" | "commands" => Some(LauncherVariant::Commands),
             "emoji_picker" | "emoji" => Some(LauncherVariant::Emoji),
             "weather" => Some(LauncherVariant::Weather),
-            "web_launcher" => Some(LauncherVariant::Web),
+            "web_launcher" | "web" => Some(LauncherVariant::Web),
             "calculation" | "calculator" => Some(LauncherVariant::Calculator),
-            "bulk_text" => Some(LauncherVariant::Script),
+            "bulk_text" | "script" => Some(LauncherVariant::Script),
             "files" => Some(LauncherVariant::Files),
             "teams_event" | "event" => Some(LauncherVariant::Event),
             "debug" => Some(LauncherVariant::Debug),
             "theme_picker" | "theme" => Some(LauncherVariant::Theme),
             "process" => Some(LauncherVariant::Process),
-            "pomodoro" => Some(LauncherVariant::Timer),
+            "pomodoro" | "timer" => Some(LauncherVariant::Timer),
             _ => None,
         }
     }
