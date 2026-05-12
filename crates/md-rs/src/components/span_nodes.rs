@@ -1,11 +1,11 @@
 use std::borrow::Cow;
 
-use md_rs_derive::SpanNode;
+use md_rs_derive::{ComponentConstructor, SpanNode};
 
 use super::Component;
 use super::span::Span;
 
-#[derive(SpanNode)]
+#[derive(Default, SpanNode, ComponentConstructor)]
 pub struct Paragraph {
     pub spans: Vec<Span>,
 }
@@ -20,16 +20,8 @@ impl Paragraph {
     }
 }
 
-pub fn paragraph() -> Paragraph {
-    Paragraph::new()
-}
-
-#[derive(SpanNode)]
+#[derive(Default, SpanNode, ComponentConstructor)]
 #[span_node(prefix = "> ")]
 pub struct Blockquote {
     pub spans: Vec<Span>,
-}
-
-pub fn block_quote() -> Blockquote {
-    Blockquote::new()
 }

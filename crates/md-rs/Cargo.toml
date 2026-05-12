@@ -5,3 +5,6 @@ edition = "2024"
 
 [dependencies]
 md-rs-derive = { path = "md-rs-derive" }
+
+[features]
+github = []

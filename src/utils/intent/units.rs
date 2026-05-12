@@ -4,6 +4,7 @@ macro_rules! define_units {
     ($(
         $category:ident, $cap_const:ident {
             cap: $cap_val:expr,
+            id: $id:literal,
             $($variant:ident: [$($alias:literal),*] => $factor:expr, $canonical_symbol:literal),* $(,)?
         }
     )*) => {
@@ -32,6 +33,24 @@ macro_rules! define_units {
                 (self.0 & cap) != 0
             }
         }
+
+        pub static CAPABILITY_DOCS: &[CapabilityDoc] = &[
+            $(
+                CapabilityDoc {
+                    name: stringify!($category),
+                    identifier: $id,
+                    units: &[
+                        $(
+                            UnitDoc {
+                                name: stringify!($variant),
+                                aliases: &[$($alias),*],
+                                symbol: $canonical_symbol,
+                            },
+                        )*
+                    ],
+                },
+            )*
+        ];
 
         impl std::fmt::Debug for Capabilities {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -221,12 +240,15 @@ impl Unit {
 define_units! {
     Math, MATH {
         cap: 1 << 0,
+        id: "calc.math",
     }
     Colors, COLORS {
         cap: 1 << 1,
+        id: "colors",
     }
     Currency, CURRENCY {
         cap: 1 << 2,
+        id: "calc.currencies",
         Usd: ["usd", "dollar", "dollars", "bucks", "$"] => 1.0, "$",
         Eur: ["eur", "euro", "euros", "€"] => 1.0, "€",
         Jpy: ["jpy", "yen", "japanese yen", "¥"] => 1.0, "¥",
@@ -247,6 +269,7 @@ define_units! {
     }
     Length, LENGTH {
         cap: 1 << 3,
+        id: "calc.length",
         Millimeter: ["mm", "millimeter", "millimeters"] => 0.001, "mm",
         Centimeter: ["cm", "centimeter", "centimeters"] => 0.01, "cm",
         Meter: ["m", "meter", "meters"] => 1.0, "m",
@@ -259,6 +282,7 @@ define_units! {
     }
     Volume, VOLUME {
         cap: 1 << 4,
+        id: "calc.volume",
         Milliliter: ["ml", "milliliter", "milliliters", "cc"] => 0.001, "ml",
         Centiliter: ["cl", "centiliter"] => 0.01, "cl",
         Liter: ["l", "liter", "liters"] => 1.0, "l",
@@ -277,6 +301,7 @@ define_units! {
     }
     Weight, WEIGHT {
         cap: 1 << 5,
+        id: "calc.weight",
         Milligram: ["mg", "milligram", "milligrams"] => 0.000001, "mg",
         Gram: ["g", "gram", "grams"] => 0.001, "g",
         Kilogram: ["kg", "kilogram", "kilograms", "kilo", "kilos"] => 1.0, "kg",
@@ -292,11 +317,13 @@ define_units! {
     }
     Temperature, TEMPERATURE {
         cap: 1 << 6,
+        id: "calc.temperature",
         Celsius: ["c", "celsius", "°c", "°"] => 1.0, "°C",
         Fahrenheit: ["f", "fahrenheit", "°f"] => 1.0, "°F",
     }
     Pressure, PRESSURE {
         cap: 1 << 7,
+        id: "calc.pressure",
         Pascal: ["pa", "pascal", "pascals"] => 0.00001, "Pa",
         Kilopascal: ["kpa", "kilopascal"] => 0.01, "kPa",
         Bar: ["bar", "bars"] => 1.0, "bar",
@@ -306,6 +333,7 @@ define_units! {
     }
     Digital, DIGITAL {
         cap: 1 << 8,
+        id: "calc.digital",
         Bit: ["bit", "bits", "b"] => 0.125, "bit",
         Kilobit: ["kb", "kilobit"] => 128.0, "kb",
         Megabit: ["mb", "megabit"] => 131072.0, "Mb",
@@ -319,6 +347,7 @@ define_units! {
     }
     Time, TIME {
         cap: 1 << 9,
+        id: "calc.time",
         Milliseconds: ["ms", "millisecond", "milliseconds"] => 0.001, "ms",
         Seconds: ["s", "sec", "second", "seconds"] => 1.0, "s",
         Minutes: ["m", "min", "minute", "minutes"] => 60.0, "min",
@@ -330,6 +359,7 @@ define_units! {
     }
     Area, AREA {
         cap: 1 << 10,
+        id: "calc.area",
         SquareMeter: ["m2", "sq m", "sq meter"] => 1.0, "m²",
         SquareKilometer: ["km2", "sq km"] => 1000000.0, "km²",
         SquareFoot: ["ft2", "sq ft", "sq feet"] => 0.092903, "ft²",
@@ -339,9 +369,22 @@ define_units! {
     }
     Speed, SPEED {
         cap: 1 << 11,
+        id: "calc.speed",
         MetersPerSecond: ["ms", "m/s", "meters per second"] => 1.0, "m/s",
         KilometersPerHour: ["kmh", "km/h", "kph"] => 0.277778, "km/h",
         MilesPerHour: ["mph", "mile per hour", "miles per hour"] => 0.44704, "mph",
         Knot: ["kn", "knot", "knots"] => 0.514444, "kn",
     }
+}
+
+pub struct CapabilityDoc {
+    pub name: &'static str,
+    pub identifier: &'static str,
+    pub units: &'static [UnitDoc],
+}
+
+pub struct UnitDoc {
+    pub name: &'static str,
+    pub aliases: &'static [&'static str],
+    pub symbol: &'static str,
 }

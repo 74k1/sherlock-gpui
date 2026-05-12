@@ -1,31 +1,41 @@
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    fmt::{Result, Write},
+};
+
+use md_rs_derive::HeadingConstructors;
 
 use super::{Component, span::Span};
 
+#[derive(Default, HeadingConstructors)]
 pub struct Heading {
-    pub level: u8,
-    pub spans: Vec<Span>,
+    level: u8,
+    spans: Vec<Span>,
 }
 impl Heading {
-    pub fn new(level: u8, text: impl Into<Cow<'static, str>>) -> Self {
-        Self {
-            level,
-            spans: vec![Span::Text(text.into())],
-        }
-    }
     pub fn span(mut self, span: Span) -> Self {
         self.spans.push(span);
         self
     }
+    pub fn level(mut self, level: u8) -> Self {
+        self.level = level.clamp(1, 6);
+        self
+    }
+    pub fn with_text(mut self, text: impl Into<Cow<'static, str>>) -> Self {
+        self.spans.push(Span::Text(text.into()));
+        self
+    }
 }
 impl Component for Heading {
-    fn render(&self, out: &mut String) {
+    fn render(&self, out: &mut dyn Write) -> Result {
         let hashes = "#".repeat(self.level as usize);
-        out.push_str(&format!("{hashes} "));
+        write!(out, "{hashes} ")?;
+
         for span in &self.spans {
-            span.render(out);
+            span.render(out)?;
         }
-        out.push('\n');
-        out.push('\n');
+
+        writeln!(out)?;
+        writeln!(out)
     }
 }

@@ -24,7 +24,7 @@ pub mod translation;
 mod units;
 mod utils;
 
-pub use units::Capabilities;
+pub use units::{CAPABILITY_DOCS, Capabilities};
 pub use utils::IntentResult;
 
 #[derive(Clone, Debug, PartialEq)]

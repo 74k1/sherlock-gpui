@@ -1,11 +1,19 @@
 use indoc::indoc;
 use md_rs::{
     components::{
-        Component, code_block::code_block, heading::Heading, hr::hr, span_nodes::paragraph,
-        table::table,
+        Component,
+        code_block::codeblock,
+        container::Container,
+        details::details,
+        heading::{h1, h2, h3},
+        hr::hr,
+        span_nodes::paragraph,
+        table::{Table, table},
     },
     md,
 };
+
+use crate::utils::intent::CAPABILITY_DOCS;
 
 pub const BASE_FIELDS: &[FieldDoc] = &[
     FieldDoc {
@@ -170,80 +178,106 @@ pub struct Example {
 }
 
 // markdown
-pub fn to_markdown(entries: &[LauncherDocEntry]) -> String {
-    let mut out = String::new();
-    md()
-        .child(Heading::new(1, "Launchers"))
-        .child(
-            paragraph()
-            .with_text("Launchers are the backbone for Sherlock's widget engine. Each displayed widget is owned by a launcher. For example:"))
-        .child(
-            code_block().content(indoc! {"
-            [Weather Launcher]
-                [Widget] Weather Display
-            [App Launcher]
-                [Widget] App 1
-                [Widget] App 2
-                [Widget] App 3"})
-        )
-        .child(paragraph().with_text("A launcher's widgets will share the same behavior based on their shared launcher configuration."))
-        .child(Heading::new(2, "Shared Launcher Configuration"))
-        .child(Heading::new(3, "Fields"))
-        .child(table()
+pub fn to_markdown(entries: &[LauncherDocEntry]) -> Result<String, std::fmt::Error> {
+    const INTRO: &str = "Launchers are the backbone for Sherlock's widget engine. \
+        Each displayed widget is owned by a launcher. For example:";
+    const SHARED: &str = "A launcher's widgets will share the same behavior \
+        based on their shared launcher configuration.";
+    const EXAMPLE: &str = indoc! {"
+        [Weather Launcher]
+            [Widget] Weather Display
+        [App Launcher]
+            [Widget] App 1
+            [Widget] App 2
+            [Widget] App 3"};
+
+    fn field_table(fields: &[FieldDoc]) -> Table {
+        table()
             .headers(["Field", "Type", "Required", "Default", "Description"])
-            .rows(BASE_FIELDS.iter().map(|f| [
+            .rows(fields.iter().map(|f| {
+                [
                     format!("`{}`", f.name),
                     format!("`{}`", f.ty),
                     if f.required { "✓" } else { "" }.into(),
                     f.default.unwrap_or("—").into(),
                     f.description.into(),
-            ]))
-            )
-        .children(
-            entries.iter().filter(|e| !e.hidden).map(|e| {
-                md()
-                    .child(Heading::new(2, e.name))
-                    .child(paragraph().with_text(format!("`type = {}`", e.variant_name)))
-                    .child(paragraph().with_text(e.description))
-                    .when(!e.args.is_empty(), |this| {
-                        this
-                            .child(Heading::new(3, "Args"))
-                            .child(table()
-                                .headers(["Field", "Type", "Required", "Default", "Description"])
-                                .rows(e.args.iter().map(|f| [
-                                    format!("`{}`", f.name),
-                                    format!("`{}`", f.ty),
-                                    if f.required { "✓" } else { "" }.into(),
-                                    f.default.unwrap_or("—").into(),
-                                    f.description.into()
-                                ]))
-                            )
-                    })
-                    .when(!e.inner_functions.is_empty(), |this| {
-                        this
-                            .child(Heading::new(3, "Inner Functions"))
-                            .child(table()
-                                .headers(["Name", "Identifier", "Description"])
-                                .rows(e.inner_functions.iter().filter(|f| f.user_facing).map(|f| [
-                                    f.name.into(),
-                                    format!("`{}`", f.identifier),
-                                    f.description.into()
-                                ]))
-                            )
-                    })
-                    .when(!e.examples.is_empty(), |this| {
-                        this
-                            .child(Heading::new(3, "Examples"))
-                            .children(e.examples.iter().map(|ex| {
-                                md()
-                                    .child(paragraph().with_text_italic(ex.description))
-                                    .child(code_block().language("json").content(ex.json.trim()))
-                            }))
-                    })
-                    .child(hr())
-            })
-        )
-        .render(&mut out);
+                ]
+            }))
+    }
 
-    out
+    fn function_table(functions: &[InnerFunctionDoc]) -> Table {
+        table().headers(["Name", "Identifier", "Description"]).rows(
+            functions.iter().filter(|f| f.user_facing).map(|f| {
+                [
+                    f.name.into(),
+                    format!("`{}`", f.identifier),
+                    f.description.into(),
+                ]
+            }),
+        )
+    }
+
+    fn entry_to_md(e: &LauncherDocEntry) -> Container {
+        md().child(h2().with_text(e.name))
+            .child(paragraph().with_text(format!("`type = {}`", e.variant_name)))
+            .child(paragraph().with_text(e.description))
+            .when(!e.args.is_empty(), |this| {
+                this.child(h3().with_text("Args"))
+                    .child(field_table(e.args))
+            })
+            .when(!e.inner_functions.is_empty(), |this| {
+                this.child(h3().with_text("Inner Functions"))
+                    .child(function_table(e.inner_functions))
+            })
+            .when(!e.examples.is_empty(), |this| {
+                this.child(h3().with_text("Examples"))
+                    .children(e.examples.iter().map(|ex| {
+                        md().child(paragraph().with_text_italic(ex.description))
+                            .child(codeblock().language("json").content(ex.json.trim()))
+                    }))
+            })
+            .child(hr())
+    }
+
+    let mut out = String::with_capacity(64 * 1024);
+    md().child(h1().with_text("Launchers"))
+        .child(paragraph().with_text(INTRO))
+        .child(codeblock().content(EXAMPLE))
+        .child(paragraph().with_text(SHARED))
+        .child(h2().with_text("Shared Launcher Configuration"))
+        .child(h3().with_text("Fields"))
+        .child(field_table(BASE_FIELDS))
+        .child(capabilities_section())
+        .child(hr())
+        .children(entries.iter().filter(|e| !e.hidden).map(entry_to_md))
+        .render(&mut out)?;
+
+    Ok(out)
+}
+
+fn capabilities_section() -> Container {
+    md().child(h3().with_text("Capabilities"))
+        .child(paragraph().with_text(
+            "Capabilities control what the calculator can compute. \
+            Pass them via the `capabilities` arg:",
+        ))
+        .child(
+            codeblock()
+                .language("json")
+                .content(r#"{ "capabilities": ["calc.math", "calc.units"] }"#),
+        )
+        .children(CAPABILITY_DOCS.iter().map(|cap| {
+            details()
+                .summary(paragraph().with_text(cap.name))
+                .child(paragraph().with_text(format!("`{}`", cap.identifier)))
+                .when(!cap.units.is_empty(), |this| {
+                    this.child(
+                        table().headers(["Unit", "Aliases", "Symbol"]).rows(
+                            cap.units
+                                .iter()
+                                .map(|u| [u.name.into(), u.aliases.join(", "), u.symbol.into()]),
+                        ),
+                    )
+                })
+        }))
 }

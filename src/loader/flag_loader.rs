@@ -32,8 +32,16 @@ impl Loader {
             return None;
         }
         if args.contains(&"--generate-docs".to_string()) && std::env::var("SHERLOCK_DEV").is_ok() {
-            let docs = to_markdown(&LauncherType::all_docs());
-            std::fs::write(DOCS_PATH, docs).expect("Failed to write docs.");
+            match to_markdown(&LauncherType::all_docs()) {
+                Ok(docs) => {
+                    if let Err(e) = std::fs::write(DOCS_PATH, docs) {
+                        eprintln!("{:?}", e);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("{:?}", e);
+                }
+            }
             return None;
         }
 
@@ -83,8 +91,14 @@ impl SherlockFlags {
 
         if check_flag_existence("docs", None) {
             let docs = LauncherType::all_docs();
-            let doc_string = to_markdown(&docs);
-            println!("{doc_string}");
+            match to_markdown(&docs) {
+                Ok(doc_string) => {
+                    println!("{doc_string}");
+                }
+                Err(e) => {
+                    eprintln!("{:?}", e);
+                }
+            }
             return None;
         }
 

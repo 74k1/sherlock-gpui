@@ -1,8 +1,13 @@
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    fmt::{Result, Write},
+};
+
+use md_rs_derive::ComponentConstructor;
 
 use super::Component;
 
-#[derive(Default)]
+#[derive(Default, ComponentConstructor)]
 pub struct CodeBlock {
     pub lang: Option<Cow<'static, str>>,
     pub content: Cow<'static, str>,
@@ -26,13 +31,12 @@ impl CodeBlock {
     }
 }
 impl Component for CodeBlock {
-    fn render(&self, out: &mut String) {
+    fn render(&self, out: &mut dyn Write) -> Result {
         let fence = "```";
         let lang = self.lang.as_deref().unwrap_or("");
-        out.push_str(&format!("{fence}{lang}\n{}\n{fence}\n\n", self.content));
+        writeln!(out, "{fence}{lang}")?;
+        writeln!(out, "{}", self.content)?;
+        writeln!(out, "{fence}")?;
+        writeln!(out)
     }
-}
-
-pub fn code_block() -> CodeBlock {
-    CodeBlock::default()
 }

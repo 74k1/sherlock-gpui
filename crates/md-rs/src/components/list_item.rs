@@ -1,6 +1,10 @@
+use std::fmt::{Result, Write};
+
+use md_rs_derive::ComponentConstructor;
+
 use super::Component;
 
-#[derive(Default)]
+#[derive(Default, ComponentConstructor)]
 pub struct ListItem {
     pub children: Vec<Box<dyn Component>>,
 }
@@ -11,11 +15,11 @@ impl ListItem {
     }
 }
 impl Component for ListItem {
-    fn render(&self, out: &mut String) {
-        out.push_str("- ");
+    fn render(&self, out: &mut dyn Write) -> Result {
+        write!(out, "- ")?;
         for child in &self.children {
-            child.render(out);
+            child.render(out)?;
         }
-        out.push('\n');
+        writeln!(out)
     }
 }

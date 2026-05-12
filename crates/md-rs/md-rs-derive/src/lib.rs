@@ -27,15 +27,46 @@ pub fn derive_span_node(input: TokenStream) -> TokenStream {
         }
 
         impl Component for #name {
-            fn render(&self, out: &mut String) {
-                out.push_str(#prefix);
+            fn render(&self, out: &mut dyn std::fmt::Write) -> std::fmt::Result {
+                write!(out, #prefix)?;
                 for span in &self.spans {
-                    span.render(out);
+                    span.render(out)?;
                 }
-                out.push('\n');
-                out.push('\n');
+                writeln!(out)?;
+                writeln!(out)
             }
         }
     }
     .into()
+}
+
+#[proc_macro_derive(ComponentConstructor)]
+pub fn derive_component_constructor(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+    let fn_name = syn::Ident::new(&name.to_string().to_lowercase(), name.span());
+
+    quote! {
+        pub fn #fn_name() -> #name {
+            #name::default()
+        }
+    }
+    .into()
+}
+
+#[proc_macro_derive(HeadingConstructors)]
+pub fn derive_heading_constructors(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+
+    let constructors = (1u8..=6).map(|level| {
+        let fn_name = syn::Ident::new(&format!("h{level}"), proc_macro2::Span::call_site());
+        quote! {
+            pub fn #fn_name() -> #name {
+                #name::default().level(#level)
+            }
+        }
+    });
+
+    quote! { #(#constructors)* }.into()
 }

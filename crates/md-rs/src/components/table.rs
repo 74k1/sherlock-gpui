@@ -1,5 +1,8 @@
 use super::Component;
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    fmt::{Result, Write},
+};
 
 #[derive(Default)]
 pub struct Table {
@@ -33,35 +36,35 @@ impl Table {
 }
 
 impl Component for Table {
-    fn render(&self, out: &mut String) {
+    fn render(&self, out: &mut dyn Write) -> Result {
         if self.headers.is_empty() {
-            return;
+            return Ok(());
         }
 
         // header row
-        out.push('|');
+        write!(out, "|")?;
         for h in &self.headers {
-            out.push_str(&format!(" {} |", h));
+            write!(out, " {} |", h)?;
         }
-        out.push('\n');
+        writeln!(out)?;
 
         // separator
-        out.push('|');
+        write!(out, "|")?;
         for _ in &self.headers {
-            out.push_str("---|");
+            write!(out, "---|")?;
         }
-        out.push('\n');
+        writeln!(out)?;
 
         // rows
         for row in &self.rows {
-            out.push('|');
+            write!(out, "|")?;
             for cell in row {
-                out.push_str(&format!(" {} |", cell));
+                write!(out, " {} |", cell)?;
             }
-            out.push('\n');
+            writeln!(out)?;
         }
 
-        out.push('\n');
+        writeln!(out)
     }
 }
 

@@ -1,14 +1,22 @@
 use std::fmt::{Result, Write};
 
-use md_rs_derive::ComponentConstructor;
+use crate::components::span_nodes::Paragraph;
 
 use super::Component;
+use md_rs_derive::ComponentConstructor;
 
 #[derive(Default, ComponentConstructor)]
-pub struct Container {
+pub struct Details {
+    summary: Paragraph,
     children: Vec<Box<dyn Component>>,
 }
-impl Container {
+
+impl Details {
+    pub fn summary(mut self, summary: Paragraph) -> Self {
+        self.summary = summary;
+        self
+    }
+
     pub fn child(mut self, child: impl Component + 'static) -> Self {
         self.children.push(Box::new(child));
         self
@@ -31,12 +39,18 @@ impl Container {
     }
 }
 
-impl Component for Container {
+impl Component for Details {
     fn render(&self, out: &mut dyn Write) -> Result {
+        writeln!(out, "<details>")?;
+
+        writeln!(out, "<summary>")?;
+        self.summary.render(out)?;
+        writeln!(out, "</summary>")?;
+
         for child in &self.children {
             child.render(out)?;
         }
 
-        Ok(())
+        writeln!(out, "</details>")
     }
 }
