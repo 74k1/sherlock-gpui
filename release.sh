@@ -1,8 +1,5 @@
 #!/bin/bash
-
-tasks=("Updated Cargo.toml version" "Update flake.nix version" "Updated CHANGELOG.md header" "Updated README.md version" "Merged into 'main'")
-status=()
-for _ in "${tasks[@]}"; do status+=(" "); done
+set -e
 
 BOLD='\033[1m'
 BLUE='\033[1;34m'
@@ -10,26 +7,57 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m'
 
+tasks=(
+    "Updated Cargo.toml version"
+    "Update flake.nix version"
+    "Updated CHANGELOG.md header"
+    "Updated README.md version"
+    "Merged into 'main'"
+)
+
+status=()
+for _ in "${tasks[@]}"; do status+=(" "); done
+
+build_and_check() {
+    echo "Checking for uncommitted changes..."
+    git diff --exit-code || { echo "Uncommitted changes, commit first"; exit 1; }
+
+    echo "Checking we're on the right branch..."
+    branch=$(git branch --show-current)
+    if [ "$branch" != "main" ]; then
+        echo "Not on main branch (on $branch)"
+        exit 1
+    fi
+
+    echo "Building..."
+    cargo b -r
+
+    echo "Testing..."
+    cargo test -r
+
+    echo "Generating docs..."
+    SHERLOCK_DEV=1 ./target/release/sherlock-gpui --generate-docs
+    git add docs/src/launchers.md
+    git commit -m "[Release Bot]: Auto-generated launcher docs"
+}
+
 add_git_release() {
     local version=$1
-
     if [ -z "$version" ]; then
         echo "Error: You must provide a version tag (e.g., v1.0.0)"
         return 1
     fi
-
     echo "Preparing git release: $version"
-
     git switch main || return 1
     git tag "$version" || return 1
     git push origin "$version" || return 1
-
     echo "Successfully pushed tag $version to origin."
 }
 
+build_and_check
+
 for i in "${!tasks[@]}"; do
     clear
-    
     if [ "$i" -gt 0 ]; then
         echo -e "${BOLD}HISTORY:${NC}"
         for j in $(seq 0 $((i-1))); do
@@ -41,20 +69,15 @@ for i in "${!tasks[@]}"; do
         done
         echo "----------------------------------------"
     fi
-
     echo -e "${BLUE}[?] ${tasks[$i]}${NC}"
     echo "----------------------------------------"
-    
     read -p "Did you finish this? (y/n): " answer
-    
     if [[ "$answer" =~ ^[Yy]$ ]]; then
         status[$i]="x"
     fi
 done
 
 clear
-
-
 all_done=true
 for i in "${!status[@]}"; do
     [[ "${status[$i]}" != "x" ]] && all_done=false
@@ -66,4 +89,3 @@ if [ "$all_done" = true ]; then
 else
     echo -e "${RED}You still have some pending tasks. Keep going!${NC}"
 fi
-

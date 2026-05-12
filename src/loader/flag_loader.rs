@@ -9,6 +9,8 @@ use crate::{
     },
 };
 
+const DOCS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/docs/src/launchers.md");
+
 impl Loader {
     /// This loads the application flags.
     pub fn load_flags() -> Option<SherlockFlags> {
@@ -27,6 +29,11 @@ impl Loader {
         }
         if args.contains(&"-v".to_string()) {
             let _ = print_version();
+            return None;
+        }
+        if args.contains(&"--generate-docs".to_string()) && std::env::var("SHERLOCK_DEV").is_ok() {
+            let docs = to_markdown(&LauncherType::all_docs());
+            std::fs::write(DOCS_PATH, docs).expect("Failed to write docs.");
             return None;
         }
 
