@@ -46,11 +46,13 @@ impl Component for Details {
         writeln!(out, "<summary>")?;
         self.summary.render(out)?;
         writeln!(out, "</summary>")?;
+        writeln!(out)?;
 
         for child in &self.children {
             child.render(out)?;
         }
 
-        writeln!(out, "</details>")
+        writeln!(out, "</details>")?;
+        writeln!(out)
     }
 }
