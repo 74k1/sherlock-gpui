@@ -76,19 +76,14 @@ impl LauncherDoc for CalculatorLauncher {
         LauncherDocEntry {
             name: display_name!(CalculatorLauncher),
             variant_name: variant_name!(Calculator),
-            description: "Allowes math calculations and different unit conversions.",
+            description: "Allows math calculations and different unit conversions.",
             args: &[
                 FieldDoc {
                     name: "capabilities",
                     ty: "Capability[]",
                     required: false,
-                    default: Some(
-                        r#"[
-                            "calc.units",
-                            "calc.math"
-                        ]"#,
-                    ),
-                    description: "The capabilies the calculator should have.",
+                    default: Some(r#"[ "calc.units", "calc.math" ]"#),
+                    description: "The capabilities the calculator should have.",
                 },
                 FieldDoc {
                     name: "currency_update_interval",
@@ -107,7 +102,7 @@ impl LauncherDoc for CalculatorLauncher {
                         "type": "calculator",
                         "alias": "calc",
                         "args": {
-                            "currecny_update_interval": 60,
+                            "currency_update_interval": 60,
                             "capabilities": [
                                 "calc.math",
                                 "calc.units",
