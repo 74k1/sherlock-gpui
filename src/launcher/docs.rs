@@ -1,5 +1,6 @@
 use indoc::indoc;
 use md_rs::{
+    cached_component,
     components::{
         Component,
         code_block::codeblock,
@@ -7,7 +8,8 @@ use md_rs::{
         details::details,
         heading::{h1, h2, h3},
         hr::hr,
-        span_nodes::paragraph,
+        raw::{Raw, raw},
+        span_nodes::{Paragraph, paragraph},
         table::{Table, table},
     },
     md,
@@ -125,6 +127,7 @@ pub struct LauncherDocEntry {
     pub variant_name: &'static str,
     pub description: &'static str,
     pub args: &'static [FieldDoc],
+    pub args_explanations: &'static [fn() -> Raw],
     pub inner_functions: &'static [InnerFunctionDoc],
     pub examples: &'static [Example],
     pub hidden: bool,
@@ -137,6 +140,7 @@ impl LauncherDocEntry {
             variant_name: "",
             description: "",
             args: &[],
+            args_explanations: &[],
             inner_functions: &[],
             examples: &[],
             hidden: false,
@@ -179,10 +183,21 @@ pub struct Example {
 
 // markdown
 pub fn to_markdown(entries: &[LauncherDocEntry]) -> Result<String, std::fmt::Error> {
-    const INTRO: &str = "Launchers are the backbone for Sherlock's widget engine. \
-        Each displayed widget is owned by a launcher. For example:";
-    const SHARED: &str = "A launcher's widgets will share the same behavior \
-        based on their shared launcher configuration.";
+    fn get_into() -> Paragraph {
+        paragraph()
+            .with_text("Sherlock separates")
+            .with_text_bold("Launchers")
+            .with_text("(The Logic) from")
+            .with_text_bold("Widgets")
+            .with_text(
+                "(The View). One Launcher configuration can generate multiple Widgets \
+                (like a weather tile and a clock tile), but they all follow the same",
+            )
+            .with_text_code("priority")
+            .with_text("and")
+            .with_text_code("home")
+            .with_text("rules.")
+    }
     const EXAMPLE: &str = indoc! {"
         [Weather Launcher]
             [Widget] Weather Display
@@ -225,6 +240,9 @@ pub fn to_markdown(entries: &[LauncherDocEntry]) -> Result<String, std::fmt::Err
                 this.child(h3().with_text("Args"))
                     .child(field_table(e.args))
             })
+            .when(!e.args_explanations.is_empty(), |this| {
+                this.children(e.args_explanations.iter().map(|f| f()))
+            })
             .when(!e.inner_functions.is_empty(), |this| {
                 this.child(h3().with_text("Inner Functions"))
                     .child(function_table(e.inner_functions))
@@ -241,13 +259,20 @@ pub fn to_markdown(entries: &[LauncherDocEntry]) -> Result<String, std::fmt::Err
 
     let mut out = String::with_capacity(64 * 1024);
     md().child(h1().with_text("Launchers"))
-        .child(paragraph().with_text(INTRO))
+        .child(get_into())
         .child(codeblock().content(EXAMPLE))
-        .child(paragraph().with_text(SHARED))
+        .child(
+            paragraph()
+                .with_text("The Widgets get sorted based by a tiered sort:")
+                .with_text_code("Launcher Priority")
+                .with_text("then")
+                .with_text_code("Search Score")
+                .with_text("then")
+                .with_text_code("Number of Executions"),
+        )
         .child(h2().with_text("Shared Launcher Configuration"))
         .child(h3().with_text("Fields"))
         .child(field_table(BASE_FIELDS))
-        .child(capabilities_section())
         .child(hr())
         .children(entries.iter().filter(|e| !e.hidden).map(entry_to_md))
         .render(&mut out)?;
@@ -255,29 +280,33 @@ pub fn to_markdown(entries: &[LauncherDocEntry]) -> Result<String, std::fmt::Err
     Ok(out)
 }
 
-fn capabilities_section() -> Container {
-    md().child(h3().with_text("Capabilities"))
-        .child(paragraph().with_text(
-            "Capabilities control what the calculator can compute. \
-            Pass them via the `capabilities` arg:",
-        ))
-        .child(
-            codeblock()
-                .language("json")
-                .content(r#"{ "capabilities": ["calc.math", "calc.units"] }"#),
-        )
-        .children(CAPABILITY_DOCS.iter().map(|cap| {
+pub(super) fn capabilities_section() -> Raw {
+    cached_component!(
+        8 * 1024,
+        md().child(
             details()
-                .summary(paragraph().with_text(cap.name))
-                .child(paragraph().with_text(format!("`{}`", cap.identifier)))
-                .when(!cap.units.is_empty(), |this| {
-                    this.child(
-                        table().headers(["Unit", "Aliases", "Symbol"]).rows(
-                            cap.units
-                                .iter()
-                                .map(|u| [u.name.into(), u.aliases.join(", "), u.symbol.into()]),
-                        ),
-                    )
-                })
-        }))
+                .summary(paragraph().with_html_text_string("Capabilities:"))
+                .child(paragraph().with_text(
+                    "Capabilities control what the calculator can compute. \
+                    Pass them via the `capabilities` arg:",
+                ))
+                .child(
+                    codeblock()
+                        .language("json")
+                        .content(r#"{ "capabilities": ["calc.math", "calc.units"] }"#),
+                )
+                .children(CAPABILITY_DOCS.iter().map(|cap| {
+                    details()
+                        .summary(paragraph().with_text(cap.name))
+                        .child(paragraph().with_text(format!("`{}`", cap.identifier)))
+                        .when(!cap.units.is_empty(), |this| {
+                            this.child(table().headers(["Unit", "Aliases", "Symbol"]).rows(
+                                cap.units.iter().map(|u| {
+                                    [u.name.into(), u.aliases.join(", "), u.symbol.into()]
+                                }),
+                            ))
+                        })
+                })),
+        )
+    )
 }

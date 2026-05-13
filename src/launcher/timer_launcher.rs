@@ -140,7 +140,7 @@ impl LauncherDoc for TimerLauncher {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

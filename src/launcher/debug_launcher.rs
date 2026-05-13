@@ -179,7 +179,6 @@ impl LauncherDoc for DebugLauncher {
             name: display_name!(DebugLauncher),
             variant_name: variant_name!(Debug),
             description: "Execute different debug functions like clearing the cache or app counts.",
-            args: &[],
             inner_functions: &[
                 InnerFunctionDoc {
                     name: "Clear Cache",
@@ -219,7 +218,7 @@ impl LauncherDoc for DebugLauncher {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

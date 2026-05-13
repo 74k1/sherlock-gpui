@@ -46,8 +46,6 @@ impl LauncherDoc for Translator {
             name: display_name!(Translator),
             variant_name: variant_name!(Translator),
             description: "Translate your queries into other languages.",
-            args: &[],
-            inner_functions: &[],
             examples: &[Example {
                 description: "Basic translator",
                 json: indoc! {
@@ -63,7 +61,7 @@ impl LauncherDoc for Translator {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

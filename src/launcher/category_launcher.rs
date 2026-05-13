@@ -101,7 +101,6 @@ impl LauncherDoc for CategoryLauncher {
                 default: None,
                 description: "The available categories. On execution, will apply the aslias, privodes as the `exec` field.",
             }],
-            inner_functions: &[],
             examples: &[Example {
                 description: "Power Menu Example",
                 json: indoc! {
@@ -156,7 +155,7 @@ impl LauncherDoc for CategoryLauncher {
                     } "#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

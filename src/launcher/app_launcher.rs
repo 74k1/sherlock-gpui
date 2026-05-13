@@ -69,7 +69,6 @@ impl LauncherDoc for AppLauncher {
                 default: Some("true"),
                 description: "Whether the search should use the keywords defined in the .desktop file.",
             }],
-            inner_functions: &[],
             examples: &[Example {
                 description: "Basic app launcher",
                 json: indoc! {
@@ -85,7 +84,7 @@ impl LauncherDoc for AppLauncher {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

@@ -335,7 +335,6 @@ impl LauncherDoc for MusicPlayerLauncher {
             name: display_name!(MusicPlayerLauncher),
             variant_name: variant_name!(MusicPlayer),
             description: "Shows the currently played song or video with thumbnail, title, and artists.",
-            args: &[],
             inner_functions: &[
                 InnerFunctionDoc {
                     name: "Toggle Playback",
@@ -382,7 +381,7 @@ impl LauncherDoc for MusicPlayerLauncher {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

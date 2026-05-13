@@ -5,7 +5,7 @@ use crate::{
     display_name,
     launcher::{
         LauncherProvider, LauncherType,
-        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
+        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry, capabilities_section},
     },
     loader::utils::RawLauncher,
     ui::widgets::{RenderableChild, clipboard::ClipWidget},
@@ -65,7 +65,7 @@ impl LauncherDoc for ClipboardLauncher {
                 ),
                 description: "The capabilities the clipboard executor should have.",
             }],
-            inner_functions: &[],
+            args_explanations: &[capabilities_section],
             examples: &[Example {
                 description: "Power Menu Example",
                 json: indoc! {
@@ -85,7 +85,7 @@ impl LauncherDoc for ClipboardLauncher {
                     } "#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

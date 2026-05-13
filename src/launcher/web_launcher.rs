@@ -92,7 +92,6 @@ impl LauncherDoc for WebLauncher {
                     description: "The display name for this tile, replacing `{keyword}` with the actual contents of the search bar.",
                 },
             ],
-            inner_functions: &[],
             examples: &[Example {
                 description: "Basic web launcher",
                 json: indoc! {
@@ -110,7 +109,7 @@ impl LauncherDoc for WebLauncher {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

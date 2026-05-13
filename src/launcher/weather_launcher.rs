@@ -321,7 +321,6 @@ impl LauncherDoc for WeatherLauncher {
                     description: "Whether to show a tile with the current date and time.",
                 },
             ],
-            inner_functions: &[],
             examples: &[Example {
                 description: "Basic weather launcher",
                 json: indoc! {
@@ -349,7 +348,7 @@ impl LauncherDoc for WeatherLauncher {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

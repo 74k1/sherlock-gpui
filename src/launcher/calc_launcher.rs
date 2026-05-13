@@ -2,7 +2,7 @@ use crate::{
     display_name,
     launcher::{
         LauncherProvider, LauncherType,
-        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
+        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry, capabilities_section},
     },
     loader::utils::RawLauncher,
     ui::widgets::{RenderableChild, calculator::CalcData},
@@ -93,7 +93,7 @@ impl LauncherDoc for CalculatorLauncher {
                     description: "Number of minutes to keep the currency cache alive.",
                 },
             ],
-            inner_functions: &[],
+            args_explanations: &[capabilities_section],
             examples: &[Example {
                 description: "Basic calculator config",
                 json: indoc! {
@@ -115,7 +115,7 @@ impl LauncherDoc for CalculatorLauncher {
                     } "#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

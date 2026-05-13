@@ -149,7 +149,7 @@ impl LauncherDoc for ProcessLauncher {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

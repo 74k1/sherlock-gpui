@@ -260,7 +260,7 @@ impl LauncherDoc for EventLauncher {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

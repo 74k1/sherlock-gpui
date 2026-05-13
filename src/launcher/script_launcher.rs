@@ -168,7 +168,7 @@ impl LauncherDoc for ScriptLauncher {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

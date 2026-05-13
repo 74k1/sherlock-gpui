@@ -161,7 +161,7 @@ impl LauncherDoc for ThemePicker {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

@@ -137,7 +137,6 @@ impl LauncherDoc for EmojiPicker {
                 default: Some("Simpsons"),
                 description: "The skin tone to use as the default. Can be either: Light, MediumLight, Medium, MediumDark, Dark, or Simpsons",
             }],
-            inner_functions: &[],
             examples: &[Example {
                 description: "Basic emoji picker",
                 json: indoc! {
@@ -153,7 +152,7 @@ impl LauncherDoc for EmojiPicker {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

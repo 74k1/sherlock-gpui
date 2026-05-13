@@ -130,7 +130,6 @@ impl LauncherDoc for FileLauncher {
                     description: "The root path from which to start the file search.",
                 },
             ],
-            inner_functions: &[],
             examples: &[Example {
                 description: "Basic event launcher",
                 json: indoc! {
@@ -149,7 +148,7 @@ impl LauncherDoc for FileLauncher {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

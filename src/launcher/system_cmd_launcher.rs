@@ -106,7 +106,6 @@ impl LauncherDoc for CommandLauncher {
                 default: None,
                 description: "The commands to show in Sherlock.",
             }],
-            inner_functions: &[],
             examples: &[Example {
                 description: "Basic command launcher",
                 json: indoc! {
@@ -126,7 +125,7 @@ impl LauncherDoc for CommandLauncher {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }

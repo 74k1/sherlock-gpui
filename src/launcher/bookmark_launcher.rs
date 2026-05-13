@@ -383,7 +383,6 @@ impl LauncherDoc for BookmarkLauncher {
                 default: Some("Default browser"),
                 description: "The browser from which the bookmarks should be parsed",
             }],
-            inner_functions: &[],
             examples: &[Example {
                 description: "Basic bookmarks launcher",
                 json: indoc! {
@@ -398,7 +397,7 @@ impl LauncherDoc for BookmarkLauncher {
                     }"#
                 },
             }],
-            hidden: false,
+            ..LauncherDocEntry::new()
         }
     }
 }
