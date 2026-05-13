@@ -91,5 +91,7 @@ async fn main() {
         .with_assets(Assets)
         .with_quit_mode(QuitMode::Explicit);
 
-    app.run(|cx: &mut App| run_app(cx, Loader::setup()));
+    if let Some(setup) = Loader::setup() {
+        app.run(|cx: &mut App| run_app(cx, setup));
+    }
 }
