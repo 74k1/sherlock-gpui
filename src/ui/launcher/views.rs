@@ -270,6 +270,15 @@ impl NavigationStack {
         let safe_ui_idx = ui_idx.min(filtered_indices.len() - 1);
         filtered_indices.get(safe_ui_idx).copied()
     }
+    pub fn set_selected_data_idx(&mut self, data_idx: usize, cx: &mut App) {
+        let filtered_indices = self.with_model(cx, |mdl| mdl.filtered_indices());
+
+        let Some(safe_ui_idx) = filtered_indices.iter().position(|i| *i == data_idx) else {
+            return;
+        };
+
+        self.current_mut().set_selected_index(safe_ui_idx);
+    }
     pub fn with_nth_shortcut_item<R>(
         &self,
         idx: usize,
@@ -316,12 +325,15 @@ pub struct NavigationView {
 
 impl NavigationView {
     pub fn reset_selected_index(&mut self) {
+        self.set_selected_index(0);
+    }
+    pub fn set_selected_index(&mut self, idx: usize) {
         match &mut self.style {
             EntityStyle::Row { selected_index, .. } => {
-                *selected_index = 0;
+                *selected_index = idx;
             }
             EntityStyle::Grid { selected_index, .. } => {
-                *selected_index = 0;
+                *selected_index = idx;
             }
         }
     }

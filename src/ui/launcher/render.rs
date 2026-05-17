@@ -1,9 +1,9 @@
 use std::{sync::Arc, time::Duration};
 
 use gpui::{
-    Animation, AnimationExt, AnyElement, App, Context, Element, FontWeight, InteractiveElement,
-    IntoElement, MouseDownEvent, ParentElement, Render, SharedString, StatefulInteractiveElement,
-    Styled, Window, div, list, prelude::FluentBuilder, px, relative,
+    Animation, AnimationExt, AnyElement, App, ClickEvent, Context, Element, Entity, FontWeight,
+    InteractiveElement, IntoElement, MouseDownEvent, ParentElement, Render, SharedString,
+    StatefulInteractiveElement, Styled, Window, div, list, prelude::FluentBuilder, px, relative,
 };
 
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
     launcher::LauncherValues,
     ui::{
         UIFunction,
-        launcher::{LauncherView, context_menu::ContextMenuAction, views::EntityStyle},
+        launcher::{Execute, LauncherView, context_menu::ContextMenuAction, views::EntityStyle},
         traits::RenderableChildDelegate,
         utils::{ease::Ease, render::ListItemBorder, selection::Selection},
         widgets::RenderableChild,
@@ -166,6 +166,7 @@ impl LauncherView {
                     .size_full()
                     .child({
                         let selected_idx = *selected_index;
+                        let view_handle = cx.entity().clone();
                         list(state.clone(), {
                             let theme = theme.clone();
                             move |idx, _win, cx| {
@@ -203,6 +204,7 @@ impl LauncherView {
                                     Selection::new(data_idx, idx == selected_idx),
                                     &query,
                                     theme.clone(),
+                                    view_handle.clone(),
                                     cx,
                                 )
                             }
@@ -284,6 +286,7 @@ impl LauncherView {
                     .child(
                         gpui::uniform_list("emoji-grid", indices.len().div_ceil(col_count), {
                             let theme = theme.clone();
+                            let handle = cx.entity().clone();
                             move |range, _win, cx| {
                                 range
                                     .map(|row_idx| {
@@ -311,6 +314,7 @@ impl LauncherView {
                                                                 ),
                                                                 &query,
                                                                 theme.clone(),
+                                                                handle.clone(),
                                                                 cx,
                                                             ))
                                                             .into_any_element();
@@ -465,13 +469,35 @@ impl LauncherView {
         selection: Selection,
         query: &str,
         theme: Arc<ThemeData>,
+        handle: Entity<LauncherView>,
         cx: &mut App,
     ) -> AnyElement {
+        let idx = selection.data_idx;
         div()
             .relative()
             .id(selection.data_idx)
             .w_full()
-            .on_click(move |_, _, _| {})
+            .on_click(move |evt: &ClickEvent, win, cx: &mut App| {
+                if !evt.standard_click() && !evt.is_keyboard() {
+                    return;
+                }
+
+                let n_clicks = ConfigGuard::read()
+                    .ok()
+                    .and_then(|c| c.behavior.n_clicks)
+                    .unwrap_or(2);
+
+                if evt.click_count() as u8 >= n_clicks {
+                    handle.update(cx, move |this, cx| {
+                        this.navigation.set_selected_data_idx(idx, cx);
+                        this.execute_listener(&Execute {}, win, cx);
+                    })
+                } else {
+                    handle.update(cx, move |this, cx| {
+                        this.navigation.set_selected_data_idx(idx, cx);
+                    })
+                }
+            })
             .child(
                 div()
                     .group("")
