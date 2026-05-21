@@ -1,5 +1,6 @@
 use crate::loader::icon::cache::IconType;
 use crate::utils::paths::get_cache_dir;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -71,4 +72,15 @@ pub fn render_to_png_cache(key: &str, svg_data: &[u8]) -> Option<Arc<Path>> {
         .ok()?;
 
     Some(Arc::from(out.into_boxed_path()))
+}
+
+pub fn copy_png_to_cache(name: &str, png_data: &[u8]) -> Option<Arc<Path>> {
+    let mut out = get_cache_dir().ok()?.join("icons");
+    std::fs::create_dir_all(&out).ok()?;
+    out.push(format!("{}.png", name.replace('/', "_")));
+    if !out.exists() {
+        fs::write(&out, png_data).ok()?;
+    }
+
+    Some(out.into_boxed_path().into())
 }
