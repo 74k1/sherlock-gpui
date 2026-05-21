@@ -1,3 +1,4 @@
+use gpui::SharedString;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
@@ -142,7 +143,7 @@ pub struct ConfigAppearance {
     #[serde(default = "OtherDefaults::five")]
     pub num_shortcuts: u8,
     #[serde(default = "AppearanceDefaults::placeholder")]
-    pub placeholder: String,
+    pub placeholder: SharedString,
 }
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ConfigBehavior {
@@ -240,13 +241,16 @@ pub struct SearchBarIcon {
     pub enable: bool,
 
     #[serde(default = "AppearanceDefaults::search_icon")]
-    pub icon: String,
+    pub icon: SharedString,
 
     #[serde(default = "AppearanceDefaults::search_icon_back")]
-    pub icon_back: String,
+    pub icon_back: SharedString,
 
     #[serde(default = "AppearanceDefaults::icon_size")]
-    pub size: i32,
+    pub icon_size: i32,
+
+    #[serde(default = "AppearanceDefaults::icon_size")]
+    pub icon_back_size: i32,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

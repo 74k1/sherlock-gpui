@@ -146,6 +146,9 @@ impl NavigationStack {
 
         self.stack.pop()
     }
+    pub fn current_mode(&self) -> &LauncherMode {
+        &self.current().mode
+    }
     pub fn current(&self) -> &NavigationView {
         // Since we ensure to always keep the stack populated with at least the home item, this is
         // safe

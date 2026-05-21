@@ -144,7 +144,7 @@ impl SherlockConfig {
         self.runtime.field = sherlock_flags.field.take();
 
         if let Some(placeholder) = sherlock_flags.placeholder.take() {
-            self.appearance.placeholder = placeholder;
+            self.appearance.placeholder = placeholder.into();
         }
     }
 }

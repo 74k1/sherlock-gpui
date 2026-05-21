@@ -1,5 +1,7 @@
 use std::{collections::HashMap, path::PathBuf, process::Command};
 
+use gpui::SharedString;
+
 use crate::{
     loader::application_loader::ApplicationLoader,
     sherlock_msg,
@@ -171,14 +173,14 @@ impl AppearanceDefaults {
     pub fn icon_size() -> i32 {
         22
     }
-    pub fn search_icon() -> String {
-        String::from("system-search-symbolic")
+    pub fn search_icon() -> SharedString {
+        SharedString::from("system-search-symbolic")
     }
-    pub fn search_icon_back() -> String {
-        String::from("sherlock-back")
+    pub fn search_icon_back() -> SharedString {
+        SharedString::from("sherlock-back")
     }
-    pub fn placeholder() -> String {
-        String::from("Search:")
+    pub fn placeholder() -> SharedString {
+        SharedString::from("Search:")
     }
 }
 

@@ -3,7 +3,8 @@ use std::{sync::Arc, time::Duration};
 use gpui::{
     Animation, AnimationExt, AnyElement, App, ClickEvent, Context, Element, Entity, FontWeight,
     InteractiveElement, IntoElement, MouseDownEvent, ParentElement, Render, SharedString,
-    StatefulInteractiveElement, Styled, Window, div, list, prelude::FluentBuilder, px, relative,
+    StatefulInteractiveElement, Styled, Window, div, img, list, prelude::FluentBuilder, px,
+    relative,
 };
 
 use crate::{
@@ -13,9 +14,13 @@ use crate::{
         theme::{ActiveTheme, ThemeData},
     },
     launcher::LauncherValues,
+    loader::resolve_icon_path,
     ui::{
         UIFunction,
-        launcher::{Execute, LauncherView, context_menu::ContextMenuAction, views::EntityStyle},
+        launcher::{
+            Execute, LauncherMode, LauncherView, context_menu::ContextMenuAction,
+            views::EntityStyle,
+        },
         traits::RenderableChildDelegate,
         utils::{ease::Ease, render::ListItemBorder, selection::Selection},
         widgets::RenderableChild,
@@ -72,6 +77,22 @@ impl Render for LauncherView {
 
 impl LauncherView {
     fn render_search_bar(&self, theme: Arc<ThemeData>) -> impl IntoElement {
+        let search_icon = ConfigGuard::read().ok().map(|c| c.search_bar_icon.clone());
+        let is_search_mode = self.navigation.current_mode() == &LauncherMode::Search;
+
+        // Extract everything upfront — avoid repeated unwraps inside closures
+        let icon_enabled = search_icon.as_ref().is_some_and(|i| i.enable);
+        let icon_path = search_icon.as_ref().map(|i| i.icon.clone());
+        let icon_size = search_icon
+            .as_ref()
+            .map(|i| i.icon_size as f32)
+            .unwrap_or(24.);
+        let icon_back_path = search_icon.as_ref().map(|i| i.icon_back.clone());
+        let icon_back_size = search_icon
+            .as_ref()
+            .map(|i| i.icon_back_size as f32)
+            .unwrap_or(24.);
+
         div()
             .flex()
             .flex_row()
@@ -80,7 +101,35 @@ impl LauncherView {
             .px_4()
             .py(px(4.))
             .gap_3()
-            .child(div().text_color(theme.text_search_icon).child(""))
+            .when(icon_enabled, |this| {
+                this.child(
+                    div()
+                        .flex()
+                        .size(px(24.))
+                        .items_center()
+                        .justify_center()
+                        .when(is_search_mode, |this| {
+                            this.when_some(
+                                icon_path.as_deref().and_then(resolve_icon_path),
+                                |this, icon| this.child(img(icon).size(px(icon_size))),
+                            )
+                        })
+                        .when(!is_search_mode, |this| {
+                            this.when_some(
+                                icon_back_path.as_deref().and_then(resolve_icon_path),
+                                |this, icon| {
+                                    this.child(if let Some(svg) = icon.svg() {
+                                        svg.size(px(icon_back_size))
+                                            .text_color(theme.secondary_text)
+                                            .into_any_element()
+                                    } else {
+                                        img(icon).size(px(icon_back_size)).into_any_element()
+                                    })
+                                },
+                            )
+                        }),
+                )
+            })
             .child(div().w_auto().child(self.text_input.clone()))
             .children(self.variable_input.iter().cloned().map(|ipt| {
                 div().child(ipt).with_animation(

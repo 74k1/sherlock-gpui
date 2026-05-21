@@ -118,7 +118,8 @@ impl Default for SearchBarIcon {
             enable: true,
             icon: AppearanceDefaults::search_icon(),
             icon_back: AppearanceDefaults::search_icon_back(),
-            size: AppearanceDefaults::icon_size(),
+            icon_size: AppearanceDefaults::icon_size(),
+            icon_back_size: AppearanceDefaults::icon_size(),
         }
     }
 }

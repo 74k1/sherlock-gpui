@@ -1,4 +1,7 @@
-use std::ops::Range;
+use std::{
+    ops::Range,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use gpui::{
     AbsoluteLength, App, Bounds, Context, CursorStyle, Element, ElementId, ElementInputHandler,
@@ -398,7 +401,17 @@ impl Element for TextElement {
         if focus_handle.is_focused(window)
             && let Some(cursor) = prepaint.cursor.take()
         {
-            window.paint_quad(cursor);
+            // handle cursor blinking
+            let visible = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
+                .is_multiple_of(2);
+
+            if visible {
+                window.paint_quad(cursor);
+            }
+            window.request_animation_frame();
         }
 
         self.input.update(cx, |input, _cx| {
