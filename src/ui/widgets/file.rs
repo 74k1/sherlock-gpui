@@ -1,7 +1,7 @@
 use crate::{
     app::theme::{ActiveTheme, ThemeData},
     launcher::{Launcher, utils::exec_mode::ExecMode},
-    loader::{resolve_icon_path, utils::Priority},
+    loader::{IconType, resolve_icon_path, utils::Priority},
     ui::{
         launcher::views::NavigationViewType, traits::RenderableChildImpl,
         utils::selection::Selection,
@@ -13,7 +13,6 @@ use gpui::{
 };
 use std::{
     hash::{DefaultHasher, Hash, Hasher},
-    path::Path,
     sync::Arc,
     time::UNIX_EPOCH,
 };
@@ -22,7 +21,7 @@ use std::{
 pub struct FileData {
     loc: SharedString,
     name: SharedString,
-    icon: Option<Arc<Path>>,
+    icon: Option<IconType>,
 }
 
 impl FileData {
@@ -336,10 +335,16 @@ impl<'a> RenderableChildImpl<'a> for FileData {
             .gap_5()
             .items_center()
             .child(if let Some(icon) = self.icon.as_ref() {
-                img(Arc::clone(icon))
-                    .size(px(24.))
-                    .flex_shrink_0()
-                    .into_any_element()
+                if let Some(svg) = icon.svg() {
+                    svg.size(px(24.))
+                        .text_color(theme.primary_text)
+                        .into_any_element()
+                } else {
+                    img(icon.clone())
+                        .size(px(24.))
+                        .flex_shrink_0()
+                        .into_any_element()
+                }
             } else {
                 img(ImageSource::Image(Arc::new(Image::empty())))
                     .size(px(24.))
@@ -429,7 +434,7 @@ struct FileSidebar {
     meta: FileMeta,
     loc: SharedString,
     name: SharedString,
-    icon: Option<Arc<Path>>,
+    icon: Option<IconType>,
 }
 impl RenderOnce for FileSidebar {
     fn render(self, _window: &mut gpui::Window, cx: &mut gpui::App) -> impl IntoElement {
@@ -496,7 +501,13 @@ impl RenderOnce for FileSidebar {
                             .justify_center()
                             .flex_shrink_0()
                             .child(if let Some(icon) = &self.icon {
-                                img(Arc::clone(icon)).size(px(32.)).into_any_element()
+                                if let Some(svg) = icon.svg() {
+                                    svg.size(px(32.))
+                                        .text_color(theme.tertiary_text)
+                                        .into_any_element()
+                                } else {
+                                    img(icon.clone()).size(px(32.)).into_any_element()
+                                }
                             } else {
                                 div().into_any_element()
                             }),

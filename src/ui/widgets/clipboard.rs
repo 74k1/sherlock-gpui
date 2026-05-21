@@ -2,7 +2,7 @@ use std::{rc::Rc, sync::Arc};
 
 use gpui::{
     App, AppContext, Image, ImageSource, IntoElement, ParentElement, SharedString, Styled, div,
-    img, prelude::FluentBuilder, px, rgb,
+    img, prelude::FluentBuilder, px, rgb, svg,
 };
 
 use crate::{
@@ -316,7 +316,13 @@ fn url_show(url: SharedString, selection: Selection, theme: Arc<ThemeData>) -> g
         .gap_5()
         .items_center()
         .child(if let Some(icon) = resolve_icon_path("sherlock-link") {
-            img(Arc::clone(&icon)).size(px(24.)).into_any_element()
+            match icon {
+                crate::loader::IconType::Png(png) => img(png).size(px(24.)).into_any_element(),
+                crate::loader::IconType::Symbolic(sym) => svg()
+                    .path(sym.to_string_lossy().into_owned())
+                    .size(px(24.))
+                    .into_any_element(),
+            }
         } else {
             img(ImageSource::Image(Arc::new(Image::empty())))
                 .size(px(24.))

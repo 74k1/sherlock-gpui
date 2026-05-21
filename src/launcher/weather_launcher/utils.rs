@@ -1,5 +1,3 @@
-use std::{path::Path, sync::Arc};
-
 use crate::{
     launcher::{
         utils::to_title_case,
@@ -8,7 +6,7 @@ use crate::{
             wttr_serde::CurrentCondition,
         },
     },
-    loader::resolve_icon_path,
+    loader::{IconType, resolve_icon_path},
     sherlock_msg,
     utils::{
         config::ConfigGuard,
@@ -38,7 +36,7 @@ fn format_wind(current: &CurrentCondition, length_unit: &str) -> String {
     }
 }
 
-fn resolve_icon(theme: &WeatherIconTheme, code: &str) -> Option<Arc<Path>> {
+fn resolve_icon(theme: &WeatherIconTheme, code: &str) -> Option<IconType> {
     let code_mapped = match_weather_code(code);
 
     let path = if matches!(theme, WeatherIconTheme::Sherlock) {

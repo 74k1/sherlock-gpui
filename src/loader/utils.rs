@@ -3,13 +3,13 @@ use serde::{Deserialize, Deserializer, Serialize};
 use std::{
     collections::{BTreeSet, HashMap},
     fmt::Debug,
-    path::{Path, PathBuf},
+    path::PathBuf,
     sync::{Arc, RwLock},
 };
 
 use crate::{
     launcher::{Launcher, utils::binds::BindSerde, variant_type::LauncherVariant},
-    loader::resolve_icon_path,
+    loader::{IconType, resolve_icon_path},
     sherlock_msg,
     utils::{
         cache::BinaryCache,
@@ -109,7 +109,7 @@ pub struct ApplicationAction {
     pub exec: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub icon: Option<Arc<Path>>,
+    pub icon: Option<IconType>,
 
     pub method: String,
 
@@ -138,7 +138,7 @@ impl ApplicationAction {
         self.name = name.into();
         self
     }
-    pub fn icon(mut self, icon: Arc<Path>) -> Self {
+    pub fn icon(mut self, icon: IconType) -> Self {
         self.icon = Some(icon);
         self
     }

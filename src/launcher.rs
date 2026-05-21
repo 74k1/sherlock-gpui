@@ -30,7 +30,7 @@ use crate::{
         variant_type::{InnerFunction, LauncherType, LauncherVariant},
     },
     loader::{
-        LoadContext, resolve_icon_path,
+        IconType, LoadContext, resolve_icon_path,
         utils::{ApplicationAction, ApplicationActionSerde, Priority, RawLauncher},
     },
     sherlock_msg,
@@ -41,7 +41,7 @@ use crate::{
     },
 };
 use gpui::{App, SharedString};
-use std::{fmt::Display, path::Path, sync::Arc};
+use std::{fmt::Display, sync::Arc};
 
 pub trait LauncherProvider {
     fn parse(raw: &RawLauncher) -> LauncherType;
@@ -77,7 +77,7 @@ pub struct Launcher {
     pub name: Option<SharedString>,
 
     /// May not apply to all widgets
-    pub icon: Option<Arc<Path>>,
+    pub icon: Option<IconType>,
 
     /// A short alias like `app` to launcher launcher-specific search (`alias` => only show items
     /// belonging to that launcher)

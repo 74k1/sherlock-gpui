@@ -171,9 +171,17 @@ impl<'a> RenderableChildImpl<'a> for WeatherWidget {
                             .items_center()
                             .gap(px(8.))
                             .child(if let Some(icon) = data.icon.as_ref() {
-                                img(Arc::clone(icon)).size(px(36.))
+                                if let Some(svg) = icon.svg() {
+                                    svg.size(px(36.))
+                                        .text_color(theme.primary_text)
+                                        .into_any_element()
+                                } else {
+                                    img(icon.clone()).size(px(36.)).into_any_element()
+                                }
                             } else {
-                                img(ImageSource::Image(Arc::new(Image::empty()))).size(px(36.))
+                                img(ImageSource::Image(Arc::new(Image::empty())))
+                                    .size(px(36.))
+                                    .into_any_element()
                             })
                             .child(
                                 div()

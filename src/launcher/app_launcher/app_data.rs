@@ -1,6 +1,6 @@
 use std::{
     hash::{Hash, Hasher},
-    path::{Path, PathBuf},
+    path::PathBuf,
     sync::Arc,
 };
 
@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     launcher::{Launcher, variant_type::LauncherType},
     loader::{
-        resolve_icon_path,
+        IconType, resolve_icon_path,
         utils::{ApplicationAction, ExecVariable, PriorityGuard, SherlockAlias, construct_search},
     },
     ui::launcher::context_menu::ContextMenuAction,
@@ -24,7 +24,7 @@ pub struct AppData {
     pub search_string: String,
     #[serde(default)]
     pub priority: PriorityGuard, // to enable new count instantly having effect
-    pub icon: Option<Arc<Path>>,
+    pub icon: Option<IconType>,
     pub desktop_file: Option<PathBuf>,
     #[serde(default)]
     pub actions: Arc<[Arc<ContextMenuAction>]>,

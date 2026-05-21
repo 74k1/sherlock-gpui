@@ -6,7 +6,6 @@ use serde::de::IntoDeserializer;
 use crate::launcher::app_launcher::app_serde::deserialize_named_appdata;
 use crate::launcher::docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::{LauncherProvider, LauncherType};
-use crate::loader::resolve_icon_path;
 use crate::loader::utils::{ApplicationAction, RawLauncher};
 use crate::ui::launcher::context_menu::ContextMenuAction;
 use crate::ui::widgets::RenderableChild;
@@ -51,20 +50,14 @@ impl LauncherProvider for CategoryLauncher {
                     .and_then(|exec| ctx.counts.get(exec))
                     .copied()
                     .unwrap_or(0u16);
-                inner.icon = inner
-                    .icon
-                    .and_then(|i| i.to_str().and_then(resolve_icon_path));
+                inner.icon = inner.icon.clone();
                 inner.priority.set_launcher(&launcher, count);
                 inner.actions = inner
                     .actions
                     .iter()
                     .map(|action_arc| match action_arc.as_ref() {
                         ContextMenuAction::App(app_action) => {
-                            let resolved_icon = app_action
-                                .icon
-                                .as_deref()
-                                .and_then(|p| p.to_str())
-                                .and_then(resolve_icon_path);
+                            let resolved_icon = app_action.icon.clone();
 
                             Arc::new(ContextMenuAction::App(ApplicationAction {
                                 icon: resolved_icon,

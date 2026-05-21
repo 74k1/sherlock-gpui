@@ -1,4 +1,4 @@
-use std::{fmt::Debug, path::Path, sync::Arc};
+use std::{fmt::Debug, sync::Arc};
 
 use gpui::{
     App, ImageSource, InteractiveElement, IntoElement, ParentElement, SharedString, Styled, div,
@@ -9,7 +9,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use crate::{
     app::theme::ThemeData,
     launcher::emoji_launcher::ALL_SKIN_TONES,
-    loader::{resolve_icon_path, utils::ApplicationAction},
+    loader::{IconType, resolve_icon_path, utils::ApplicationAction},
     ui::widgets::emoji::{EmojiAction, get_emoji, get_selected_skin_tones},
 };
 
@@ -92,7 +92,13 @@ impl ContextMenuAction {
                 }
             })
             .child(if let Some(icon) = icon {
-                img(Arc::clone(icon)).size(px(16.)).into_any_element()
+                if let Some(svg) = icon.svg() {
+                    svg.size(px(16.))
+                        .text_color(theme.primary_text)
+                        .into_any_element()
+                } else {
+                    img(icon.clone()).size(px(16.)).into_any_element()
+                }
             } else {
                 img(ImageSource::Image(Arc::new(gpui::Image::empty())))
                     .size(px(16.))
@@ -176,7 +182,7 @@ impl ContextMenuAction {
 type ContextFunction = Box<dyn Fn(&mut App) + Send + Sync + 'static>;
 pub struct DynamicFunctionAction {
     pub name: SharedString,
-    pub icon: Option<Arc<Path>>,
+    pub icon: Option<IconType>,
     pub exit: bool,
     pub func: Option<ContextFunction>,
 }
@@ -209,7 +215,7 @@ impl DynamicFunctionAction {
         self
     }
 
-    pub fn icon(mut self, icon: Arc<Path>) -> Self {
+    pub fn icon(mut self, icon: IconType) -> Self {
         self.icon = Some(icon);
         self
     }

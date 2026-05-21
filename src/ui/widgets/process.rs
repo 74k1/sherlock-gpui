@@ -4,7 +4,7 @@ use crate::{
         Launcher, process_launcher::ProcessLauncherFunctions, utils::exec_mode::ExecMode,
         variant_type::InnerFunction,
     },
-    loader::{resolve_icon_path, utils::Priority},
+    loader::{IconType, resolve_icon_path, utils::Priority},
     ui::widgets::{RenderableChildImpl, Selection},
 };
 use gpui::{
@@ -12,14 +12,14 @@ use gpui::{
     Styled, div, img, prelude::FluentBuilder, px,
 };
 use procfs::ProcResult;
-use std::{path::Path, sync::Arc};
+use std::sync::Arc;
 
 #[derive(Clone, Default, Debug)]
 pub struct ProcessData {
     name: SharedString,
     pid: i32,
     ppid: i32,
-    icon: Option<Arc<Path>>,
+    icon: Option<IconType>,
 }
 
 impl ProcessData {
@@ -64,7 +64,7 @@ impl ProcessData {
 }
 
 struct ProcessMeta {
-    pub icon: Option<Arc<Path>>,
+    pub icon: Option<IconType>,
     pub exe: SharedString,
     pub memory_mb: f32,
     pub mem_peak: f32,
@@ -90,10 +90,17 @@ impl<'a> RenderableChildImpl<'a> for ProcessData {
             .gap_5()
             .items_center()
             .child(if let Some(icon) = self.icon.as_ref() {
-                img(Arc::clone(icon))
-                    .size(px(24.))
-                    .flex_shrink_0()
-                    .into_any_element()
+                if let Some(svg) = icon.svg() {
+                    svg.size(px(24.))
+                        .flex_shrink_0()
+                        .text_color(theme.primary_text)
+                        .into_any_element()
+                } else {
+                    img(icon.clone())
+                        .size(px(24.))
+                        .flex_shrink_0()
+                        .into_any_element()
+                }
             } else {
                 img(ImageSource::Image(Arc::new(Image::empty())))
                     .size(px(24.))
@@ -241,7 +248,13 @@ impl RenderOnce for ProcessSidebar {
                             .justify_center()
                             .flex_shrink_0()
                             .child(if let Some(icon) = &self.meta.icon {
-                                img(Arc::clone(icon)).size(px(32.)).into_any_element()
+                                if let Some(svg) = icon.svg() {
+                                    svg.size(px(32.))
+                                        .text_color(theme.primary_text)
+                                        .into_any_element()
+                                } else {
+                                    img(icon.clone()).size(px(32.)).into_any_element()
+                                }
                             } else {
                                 div().into_any_element()
                             }),

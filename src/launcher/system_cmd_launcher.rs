@@ -10,7 +10,7 @@ use crate::{
         app_launcher::app_serde::deserialize_named_appdata,
         docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
     },
-    loader::{resolve_icon_path, utils::RawLauncher},
+    loader::utils::RawLauncher,
     sherlock_msg,
     ui::{launcher::context_menu::ContextMenuAction, widgets::RenderableChild},
     utils::errors::{SherlockMessage, types::SherlockErrorType},
@@ -54,10 +54,7 @@ impl LauncherProvider for CommandLauncher {
                     .copied()
                     .unwrap_or(0u16);
 
-                let parent_icon = inner
-                    .icon
-                    .and_then(|i| i.to_str().and_then(resolve_icon_path))
-                    .or(launcher.icon.clone());
+                let parent_icon = inner.icon.or(launcher.icon.clone());
 
                 inner.icon = parent_icon.clone();
 
@@ -67,12 +64,7 @@ impl LauncherProvider for CommandLauncher {
                     .map(|action| match action.as_ref() {
                         ContextMenuAction::App(app_action) => {
                             let mut resolved = app_action.clone();
-                            resolved.icon = app_action
-                                .icon
-                                .as_ref()
-                                .and_then(|i| i.to_str())
-                                .and_then(resolve_icon_path)
-                                .or_else(|| parent_icon.clone());
+                            resolved.icon = app_action.icon.clone().or_else(|| parent_icon.clone());
                             Arc::new(ContextMenuAction::App(resolved))
                         }
                         _ => action.clone(),

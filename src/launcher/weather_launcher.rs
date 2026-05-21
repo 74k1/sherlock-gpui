@@ -3,7 +3,7 @@ use gpui::{Hsla, LinearColorStop, SharedString, linear_color_stop, rgb};
 use indoc::indoc;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use strum::Display;
@@ -11,7 +11,7 @@ use strum::Display;
 use crate::launcher::docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::weather_launcher::utils::transform_weather;
 use crate::launcher::weather_launcher::wttr_serde::WttrResponse;
-use crate::loader::resolve_icon_path;
+use crate::loader::{IconType, resolve_icon_path};
 use crate::ui::widgets::RenderableChild;
 use crate::ui::widgets::weather::WeatherWidget;
 use crate::utils::errors::SherlockMessage;
@@ -76,7 +76,7 @@ impl LauncherProvider for WeatherLauncher {
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct WeatherData {
     pub temperature: SharedString,
-    pub icon: Option<Arc<Path>>,
+    pub icon: Option<IconType>,
     pub format_str: SharedString,
     pub condition: SharedString,
     pub location: SharedString,

@@ -1,16 +1,31 @@
+use crate::loader::icon::cache::IconType;
 use crate::utils::paths::get_cache_dir;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-pub fn render_svg_to_cache(key: &str, path: PathBuf) -> Option<Arc<Path>> {
+pub fn render_svg_to_cache(key: &str, path: PathBuf) -> Option<IconType> {
     if !path.exists() {
         return None;
     }
-    if path.extension().and_then(|e| e.to_str()) != Some("svg") {
-        return Some(Arc::from(path.into_boxed_path()));
+
+    let ext = path.extension().and_then(|e| e.to_str());
+
+    match ext {
+        Some("svg") => {
+            let svg_data = std::fs::read(&path).ok()?;
+            let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+            let is_symbolic = stem.ends_with("-symbolic")
+                || path.components().any(|c| c.as_os_str() == "symbolic")
+                || svg_data.windows(12).any(|w| w == b"currentColor");
+            if is_symbolic {
+                Some(IconType::Symbolic(path.into_boxed_path().into()))
+            } else {
+                render_to_png_cache(key, &svg_data).map(IconType::Png)
+            }
+        }
+        Some("png") => Some(IconType::Png(Arc::from(path.into_boxed_path()))),
+        _ => None,
     }
-    let svg_data = std::fs::read(&path).ok()?;
-    render_to_png_cache(key, &svg_data)
 }
 
 pub fn render_to_png_cache(key: &str, svg_data: &[u8]) -> Option<Arc<Path>> {

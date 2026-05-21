@@ -1,3 +1,6 @@
+use gpui::{ImageSource, Img, Svg, img, svg};
+use serde::{Deserialize, Serialize};
+
 use crate::loader::icon::render::render_svg_to_cache;
 use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::SherlockErrorType;
@@ -7,8 +10,37 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
+#[derive(Hash, Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub enum IconType {
+    Symbolic(Arc<Path>),
+    Png(Arc<Path>),
+}
+impl IconType {
+    pub fn svg(&self) -> Option<Svg> {
+        if let Self::Symbolic(sym) = self {
+            return Some(svg().path(sym.to_string_lossy()));
+        }
+        None
+    }
+    pub fn img(&self) -> Option<Img> {
+        if let Self::Png(png) = self {
+            return Some(img(png.clone()));
+        }
+        None
+    }
+}
+
+impl From<IconType> for ImageSource {
+    fn from(value: IconType) -> Self {
+        match value {
+            IconType::Symbolic(sym) => sym.into(),
+            IconType::Png(png) => png.into(),
+        }
+    }
+}
+
 pub struct CustomIconTheme {
-    pub buf: HashMap<String, Option<Arc<Path>>>,
+    pub buf: HashMap<String, Option<IconType>>,
 }
 impl CustomIconTheme {
     pub fn new() -> Self {
@@ -34,10 +66,10 @@ impl CustomIconTheme {
         };
         Self::scan_path(&path, &mut self.buf);
     }
-    pub fn lookup_icon(&self, name: &str) -> Option<Option<Arc<Path>>> {
+    pub fn lookup_icon(&self, name: &str) -> Option<Option<IconType>> {
         self.buf.get(name).cloned()
     }
-    fn scan_path(path: &Path, buf: &mut HashMap<String, Option<Arc<Path>>>) {
+    fn scan_path(path: &Path, buf: &mut HashMap<String, Option<IconType>>) {
         // Early return if its not a scannable directory
         if !path.exists() || !path.is_dir() {
             return;
@@ -101,7 +133,7 @@ impl<'g> IconThemeGuard {
         Ok(())
     }
 
-    pub fn lookup_icon(name: &str) -> Result<Option<Option<Arc<Path>>>, SherlockMessage> {
+    pub fn lookup_icon(name: &str) -> Result<Option<Option<IconType>>, SherlockMessage> {
         let inner = Self::get_read()?;
         Ok(inner.lookup_icon(name))
     }
