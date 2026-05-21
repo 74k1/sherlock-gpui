@@ -10,7 +10,7 @@ use crate::{
     launcher::{Launcher, app_launcher::app_data::AppData},
     loader::{
         resolve_icon_path,
-        utils::{ExecVariable, PriorityGuard},
+        utils::{ApplicationAction, ExecVariable, PriorityGuard},
     },
     ui::launcher::context_menu::ContextMenuAction,
 };
@@ -46,13 +46,30 @@ where
                 pub icon: Option<String>,
                 pub desktop_file: Option<PathBuf>,
                 #[serde(default)]
-                pub actions: Vec<ContextMenuAction>,
+                pub actions: Vec<AppActionSerde>,
                 #[serde(default)]
                 #[serde(rename = "variables")]
                 pub vars: Vec<ExecVariable>,
                 #[serde(default)]
                 pub terminal: bool,
             }
+
+            #[derive(Deserialize)]
+            pub struct AppActionSerde {
+                pub name: SharedString,
+
+                #[serde(default)]
+                pub exec: Option<String>,
+
+                #[serde(default)]
+                pub icon: Option<String>,
+
+                pub method: String,
+
+                #[serde(default)]
+                pub exit: Option<bool>,
+            }
+
             let mut collection = Vec::with_capacity(map.size_hint().unwrap_or(0));
 
             while let Some((key, value)) = map.next_entry::<String, AppDataSerde>()? {
@@ -68,13 +85,19 @@ where
                     actions: value
                         .actions
                         .into_iter()
-                        .map(|mut a| {
-                            if let ContextMenuAction::App(app) = &mut a
-                                && app.icon.is_none()
-                            {
-                                app.icon = icon.clone();
-                            }
-                            Arc::new(a)
+                        .map(|a| {
+                            let ctx_action = ContextMenuAction::App(ApplicationAction {
+                                name: a.name,
+                                icon: a
+                                    .icon
+                                    .as_deref()
+                                    .and_then(resolve_icon_path)
+                                    .or(icon.clone()),
+                                method: a.method,
+                                exec: a.exec,
+                                exit: a.exit.unwrap_or(true),
+                            });
+                            Arc::new(ctx_action)
                         })
                         .collect(),
                     icon,
