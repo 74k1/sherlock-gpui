@@ -5,7 +5,7 @@ use gpui::{
     Entity, EntityInputHandler, EventEmitter, FocusHandle, Focusable, GlobalElementId,
     InteractiveElement, IntoElement, LayoutId, MouseButton, PaintQuad, ParentElement, Pixels,
     Render, ShapedLine, SharedString, Style, Styled, Subscription, TextRun, UTF16Selection,
-    UnderlineStyle, Window, div, fill, point, px,
+    UnderlineStyle, Window, div, fill, point, prelude::FluentBuilder, px,
 };
 
 use crate::{
@@ -433,7 +433,7 @@ impl Element for TextElement {
 }
 
 impl Render for TextInput {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, win: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<ActiveTheme>().0.clone();
         div()
             .flex()
@@ -465,17 +465,23 @@ impl Render for TextInput {
                 div()
                     .line_height(px(12.))
                     .text_size(px(12.))
-                    .h(px(20. + 4. * 2.)) // 38px
-                    .p(px(4.))
-                    .px(px(7.))
+                    .h(px(20. + 3. * 2.)) // 26px
+                    .py(px(3.))
+                    .px(px(8.))
                     .w_auto()
+                    .min_w(px(20.))
                     .flex()
                     .flex_none()
                     .items_center()
-                    .border(px(1.))
-                    .border_color(theme.border)
+                    .border(px(1.5))
+                    .border_color(theme.border_idle)
                     .rounded_md()
-                    .min_w(px(20.))
+                    .text_color(theme.tertiary_text)
+                    .when(self.focus_handle.is_focused(win), |this| {
+                        this.border_color(theme.border_selected)
+                            .bg(theme.bg_muted)
+                            .text_color(theme.secondary_text)
+                    })
                     .font_family(theme.font_family.clone())
                     .child(TextElement::new(cx))
             } else {
