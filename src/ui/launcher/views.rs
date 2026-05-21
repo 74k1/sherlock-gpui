@@ -377,25 +377,27 @@ impl EntityStyle {
         }
     }
 
-    pub fn next_index(&self, direction: MoveDirection) -> Option<usize> {
+    pub fn next_index(&self, direction: MoveDirection) -> Option<(usize, usize)> {
         let current = self.selected_index()?;
 
         match self {
             EntityStyle::Row { .. } => match direction {
-                MoveDirection::Down => Some(current + 1),
+                MoveDirection::Down => current.checked_add(1),
                 MoveDirection::Up => current.checked_sub(1),
+
                 _ => None,
             },
             EntityStyle::Grid { columns, .. } => {
                 let cols = *columns;
                 match direction {
-                    MoveDirection::Down => Some(current + cols),
+                    MoveDirection::Down => current.checked_add(cols),
                     MoveDirection::Up => current.checked_sub(cols),
-                    MoveDirection::Right => Some(current + 1),
+                    MoveDirection::Right => current.checked_add(1),
                     MoveDirection::Left => current.checked_sub(1),
                 }
             }
         }
+        .map(|new| (current, new))
     }
 
     /// Sets internal focus to the first item of the view.

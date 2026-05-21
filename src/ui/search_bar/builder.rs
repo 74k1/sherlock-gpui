@@ -1,4 +1,9 @@
-use crate::{loader::utils::ExecVariable, ui::search_bar::TextInput};
+use std::time::Duration;
+
+use crate::{
+    loader::utils::ExecVariable,
+    ui::{search_bar::TextInput, utils::timeout::TimeoutCaller},
+};
 use gpui::{Context, SharedString};
 
 pub struct TextInputBuilder {
@@ -46,6 +51,12 @@ impl TextInputBuilder {
     }
 
     pub fn build(self, cx: &mut Context<TextInput>) -> TextInput {
+        let mut cursor_timer = TimeoutCaller::new(false, cx);
+        cursor_timer.repeat();
+        cursor_timer.start(Duration::from_millis(500), cx, |visible, _| {
+            *visible = !*visible;
+        });
+
         TextInput {
             scope: self.scope,
             focus_handle: cx.focus_handle(),
@@ -60,6 +71,7 @@ impl TextInputBuilder {
             variable: self.variable,
             ghost_text: self.ghost_text,
             _sub: None,
+            cursor_timer,
         }
     }
 }

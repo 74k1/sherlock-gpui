@@ -99,7 +99,12 @@ impl LauncherView {
 
         cx.notify()
     }
-    fn move_selection(&mut self, direction: MoveDirection, cx: &mut Context<Self>) {
+    fn move_selection(
+        &mut self,
+        direction: MoveDirection,
+        win: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         if let Some(idx) = self.context_idx {
             match direction {
                 MoveDirection::Down => {
@@ -144,41 +149,52 @@ impl LauncherView {
 
         let current_style = &mut self.navigation.current_mut().style;
 
-        if let Some(target_idx) = current_style.next_index(direction)
+        if let Some((old, target_idx)) = current_style.next_index(direction)
             && self.valid_selection_idx(target_idx, cx)
         {
             self.focus_nth(target_idx, cx);
+            if old != target_idx {
+                self.active_bar = 0;
+                self.text_input.update(cx, |this, cx| {
+                    this.focus_handle(cx).focus(win, cx);
+                });
+            }
         }
     }
     pub(super) fn selection_down(
         &mut self,
         _: &SelectionDown,
-        _: &mut Window,
+        win: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        self.move_selection(MoveDirection::Down, cx);
+        self.move_selection(MoveDirection::Down, win, cx);
     }
 
-    pub(super) fn selection_up(&mut self, _: &SelectionUp, _: &mut Window, cx: &mut Context<Self>) {
-        self.move_selection(MoveDirection::Up, cx);
+    pub(super) fn selection_up(
+        &mut self,
+        _: &SelectionUp,
+        win: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.move_selection(MoveDirection::Up, win, cx);
     }
 
     pub(super) fn selection_left(
         &mut self,
         _: &SelectionLeft,
-        _: &mut Window,
+        win: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        self.move_selection(MoveDirection::Left, cx);
+        self.move_selection(MoveDirection::Left, win, cx);
     }
 
     pub(super) fn selection_right(
         &mut self,
         _: &SelectionRight,
-        _: &mut Window,
+        win: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        self.move_selection(MoveDirection::Right, cx);
+        self.move_selection(MoveDirection::Right, win, cx);
     }
 
     pub(super) fn next_var(&mut self, _: &NextVar, win: &mut Window, cx: &mut Context<Self>) {
@@ -546,6 +562,7 @@ impl LauncherView {
     }
     pub(super) fn update_vars(&mut self, cx: &mut Context<Self>) {
         let Some(idx) = self.navigation.selected_item_index(cx) else {
+            self.variable_input.clear();
             return;
         };
 

@@ -1,7 +1,4 @@
-use std::{
-    ops::Range,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{ops::Range, time::Duration};
 
 use gpui::{
     AbsoluteLength, App, Bounds, Context, CursorStyle, Element, ElementId, ElementInputHandler,
@@ -14,7 +11,7 @@ use gpui::{
 use crate::{
     app::theme::ActiveTheme,
     loader::utils::ExecVariable,
-    ui::search_bar::builder::TextInputBuilder,
+    ui::{search_bar::builder::TextInputBuilder, utils::timeout::TimeoutCaller},
     utils::paths::{get_nth_command_completion, get_nth_path_completion},
 };
 
@@ -39,6 +36,7 @@ pub struct TextInput {
     pub variable: Option<ExecVariable>,
     pub ghost_text: Option<String>,
     pub _sub: Option<Subscription>,
+    pub cursor_timer: TimeoutCaller<bool>,
 }
 
 impl EntityInputHandler for TextInput {
@@ -175,6 +173,11 @@ impl EntityInputHandler for TextInput {
 struct TextElement {
     input: Entity<TextInput>,
 }
+impl TextElement {
+    fn new(cx: &mut Context<TextInput>) -> Self {
+        Self { input: cx.entity() }
+    }
+}
 
 struct PrepaintState {
     line: Option<ShapedLine>,
@@ -307,7 +310,7 @@ impl Element for TextElement {
         _inspector_id: Option<&gpui::InspectorElementId>,
         bounds: Bounds<Pixels>,
         request_layout: &mut Self::RequestLayoutState,
-        _window: &mut Window,
+        win: &mut Window,
         cx: &mut App,
     ) -> Self::PrepaintState {
         let input = self.input.read(cx);
@@ -327,6 +330,22 @@ impl Element for TextElement {
 
         // Cached from request layout
         let line = &request_layout.l;
+
+        // Handle blinker timer cleanup
+        if self.input.read(cx).focus_handle.is_focused(win) {
+            if !self.input.read(cx).cursor_timer.is_running(cx) {
+                self.input.update(cx, |this, cx| {
+                    this.cursor_timer
+                        .start(Duration::from_millis(500), cx, |visible, _| {
+                            *visible = !*visible;
+                        });
+                });
+            }
+        } else {
+            self.input.update(cx, |this, cx| {
+                this.cursor_timer.stop(cx);
+            });
+        }
 
         let cursor_pos = line.x_for_index(cursor);
         let (selection, cursor) = if selected_range.is_empty() {
@@ -398,20 +417,12 @@ impl Element for TextElement {
         )
         .unwrap();
 
+        // handle cursor blinking logic
         if focus_handle.is_focused(window)
+            && *self.input.read(cx).cursor_timer.read(cx)
             && let Some(cursor) = prepaint.cursor.take()
         {
-            // handle cursor blinking
-            let visible = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_millis()
-                .is_multiple_of(2);
-
-            if visible {
-                window.paint_quad(cursor);
-            }
-            window.request_animation_frame();
+            window.paint_quad(cursor);
         }
 
         self.input.update(cx, |input, _cx| {
@@ -466,7 +477,7 @@ impl Render for TextInput {
                     .rounded_md()
                     .min_w(px(20.))
                     .font_family(theme.font_family.clone())
-                    .child(TextElement { input: cx.entity() })
+                    .child(TextElement::new(cx))
             } else {
                 div()
                     .line_height(px(16.))
@@ -479,7 +490,7 @@ impl Render for TextInput {
                     .items_center()
                     .min_w(px(20.))
                     .font_family(theme.font_family.clone())
-                    .child(TextElement { input: cx.entity() })
+                    .child(TextElement::new(cx))
             })
     }
 }
