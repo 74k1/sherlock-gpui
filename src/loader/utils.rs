@@ -11,6 +11,7 @@ use crate::{
     launcher::{Launcher, utils::binds::BindSerde, variant_type::LauncherVariant},
     loader::{IconType, resolve_icon_path},
     sherlock_msg,
+    ui::choice::ChoiceOption,
     utils::{
         cache::BinaryCache,
         config::HomeType,
@@ -203,6 +204,11 @@ pub enum ExecVariable {
     Path(PathData),
     #[serde(rename = "command_input")]
     Command(CommandData),
+    #[serde(rename = "choice")]
+    Choice {
+        name: SharedString,
+        choices: Arc<[ChoiceOption]>,
+    },
 }
 
 /// A path placeholder that deserializes from a plain string.
@@ -246,6 +252,7 @@ impl ExecVariable {
             Self::Path(p) => p.path.clone(),
             Self::Password(s) => s.clone(),
             Self::Command(c) => c.command.clone(),
+            Self::Choice { name, .. } => name.clone(),
         }
     }
 }

@@ -1,11 +1,10 @@
-use std::{sync::Arc, time::Duration};
-
 use gpui::{
     Animation, AnimationExt, AnyElement, App, ClickEvent, Context, Element, Entity, FontWeight,
     InteractiveElement, IntoElement, MouseDownEvent, ParentElement, Render, SharedString,
-    StatefulInteractiveElement, Styled, Window, div, img, list, prelude::FluentBuilder, px,
-    relative,
+    StatefulInteractiveElement, Styled, Window, deferred, div, img, list, prelude::FluentBuilder,
+    px, relative,
 };
+use std::{sync::Arc, time::Duration};
 
 use crate::{
     CONTEXT_MENU_BIND,
@@ -29,7 +28,7 @@ use crate::{
 };
 
 impl Render for LauncherView {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _win: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<ActiveTheme>().0.clone();
 
         div()
@@ -132,7 +131,7 @@ impl LauncherView {
             })
             .child(div().w_auto().child(self.text_input.clone()))
             .children(self.variable_input.iter().cloned().map(|ipt| {
-                div().child(ipt).with_animation(
+                div().child(deferred(ipt)).with_animation(
                     "variable-input",
                     Animation::new(Duration::from_millis(100)).with_easing(Ease::ease_in_out_sine),
                     |this, frac| this.opacity(frac),

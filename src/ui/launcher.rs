@@ -1,6 +1,7 @@
 use crate::app::{RenderableChildEntity, RenderableChildWeak};
 use crate::launcher::{Launcher, LauncherValues};
 use crate::tokio_utils::SizedMessageObj;
+use crate::ui::choice::Choice;
 use crate::ui::traits::RenderableChildDelegate;
 use crate::ui::utils::scoring::SortKey;
 use crate::ui::{
@@ -12,8 +13,8 @@ use crate::ui::{
 use crate::utils::config::HomeType;
 use crate::utils::networking::ServerResponse;
 use crate::utils::sized_message_sync::SizedMessage;
-use gpui::AsyncApp;
 use gpui::WeakEntity;
+use gpui::{AnyElement, AsyncApp, IntoElement};
 use gpui::{App, Context, Entity, FocusHandle, Focusable, SharedString, Subscription};
 use std::os::unix::net::UnixStream;
 use std::sync::Arc;
@@ -30,6 +31,53 @@ pub use actions::{
     SelectionUp,
 };
 
+#[derive(Clone, Debug)]
+pub enum VariableInput {
+    Text(Entity<TextInput>),
+    Choice(Entity<Choice>),
+}
+impl Focusable for VariableInput {
+    fn focus_handle(&self, cx: &App) -> FocusHandle {
+        match self {
+            Self::Text(ent) => ent.read(cx).focus_handle.clone(),
+            Self::Choice(ent) => ent.read(cx).focus_handle.clone(),
+        }
+    }
+}
+
+impl IntoElement for VariableInput {
+    type Element = AnyElement;
+
+    fn into_element(self) -> Self::Element {
+        match self {
+            Self::Text(ent) => ent.into_any_element(),
+            Self::Choice(ent) => ent.into_any_element(),
+        }
+    }
+}
+
+// Choice {
+//                 options: Arc::from([
+//                     ChoiceOption {
+//                         value: false,
+//                         label: SharedString::from("One"),
+//                     },
+//                     ChoiceOption {
+//                         value: false,
+//                         label: SharedString::from("Two"),
+//                     },
+//                     ChoiceOption {
+//                         value: false,
+//                         label: SharedString::from("Threeeeeeeeeeeeeee"),
+//                     },
+//                 ]),
+//                 placeholder: SharedString::from("Option"),
+//                 selected: Some(0),
+//                 is_opened: false,
+
+//                 focus_handle: cx.focus_handle(),
+//                 scope: Some("variable"),
+//             }
 pub struct LauncherView {
     pub text_input: Entity<TextInput>,
     pub focus_handle: FocusHandle,
@@ -44,7 +92,7 @@ pub struct LauncherView {
     pub has_actions: bool,
 
     // variable input fields
-    pub variable_input: Vec<Entity<TextInput>>,
+    pub variable_input: Vec<VariableInput>,
     pub active_bar: usize,
 
     // Model

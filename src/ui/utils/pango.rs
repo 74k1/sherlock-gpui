@@ -1,7 +1,67 @@
+use std::sync::Arc;
+
 use gpui::{
-    AnyElement, Font, FontStyle, FontWeight, IntoElement, ParentElement, SharedString, Styled,
-    StyledText, TextRun, div,
+    AnyElement, Font, FontStyle, FontWeight, Hsla, IntoElement, ParentElement, SharedString,
+    Styled, StyledText, TextRun, div,
 };
+use serde::{Deserialize, Serialize};
+
+use crate::app::theme::ThemeData;
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct CachedPango {
+    source: SharedString,
+    pub text: SharedString,
+    runs: Arc<[TextRun]>,
+}
+
+impl<T: Into<SharedString>> From<T> for CachedPango {
+    fn from(value: T) -> Self {
+        Self::new(value)
+    }
+}
+
+impl CachedPango {
+    pub fn new(source: impl Into<SharedString>) -> Self {
+        Self {
+            source: source.into(),
+            text: SharedString::default(),
+            runs: Arc::from([]),
+        }
+    }
+
+    pub fn populate(&mut self, theme: &Arc<ThemeData>) {
+        if self.text.is_empty() && !self.source.is_empty() {
+            let (text, runs) = parse_pango(&self.source, theme);
+            self.text = text.into();
+            self.runs = runs.into();
+        }
+    }
+}
+
+impl IntoElement for CachedPango {
+    type Element = StyledText;
+    fn into_element(self) -> Self::Element {
+        StyledText::new(self.text.clone()).with_runs(self.runs.to_vec())
+    }
+}
+
+impl Serialize for CachedPango {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.source.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for CachedPango {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let source = SharedString::deserialize(deserializer)?;
+        Ok(Self {
+            source,
+            text: SharedString::default(),
+            runs: Arc::from([]),
+        })
+    }
+}
 
 /// Minimal Pango-subset renderer: supports <b>, <i>, <br/>, HTML entities.
 pub fn render_pango(
@@ -17,29 +77,15 @@ pub fn render_pango(
         .into_any_element()
 }
 
-fn unescape_html(s: &str) -> String {
-    s.replace("&quot;", "\"")
-        .replace("&amp;", "&")
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&nbsp;", " ")
-        .replace("&apos;", "'")
-}
-
-fn get_attribute(tag: &str, attr: &str) -> Option<SharedString> {
-    let pattern = format!("{}='", attr);
-    if let Some(start) = tag.find(&pattern) {
-        let remainder = &tag[start + pattern.len()..];
-        if let Some(end) = remainder.find('\'') {
-            return Some(remainder[..end].to_string().into());
-        }
-    }
-    // Try double quotes too
-    let pattern_dq = format!("{}=\"", attr);
-    if let Some(start) = tag.find(&pattern_dq) {
-        let remainder = &tag[start + pattern_dq.len()..];
-        if let Some(end) = remainder.find('"') {
-            return Some(remainder[..end].to_string().into());
+fn get_attribute<'a>(tag: &'a str, attr: &str) -> Option<&'a str> {
+    let mut rest = tag;
+    while let Some(pos) = rest.find(attr) {
+        rest = &rest[pos + attr.len()..];
+        let rest_trimmed = rest.trim_start_matches(' ');
+        if let Some(rest2) = rest_trimmed.strip_prefix("='") {
+            return rest2.split('\'').next();
+        } else if let Some(rest2) = rest_trimmed.strip_prefix("=\"") {
+            return rest2.split('"').next();
         }
     }
     None
@@ -55,19 +101,23 @@ fn parse_pango(
     let mut runs: Vec<TextRun> = Vec::new();
     let mut bold_depth: usize = 0;
     let mut italic_depth: usize = 0;
-    let mut family_stack: Vec<SharedString> = Vec::new();
-
+    let mut span_stack: Vec<SpanState> = Vec::new();
+    let mut scratch = String::new();
     let mut rest = content;
 
     while !rest.is_empty() {
         if let Some(tag_start) = rest.find('<') {
             if tag_start > 0 {
-                let text = unescape_html(&rest[..tag_start]);
+                scratch.clear();
+                unescape_into(&rest[..tag_start], &mut scratch);
                 push_run(
-                    &text,
-                    bold_depth,
-                    italic_depth,
-                    family_stack.last().cloned(),
+                    &scratch,
+                    &RunContext {
+                        bold_depth,
+                        italic_depth,
+                        family: current_family(&span_stack, theme),
+                        color_override: current_color(&span_stack),
+                    },
                     theme,
                     &mut final_text,
                     &mut runs,
@@ -75,44 +125,51 @@ fn parse_pango(
             }
             rest = &rest[tag_start..];
 
-            // Find closing >
             if let Some(tag_end) = rest.find('>') {
-                let tag = &rest[..=tag_end];
-                let inner = tag[1..tag.len() - 1].trim();
-                let inner_lower = inner.to_ascii_lowercase();
+                let inner = rest[1..tag_end].trim();
 
-                if inner_lower == "b" {
+                if tag_eq(inner, "b") {
                     bold_depth += 1;
-                } else if inner_lower == "/b" {
+                } else if tag_eq(inner, "/b") {
                     bold_depth = bold_depth.saturating_sub(1);
-                } else if inner_lower == "i" {
+                } else if tag_eq(inner, "i") {
                     italic_depth += 1;
-                } else if inner_lower == "/i" {
+                } else if tag_eq(inner, "/i") {
                     italic_depth = italic_depth.saturating_sub(1);
-                } else if inner_lower == "br" || inner_lower == "br/" || inner_lower == "br /" {
+                } else if tag_eq(inner, "br") || tag_eq(inner, "br/") || tag_eq(inner, "br /") {
                     push_run(
                         "\n\n",
-                        bold_depth,
-                        italic_depth,
-                        family_stack.last().cloned(),
+                        &RunContext {
+                            bold_depth,
+                            italic_depth,
+                            family: current_family(&span_stack, theme),
+                            color_override: current_color(&span_stack),
+                        },
                         theme,
                         &mut final_text,
                         &mut runs,
                     );
-                } else if inner_lower.starts_with("span") {
-                    if let Some(f) = get_attribute(inner, "font_desc") {
-                        family_stack.push(f);
-                    }
-                } else if inner_lower == "/span" {
-                    family_stack.pop();
+                } else if tag_starts_with(inner, "span") {
+                    span_stack.push(SpanState {
+                        family: get_attribute(inner, "font_desc").map(SharedString::from),
+                        color: get_attribute(inner, "color").and_then(parse_color),
+                    });
+                } else if tag_eq(inner, "/span") {
+                    span_stack.pop();
                 } else {
-                    // Unknown tag — emit as literal
-                    let text = unescape_html(tag);
+                    // unknown tag — emit literally
+                    scratch.clear();
+                    scratch.push('<');
+                    unescape_into(&rest[1..tag_end], &mut scratch);
+                    scratch.push('>');
                     push_run(
-                        &text,
-                        bold_depth,
-                        italic_depth,
-                        family_stack.last().cloned(),
+                        &scratch,
+                        &RunContext {
+                            bold_depth,
+                            italic_depth,
+                            family: current_family(&span_stack, theme),
+                            color_override: current_color(&span_stack),
+                        },
                         theme,
                         &mut final_text,
                         &mut runs,
@@ -120,13 +177,16 @@ fn parse_pango(
                 }
                 rest = &rest[tag_end + 1..];
             } else {
-                // Unclosed <
-                let text = unescape_html(rest);
+                scratch.clear();
+                unescape_into(rest, &mut scratch);
                 push_run(
-                    &text,
-                    bold_depth,
-                    italic_depth,
-                    family_stack.last().cloned(),
+                    &scratch,
+                    &RunContext {
+                        bold_depth,
+                        italic_depth,
+                        family: current_family(&span_stack, theme),
+                        color_override: current_color(&span_stack),
+                    },
                     theme,
                     &mut final_text,
                     &mut runs,
@@ -134,12 +194,16 @@ fn parse_pango(
                 break;
             }
         } else {
-            let text = unescape_html(rest);
+            scratch.clear();
+            unescape_into(rest, &mut scratch);
             push_run(
-                &text,
-                bold_depth,
-                italic_depth,
-                family_stack.last().cloned(),
+                &scratch,
+                &RunContext {
+                    bold_depth,
+                    italic_depth,
+                    family: current_family(&span_stack, theme),
+                    color_override: current_color(&span_stack),
+                },
                 theme,
                 &mut final_text,
                 &mut runs,
@@ -151,11 +215,48 @@ fn parse_pango(
     (final_text, runs)
 }
 
-fn push_run(
-    text: &str,
+struct SpanState {
+    family: Option<SharedString>,
+    color: Option<Hsla>,
+}
+
+fn current_family<'a>(stack: &'a [SpanState], theme: &'a ThemeData) -> &'a SharedString {
+    stack
+        .iter()
+        .rev()
+        .find_map(|s| s.family.as_ref())
+        .unwrap_or(&theme.font_family)
+}
+
+fn current_color(stack: &[SpanState]) -> Option<Hsla> {
+    stack.iter().rev().find_map(|s| s.color)
+}
+
+fn tag_eq(a: &str, b: &str) -> bool {
+    a.len() == b.len()
+        && a.bytes()
+            .zip(b.bytes())
+            .all(|(x, y)| x.to_ascii_lowercase() == y)
+}
+
+fn tag_starts_with(a: &str, b: &str) -> bool {
+    a.len() >= b.len()
+        && a[..b.len()]
+            .bytes()
+            .zip(b.bytes())
+            .all(|(x, y)| x.to_ascii_lowercase() == y)
+}
+
+struct RunContext<'a> {
     bold_depth: usize,
     italic_depth: usize,
-    family: Option<SharedString>,
+    family: &'a SharedString,
+    color_override: Option<Hsla>,
+}
+
+fn push_run(
+    text: &str,
+    ctx: &RunContext,
     theme: &std::sync::Arc<crate::app::theme::ThemeData>,
     final_text: &mut String,
     runs: &mut Vec<TextRun>,
@@ -168,18 +269,18 @@ fn push_run(
     final_text.push_str(text);
     let len = final_text.len() - start;
 
-    let target_family = match family {
-        Some(ref f) if f.as_ref() == "monospace" => theme.monospace.clone(),
-        Some(f) => f,
-        None => theme.font_family.clone(),
-    };
+    let target_color = ctx.color_override.unwrap_or(if ctx.bold_depth > 0 {
+        theme.primary_text
+    } else {
+        theme.secondary_text
+    });
 
-    let target_weight = if bold_depth > 0 {
+    let target_weight = if ctx.bold_depth > 0 {
         FontWeight::BOLD
     } else {
         FontWeight::NORMAL
     };
-    let target_style = if italic_depth > 0 {
+    let target_style = if ctx.italic_depth > 0 {
         FontStyle::Italic
     } else {
         FontStyle::Normal
@@ -189,9 +290,10 @@ fn push_run(
     if let Some(last) = runs.last_mut() {
         let same_bold = last.font.weight == target_weight;
         let same_italic = last.font.style == target_style;
-        let same_family = last.font.family == target_family;
+        let same_family = &last.font.family == ctx.family;
+        let same_color = last.color == target_color;
 
-        if same_bold && same_italic && same_family {
+        if same_bold && same_italic && same_family && same_color {
             last.len += len;
             return;
         }
@@ -199,13 +301,9 @@ fn push_run(
 
     runs.push(TextRun {
         len,
-        color: if bold_depth > 0 {
-            theme.primary_text
-        } else {
-            theme.secondary_text
-        },
+        color: target_color,
         font: Font {
-            family: target_family,
+            family: ctx.family.clone(),
             weight: target_weight,
             style: target_style,
             ..Default::default()
@@ -249,35 +347,42 @@ pub fn strip_pango(content: &str) -> String {
 
 #[inline]
 fn unescape_into(s: &str, out: &mut String) {
-    let mut rest = s;
-    while !rest.is_empty() {
-        match rest.find('&') {
-            None => {
-                out.push_str(rest);
-                break;
+    let bytes = s.as_bytes();
+    let mut start = 0;
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'&' {
+            out.push_str(&s[start..i]);
+            let end = bytes[i..]
+                .iter()
+                .take(7)
+                .position(|&b| b == b';')
+                .map(|p| i + p)
+                .unwrap_or(bytes.len().saturating_sub(1));
+            match &s[i..=end] {
+                "&quot;" => out.push('"'),
+                "&amp;" => out.push('&'),
+                "&lt;" => out.push('<'),
+                "&gt;" => out.push('>'),
+                "&nbsp;" => out.push(' '),
+                "&apos;" => out.push('\''),
+                other => out.push_str(other),
             }
-            Some(0) => {
-                let end = rest.find(';').unwrap_or(rest.len());
-                match &rest[..=end] {
-                    "&quot;" => out.push('"'),
-                    "&amp;" => out.push('&'),
-                    "&lt;" => out.push('<'),
-                    "&gt;" => out.push('>'),
-                    "&nbsp;" => out.push(' '),
-                    "&apos;" => out.push('\''),
-                    other => out.push_str(other),
-                }
-                rest = if end < rest.len() {
-                    &rest[end + 1..]
-                } else {
-                    ""
-                };
-            }
-            Some(amp) => {
-                out.push_str(&rest[..amp]);
-                rest = &rest[amp..];
-            }
+            i = end + 1;
+            start = i;
+        } else {
+            i += 1;
         }
+    }
+    out.push_str(&s[start..]);
+}
+
+fn parse_color(s: &str) -> Option<gpui::Hsla> {
+    let s = s.trim().trim_start_matches('#');
+    if s.len() == 6 {
+        Some(gpui::rgb(u32::from_str_radix(s, 16).ok()?).into())
+    } else {
+        None
     }
 }
 

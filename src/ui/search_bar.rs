@@ -11,7 +11,7 @@ use gpui::{
 use crate::{
     app::theme::ActiveTheme,
     loader::utils::ExecVariable,
-    ui::{search_bar::builder::TextInputBuilder, utils::timeout::TimeoutCaller},
+    ui::{choice::Choice, search_bar::builder::TextInputBuilder, utils::timeout::TimeoutCaller},
     utils::paths::{get_nth_command_completion, get_nth_path_completion},
 };
 
@@ -21,6 +21,7 @@ mod builder;
 // Implement event for mode change
 pub struct EmptyBackspace;
 impl EventEmitter<EmptyBackspace> for TextInput {}
+impl EventEmitter<EmptyBackspace> for Choice {}
 
 pub struct TextInput {
     pub scope: Option<&'static str>,
@@ -437,7 +438,7 @@ impl Render for TextInput {
         let theme = cx.global::<ActiveTheme>().0.clone();
         div()
             .flex()
-            .key_context(self.scope.unwrap_or("TextInput"))
+            .key_context(self.scope.unwrap_or("search_bar"))
             .track_focus(&self.focus_handle(cx))
             .cursor(CursorStyle::IBeam)
             .on_action(cx.listener(Self::backspace))

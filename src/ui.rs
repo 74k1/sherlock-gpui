@@ -1,3 +1,4 @@
+pub mod choice;
 pub mod launcher;
 pub mod model;
 pub mod search_bar;

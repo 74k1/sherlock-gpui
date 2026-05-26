@@ -12,7 +12,10 @@ use crate::{
     loader::utils::{CounterReader, ExecVariable},
     sherlock_msg,
     ui::{
-        launcher::{LauncherView, context_menu::ContextMenuAction, views::MoveDirection},
+        choice::Choice,
+        launcher::{
+            LauncherView, VariableInput, context_menu::ContextMenuAction, views::MoveDirection,
+        },
         search_bar::{EmptyBackspace, TextInput, actions::ShortcutAction},
         traits::RenderableChildDelegate,
         widgets::emoji::set_selected_skin_tone,
@@ -214,15 +217,30 @@ impl LauncherView {
                 active_bar.focus_handle(cx).focus(win, cx);
 
                 // handle switching back if variable input is empty
-                let sub = Some(cx.subscribe(
-                    &active_bar.clone(),
-                    |_this, _entity, _ev: &EmptyBackspace, cx| {
-                        cx.dispatch_action(&PrevVar);
-                    },
-                ));
-                active_bar.update(cx, |var_input, _| {
-                    var_input._sub = sub;
-                });
+                match active_bar {
+                    VariableInput::Text(ent) => {
+                        let sub = Some(cx.subscribe(
+                            ent,
+                            |_this, _entity, _ev: &EmptyBackspace, cx| {
+                                cx.dispatch_action(&PrevVar);
+                            },
+                        ));
+                        ent.update(cx, |var_input, _| {
+                            var_input._sub = sub;
+                        });
+                    }
+                    VariableInput::Choice(ent) => {
+                        let sub = Some(cx.subscribe(
+                            ent,
+                            |_this, _entity, _ev: &EmptyBackspace, cx| {
+                                cx.dispatch_action(&PrevVar);
+                            },
+                        ));
+                        ent.update(cx, |var_input, _| {
+                            var_input._sub = sub;
+                        });
+                    }
+                }
             }
 
             cx.notify();
@@ -411,23 +429,33 @@ impl LauncherView {
     }
     fn get_variables(&self, cx: &mut App) -> SmallVec<[(SharedString, SharedString); 4]> {
         let mut variables: SmallVec<[(SharedString, SharedString); 4]> = SmallVec::new();
-        for s in &self.variable_input {
-            let guard = s.read(cx);
-            let mut content = guard.content.to_string();
+        for input in &self.variable_input {
+            match input {
+                VariableInput::Choice(ent) => {
+                    let guard = ent.read(cx);
+                    if let Some(choice) = guard.selected.and_then(|idx| guard.options.get(idx)) {
+                        variables.push((guard.placeholder.text.clone(), choice.value.clone()));
+                    }
+                }
+                VariableInput::Text(ent) => {
+                    let guard = ent.read(cx);
+                    let mut content = guard.content.to_string();
 
-            // Only transform if it's a PathInput
-            if let Some(ExecVariable::Path(_)) = &guard.variable {
-                let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
-                if content.starts_with('~') {
-                    content = content.replacen('~', &home, 1);
-                } else if !content.starts_with('/') {
-                    let mut p = PathBuf::from(home);
-                    p.push(&content);
-                    content = p.to_string_lossy().to_string();
+                    // Only transform if it's a PathInput
+                    if let Some(ExecVariable::Path(_)) = &guard.variable {
+                        let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
+                        if content.starts_with('~') {
+                            content = content.replacen('~', &home, 1);
+                        } else if !content.starts_with('/') {
+                            let mut p = PathBuf::from(home);
+                            p.push(&content);
+                            content = p.to_string_lossy().to_string();
+                        }
+                    }
+
+                    variables.push((guard.placeholder.clone(), SharedString::from(content)));
                 }
             }
-
-            variables.push((guard.placeholder.clone(), SharedString::from(content)));
         }
         variables
     }
@@ -578,14 +606,25 @@ impl LauncherView {
         if let Some(vars_to_create) = needed_vars {
             self.variable_input = vars_to_create
                 .into_iter()
-                .map(|var| {
-                    cx.new(|cx| {
-                        TextInput::builder()
-                            .scope("variable")
-                            .placeholder(var.placeholder())
-                            .variable(var)
-                            .build(cx)
-                    })
+                .map(|var| -> VariableInput {
+                    match var {
+                        ExecVariable::Choice { name, choices } => {
+                            VariableInput::Choice(cx.new(|cx| {
+                                Choice::builder()
+                                    .scope("variable")
+                                    .placeholder(name)
+                                    .options(choices.to_vec())
+                                    .build(cx)
+                            }))
+                        }
+                        _ => VariableInput::Text(cx.new(|cx| {
+                            TextInput::builder()
+                                .scope("variable")
+                                .placeholder(var.placeholder())
+                                .variable(var)
+                                .build(cx)
+                        })),
+                    }
                 })
                 .collect();
         } else {

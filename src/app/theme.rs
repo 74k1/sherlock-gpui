@@ -19,6 +19,8 @@ pub struct ThemeData {
     #[serde(deserialize_with = "hsla_from_hex")]
     pub bg_app: Hsla,
     #[serde(deserialize_with = "hsla_from_hex")]
+    pub bg_overlay: Hsla,
+    #[serde(deserialize_with = "hsla_from_hex")]
     pub bg_selected: Hsla,
     #[serde(deserialize_with = "hsla_from_hex")]
     pub bg_idle: Hsla,
@@ -97,6 +99,7 @@ impl ThemeData {
             selection: hsla(0.639, 1.0, 0.53, 0.19),
             // Backgrounds
             bg_app: hsla(0.0, 0.0, 0.059, 1.0), // 0x0F0F0F
+            bg_overlay: hsla(0.0, 0.0, 0.078, 1.0),
             bg_selected: hsla(0.0, 0.0, 1.0, 0.1),
             bg_idle: hsla(0.0, 0.0, 0.0, 0.0),
             bg_status_bar: hsla(0.0, 0.0, 0.098, 1.0),
@@ -139,6 +142,7 @@ impl ThemeData {
 
             // Backgrounds - Warm Paper & Alabaster
             bg_app: hsla(40.0 / 360.0, 0.10, 0.98, 1.0), // Off-white/Bone 0xFCFAF8
+            bg_overlay: hsla(40.0 / 360.0, 0.08, 0.95, 1.0), // Matte Alabaster surface
             bg_selected: hsla(220.0 / 360.0, 0.15, 0.92, 1.0), // Soft Blue-tinted White
             bg_idle: hsla(0.0, 0.0, 0.0, 0.0),
             bg_status_bar: hsla(40.0 / 360.0, 0.05, 0.94, 1.0), // Slightly darker paper
@@ -182,6 +186,7 @@ impl ThemeData {
             cursor: hsla(267.0 / 360.0, 0.84, 0.81, 1.0),
             selection: hsla(267.0 / 360.0, 0.84, 0.81, 0.2),
             bg_app: hsla(240.0 / 360.0, 0.21, 0.12, 1.0),
+            bg_overlay: hsla(240.0 / 360.0, 0.21, 0.15, 1.0),
             bg_selected: hsla(248.0 / 360.0, 0.15, 0.22, 1.0),
             bg_idle: hsla(240.0 / 360.0, 0.21, 0.15, 1.0),
             bg_status_bar: hsla(240.0 / 360.0, 0.21, 0.10, 1.0),
@@ -217,6 +222,7 @@ impl ThemeData {
             cursor: hsla(213.0 / 360.0, 0.32, 0.52, 1.0),
             selection: hsla(213.0 / 360.0, 0.32, 0.52, 0.25),
             bg_app: hsla(220.0 / 360.0, 0.17, 0.14, 1.0),
+            bg_overlay: hsla(220.0 / 360.0, 0.17, 0.12, 1.0),
             bg_selected: hsla(220.0 / 360.0, 0.17, 0.28, 1.0),
             bg_idle: hsla(220.0 / 360.0, 0.17, 0.18, 1.0),
             bg_status_bar: hsla(220.0 / 360.0, 0.17, 0.12, 1.0),
