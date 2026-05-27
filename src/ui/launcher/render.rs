@@ -107,13 +107,13 @@ impl LauncherView {
                         .size(px(24.))
                         .items_center()
                         .justify_center()
-                        .when(is_search_mode, |this| {
+                        .when(!is_search_mode, |this| {
                             this.when_some(
                                 icon_path.as_deref().and_then(resolve_icon_path),
                                 |this, icon| this.child(img(icon).size(px(icon_size))),
                             )
                         })
-                        .when(!is_search_mode, |this| {
+                        .when(is_search_mode, |this| {
                             this.when_some(
                                 icon_back_path.as_deref().and_then(resolve_icon_path),
                                 |this, icon| {
