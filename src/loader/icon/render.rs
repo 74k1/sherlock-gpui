@@ -4,6 +4,16 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+pub fn handle_symblic(name: &str, svg_data: &[u8]) -> Option<IconType> {
+    let is_symbolic =
+        name.ends_with("-symbolic") || svg_data.windows(12).any(|w| w == b"currentColor");
+    if is_symbolic {
+        copy_svg_to_cache(name, &svg_data).map(IconType::Symbolic)
+    } else {
+        None
+    }
+}
+
 pub fn render_svg_to_cache(key: &str, path: PathBuf) -> Option<IconType> {
     if !path.exists() {
         return None;
@@ -19,7 +29,7 @@ pub fn render_svg_to_cache(key: &str, path: PathBuf) -> Option<IconType> {
                 || path.components().any(|c| c.as_os_str() == "symbolic")
                 || svg_data.windows(12).any(|w| w == b"currentColor");
             if is_symbolic {
-                Some(IconType::Symbolic(path.into_boxed_path().into()))
+                copy_svg_to_cache(key, &svg_data).map(IconType::Symbolic)
             } else {
                 render_to_png_cache(key, &svg_data).map(IconType::Png)
             }
@@ -80,6 +90,17 @@ pub fn copy_png_to_cache(name: &str, png_data: &[u8]) -> Option<Arc<Path>> {
     out.push(format!("{}.png", name.replace('/', "_")));
     if !out.exists() {
         fs::write(&out, png_data).ok()?;
+    }
+
+    Some(out.into_boxed_path().into())
+}
+
+pub fn copy_svg_to_cache(name: &str, svg_data: &[u8]) -> Option<Arc<Path>> {
+    let mut out = get_cache_dir().ok()?.join("icons");
+    std::fs::create_dir_all(&out).ok()?;
+    out.push(format!("{}.svg", name.replace('/', "_")));
+    if !out.exists() {
+        fs::write(&out, svg_data).ok()?;
     }
 
     Some(out.into_boxed_path().into())

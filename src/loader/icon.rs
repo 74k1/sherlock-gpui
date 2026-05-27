@@ -1,6 +1,9 @@
 use crate::loader::{
     assets::Assets,
-    icon::{render::copy_png_to_cache, theme::resolve_icon_internal},
+    icon::{
+        render::{copy_png_to_cache, handle_symblic},
+        theme::resolve_icon_internal,
+    },
 };
 
 const ICON_SIZE: u16 = 48;
@@ -22,7 +25,10 @@ pub fn resolve_icon_path(name: &str) -> Option<IconType> {
 
     // Check embedded files
     if let Some(asset) = Assets::get(&format!("icons/{name}.svg")) {
-        result = render_to_png_cache(name, &asset.data).map(IconType::Png);
+        result = handle_symblic(name, &asset.data);
+        if result.is_none() {
+            result = render_to_png_cache(name, &asset.data).map(IconType::Png);
+        }
     } else if let Some(asset) = Assets::get(&format!("icons/{name}.png")) {
         result = copy_png_to_cache(name, &asset.data).map(IconType::Png);
     }
