@@ -13,7 +13,7 @@ use crate::{
             translation::Language,
             units::{Unit, UnitCategory},
         },
-        websearch::is_url,
+        url_detection::is_url,
     },
 };
 
