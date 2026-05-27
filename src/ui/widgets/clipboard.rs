@@ -44,8 +44,8 @@ impl Fetchable for ClipData {
         };
 
         let content = match get_clipboard() {
-            Some(c) => c,
-            None => return Ok(None),
+            Some(c) if c.len() < 2048 => c,
+            _ => return Ok(None),
         };
 
         let intent = Intent::parse(&content, &clp.capabilities);
@@ -320,6 +320,7 @@ fn url_show(url: SharedString, selection: Selection, theme: Arc<ThemeData>) -> g
                 crate::loader::IconType::Png(png) => img(png).size(px(24.)).into_any_element(),
                 crate::loader::IconType::Symbolic(sym) => svg()
                     .path(sym.to_string_lossy().into_owned())
+                    .text_color(theme.secondary_text)
                     .size(px(24.))
                     .into_any_element(),
             }
