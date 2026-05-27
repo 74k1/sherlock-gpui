@@ -8,7 +8,7 @@ pub fn handle_symblic(name: &str, svg_data: &[u8]) -> Option<IconType> {
     let is_symbolic =
         name.ends_with("-symbolic") || svg_data.windows(12).any(|w| w == b"currentColor");
     if is_symbolic {
-        copy_svg_to_cache(name, &svg_data).map(IconType::Symbolic)
+        copy_svg_to_cache(name, svg_data).map(IconType::Symbolic)
     } else {
         None
     }
