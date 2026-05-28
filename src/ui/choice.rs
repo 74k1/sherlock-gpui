@@ -87,9 +87,9 @@ impl Choice {
                     })
                     // children
                     .child(if let Some(content) = content {
-                        content.label.clone()
+                        content.label.clone().prepared(&theme)
                     } else {
-                        self.placeholder.clone()
+                        self.placeholder.clone().prepared(&theme)
                     })
                     .child(
                         div()
@@ -129,7 +129,7 @@ impl Choice {
                                 .text_size(px(12.))
                                 .text_color(theme.secondary_text)
                                 .font_family(theme.font_family.clone())
-                                .child(option.label.clone())
+                                .child(option.label.clone().prepared(&theme))
                         })),
                 )
             })
