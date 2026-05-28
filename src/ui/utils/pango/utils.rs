@@ -1,7 +1,5 @@
 use gpui::{Hsla, SharedString};
 
-use crate::app::theme::ThemeData;
-
 pub(super) enum TagKind {
     BoldOpen,
     BoldClose,
@@ -76,16 +74,10 @@ impl SpanState {
             color: get_attribute(tag, "color").and_then(parse_color),
         }
     }
-}
-
-pub(super) fn current_family<'a>(stack: &'a [SpanState], theme: &'a ThemeData) -> &'a SharedString {
-    stack
-        .iter()
-        .rev()
-        .find_map(|s| s.family.as_ref())
-        .unwrap_or(&theme.font_family)
-}
-
-pub(super) fn current_color(stack: &[SpanState]) -> Option<Hsla> {
-    stack.iter().rev().find_map(|s| s.color)
+    pub fn family(&self) -> Option<&SharedString> {
+        self.family.as_ref()
+    }
+    pub fn color(&self) -> Option<Hsla> {
+        self.color
+    }
 }

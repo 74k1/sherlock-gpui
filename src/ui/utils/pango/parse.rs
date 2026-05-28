@@ -1,8 +1,8 @@
-use gpui::{FontStyle, FontWeight, Hsla, SharedString, TextRun};
+use gpui::{FontStyle, FontWeight, TextRun};
 
 use crate::{
     app::theme::ThemeData,
-    ui::utils::pango::utils::{SpanState, TagKind, classify_tag, current_color, current_family},
+    ui::utils::pango::utils::{SpanState, TagKind, classify_tag},
 };
 
 /// Tokenise `content` into alternating text/tag slices and build
@@ -29,8 +29,7 @@ pub(super) fn parse_pango(
                     &RunContext {
                         bold_depth,
                         italic_depth,
-                        family: current_family(&span_stack, theme),
-                        color_override: current_color(&span_stack),
+                        state: span_stack.last(),
                     },
                     theme,
                     &mut final_text,
@@ -52,8 +51,7 @@ pub(super) fn parse_pango(
                         &RunContext {
                             bold_depth,
                             italic_depth,
-                            family: current_family(&span_stack, theme),
-                            color_override: current_color(&span_stack),
+                            state: span_stack.last(),
                         },
                         theme,
                         &mut final_text,
@@ -76,8 +74,7 @@ pub(super) fn parse_pango(
                             &RunContext {
                                 bold_depth,
                                 italic_depth,
-                                family: current_family(&span_stack, theme),
-                                color_override: current_color(&span_stack),
+                                state: span_stack.last(),
                             },
                             theme,
                             &mut final_text,
@@ -94,8 +91,7 @@ pub(super) fn parse_pango(
                     &RunContext {
                         bold_depth,
                         italic_depth,
-                        family: current_family(&span_stack, theme),
-                        color_override: current_color(&span_stack),
+                        state: span_stack.last(),
                     },
                     theme,
                     &mut final_text,
@@ -111,8 +107,7 @@ pub(super) fn parse_pango(
                 &RunContext {
                     bold_depth,
                     italic_depth,
-                    family: current_family(&span_stack, theme),
-                    color_override: current_color(&span_stack),
+                    state: span_stack.last(),
                 },
                 theme,
                 &mut final_text,
@@ -192,8 +187,7 @@ fn unescape_into(s: &str, out: &mut String) {
 struct RunContext<'a> {
     bold_depth: usize,
     italic_depth: usize,
-    family: &'a SharedString,
-    color_override: Option<Hsla>,
+    state: Option<&'a SpanState>,
 }
 
 fn push_run(
@@ -211,11 +205,14 @@ fn push_run(
     final_text.push_str(text);
     let len = final_text.len() - start;
 
-    let target_color = ctx.color_override.unwrap_or(if ctx.bold_depth > 0 {
-        theme.primary_text
-    } else {
-        theme.secondary_text
-    });
+    let target_color = ctx
+        .state
+        .and_then(|s| s.color())
+        .unwrap_or(if ctx.bold_depth > 0 {
+            theme.primary_text
+        } else {
+            theme.secondary_text
+        });
 
     let target_weight = if ctx.bold_depth > 0 {
         FontWeight::BOLD
@@ -232,7 +229,11 @@ fn push_run(
     if let Some(last) = runs.last_mut() {
         let same_bold = last.font.weight == target_weight;
         let same_italic = last.font.style == target_style;
-        let same_family = &last.font.family == ctx.family;
+        let same_family = &last.font.family
+            == ctx
+                .state
+                .and_then(|s| s.family())
+                .unwrap_or(&theme.font_family);
         let same_color = last.color == target_color;
 
         if same_bold && same_italic && same_family && same_color {
@@ -245,7 +246,11 @@ fn push_run(
         len,
         color: target_color,
         font: gpui::Font {
-            family: ctx.family.clone(),
+            family: ctx
+                .state
+                .and_then(|s| s.family())
+                .unwrap_or(&theme.font_family)
+                .clone(),
             weight: target_weight,
             style: target_style,
             ..Default::default()
