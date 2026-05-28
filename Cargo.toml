@@ -62,3 +62,8 @@ const-str = "1.1.0"
 [features]
 default = ["wayland"]
 wayland = ["gpui/wayland", "gpui_platform/wayland"]
+bench = []
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
