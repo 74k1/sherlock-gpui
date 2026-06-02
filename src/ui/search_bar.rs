@@ -517,8 +517,9 @@ impl TextInput {
             Some(ExecVariable::Path(inner)) => {
                 get_nth_path_completion(self.content.as_str(), inner.index, false)
             }
-            Some(ExecVariable::Command(inner)) => {
-                let last = self.content.as_str().split(' ').next_back().unwrap_or("");
+            Some(ExecVariable::Command(inner))
+                if let Some(last) = self.content.trim().split(' ').next_back() =>
+            {
                 match get_nth_command_completion(last, inner.index) {
                     Some(cmd) => {
                         inner.is_scoped = false;

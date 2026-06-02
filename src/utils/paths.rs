@@ -94,6 +94,7 @@ pub fn get_cache_dir() -> Result<PathBuf, crate::utils::errors::SherlockMessage>
 /// # Arguments
 /// * `input` - The partial path string typed by the user (e.g., "~/Down" or "Documents/").
 /// * `n` - The index used to cycle through multiple matches.
+/// * `executable_only` - To only look for files that satisfy the executionable flag
 ///
 /// # Returns
 /// * `Some(String)` - The "ghost text" remainder of the completion (the part after `input`).
@@ -150,8 +151,11 @@ pub fn get_nth_path_completion(input: &str, n: usize, executable_only: bool) -> 
     let mut matches: Vec<String> = entries
         .filter_map(|res| res.ok())
         .filter(|e| !executable_only || e.metadata().is_ok_and(|m| is_executable(&m)))
-        .map(|e| e.file_name().to_string_lossy().into_owned())
-        .filter(|name| !is_hidden(name) && name.starts_with(prefix))
+        .filter_map(|e| {
+            let os_name = e.file_name();
+            let name = os_name.to_str()?;
+            (!is_hidden(name) && name.starts_with(prefix)).then(|| name.to_string())
+        })
         .collect();
 
     if matches.is_empty() {
@@ -205,8 +209,8 @@ pub fn get_nth_command_completion(input: &str, n: usize) -> Option<String> {
         .filter_map(|dir| std::fs::read_dir(dir).ok())
         .flatten()
         .filter_map(|res| res.ok())
+        .filter(|e| e.file_name().to_str().is_some_and(|n| n.starts_with(input)))
         .map(|e| e.file_name().to_string_lossy().into_owned())
-        .filter(|name| name.starts_with(input))
         .collect();
 
     if matches.is_empty() {
