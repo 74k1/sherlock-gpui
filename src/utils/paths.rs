@@ -105,7 +105,7 @@ pub fn get_cache_dir() -> Result<PathBuf, crate::utils::errors::SherlockMessage>
 /// // input: "~/Doc", match: "Documents/"
 /// // returns: Some("uments/")
 /// ```
-pub fn get_nth_path_completion(input: &str, n: usize) -> Option<String> {
+pub fn get_nth_path_completion(input: &str, n: usize, executable_only: bool) -> Option<String> {
     if input.is_empty() {
         return None;
     }
@@ -138,10 +138,20 @@ pub fn get_nth_path_completion(input: &str, n: usize) -> Option<String> {
 
     let entries = std::fs::read_dir(&search_dir).ok()?;
 
+    // Enables .config dir for path completion
+    let is_hidden = |name: &str| -> bool { name.starts_with('.') && !name.starts_with(".config") };
+
+    // Enables support to filter out non-executable files
+    fn is_executable(meta: &std::fs::Metadata) -> bool {
+        use std::os::unix::fs::PermissionsExt;
+        meta.permissions().mode() & 0o111 != 0
+    }
+
     let mut matches: Vec<String> = entries
         .filter_map(|res| res.ok())
+        .filter(|e| !executable_only || e.metadata().is_ok_and(|m| is_executable(&m)))
         .map(|e| e.file_name().to_string_lossy().into_owned())
-        .filter(|name| !name.starts_with('.') && name.starts_with(prefix))
+        .filter(|name| !is_hidden(name) && name.starts_with(prefix))
         .collect();
 
     if matches.is_empty() {

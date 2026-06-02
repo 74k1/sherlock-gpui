@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use gpui::{
     App, AppContext, ClipboardItem, Context, Focusable, KeyUpEvent, SharedString, Window, actions,
@@ -23,6 +23,7 @@ use crate::{
     utils::{
         command_launch::spawn_detached,
         errors::{SherlockMessage, types::SherlockErrorType},
+        files::expand_path,
         websearch::websearch,
     },
 };
@@ -442,15 +443,18 @@ impl LauncherView {
                     let mut content = guard.content.to_string();
 
                     // Only transform if it's a PathInput
-                    if let Some(ExecVariable::Path(_)) = &guard.variable {
-                        let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
-                        if content.starts_with('~') {
-                            content = content.replacen('~', &home, 1);
-                        } else if !content.starts_with('/') {
-                            let mut p = PathBuf::from(home);
-                            p.push(&content);
-                            content = p.to_string_lossy().to_string();
-                        }
+                    let needs_expansion = matches!(&guard.variable, Some(ExecVariable::Path(_)))
+                        || matches!(&guard.variable, Some(ExecVariable::Command(inner)) if inner.is_scoped);
+
+                    if needs_expansion {
+                        let home = std::env::var_os("HOME").map(PathBuf::from);
+                        let home = home.as_deref().unwrap_or(Path::new("."));
+
+                        content = match content.chars().next() {
+                            Some('~') => expand_path(content, home).to_string_lossy().into_owned(),
+                            Some('/') => content,
+                            _ => home.join(&content).to_string_lossy().into_owned(),
+                        };
                     }
 
                     variables.push((guard.placeholder.clone(), SharedString::from(content)));

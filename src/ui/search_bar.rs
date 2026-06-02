@@ -513,15 +513,21 @@ impl TextInput {
         TextInputBuilder::new()
     }
     pub(super) fn refresh_ghost_text(&mut self) {
-        self.ghost_text = match &self.variable {
+        self.ghost_text = match &mut self.variable {
             Some(ExecVariable::Path(inner)) => {
-                get_nth_path_completion(self.content.as_str(), inner.index)
+                get_nth_path_completion(self.content.as_str(), inner.index, false)
             }
             Some(ExecVariable::Command(inner)) => {
-                if let Some(last) = self.content.as_str().split(' ').next_back() {
-                    get_nth_command_completion(last, inner.index)
-                } else {
-                    None
+                let last = self.content.as_str().split(' ').next_back().unwrap_or("");
+                match get_nth_command_completion(last, inner.index) {
+                    Some(cmd) => {
+                        inner.is_scoped = false;
+                        Some(cmd)
+                    }
+                    None => {
+                        inner.is_scoped = true;
+                        get_nth_path_completion(last, inner.index, true)
+                    }
                 }
             }
             _ => None,

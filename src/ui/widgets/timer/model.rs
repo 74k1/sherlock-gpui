@@ -1,8 +1,11 @@
-use std::time::Duration;
+use std::{
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
 use gpui::{App, SharedString, Task};
 
-use crate::utils::command_launch;
+use crate::utils::{command_launch, files::expand_path};
 
 fn boottime_now() -> Duration {
     let mut ts = libc::timespec {
@@ -128,7 +131,14 @@ impl Timer {
             }
             TimerState::Running { .. } => {
                 let remaining = self.state.remaining();
-                self.completion_task = Self::spawn_completion_task(remaining, &self.command, cx);
+                let home = std::env::var_os("HOME").map(PathBuf::from);
+                let command: Option<SharedString> = self.command.as_deref().map(|c| {
+                    expand_path(c, home.as_deref().unwrap_or(Path::new("~")))
+                        .to_string_lossy()
+                        .into()
+                });
+
+                self.completion_task = Self::spawn_completion_task(remaining, &command, cx);
             }
         }
     }

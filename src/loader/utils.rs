@@ -236,12 +236,18 @@ pub struct CommandData {
     pub command: SharedString,
     #[serde(skip)]
     pub index: usize,
+    #[serde(skip)]
+    pub is_scoped: bool,
 }
 
 // Implement the conversion logic
 impl From<SharedString> for CommandData {
     fn from(command: SharedString) -> Self {
-        Self { command, index: 0 }
+        Self {
+            command,
+            index: 0,
+            is_scoped: false,
+        }
     }
 }
 
