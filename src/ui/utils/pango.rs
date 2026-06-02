@@ -6,10 +6,10 @@ mod cache;
 mod parse;
 mod utils;
 
-#[cfg(test)]
-mod tests;
 #[cfg(all(test, feature = "bench"))]
 mod benches;
+#[cfg(test)]
+mod tests;
 
 pub use cache::CachedPango;
 pub use parse::strip_pango;
