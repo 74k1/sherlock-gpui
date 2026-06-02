@@ -8,6 +8,10 @@ use crate::utils::config::SherlockFlags;
 pub enum ClientMessage {
     ConfigUpdate(Box<SherlockFlags>),
     Dmenu(Vec<SharedString>),
+    Timer {
+        duration: String,
+        command: Option<SharedString>,
+    },
     Open,
 }
 

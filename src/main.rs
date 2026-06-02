@@ -39,9 +39,12 @@ async fn main() {
     let socket_path = "/tmp/sherlock.sock";
     if let Ok(mut stream) = UnixStream::connect(socket_path).await {
         // update flags
-        let Some(flags) = Loader::load_flags() else {
+        let mut flags = Loader::load_flags();
+        if flags.execute_startup() {
             return;
-        };
+        }
+        let (flags, startup_action) = (flags.flags, flags.startup);
+
         let config_update = ClientMessage::ConfigUpdate(Box::new(flags));
         if let Ok(config_bin) = SizedMessageObj::from_struct(&config_update) {
             let _ = stream.write_sized(config_bin).await;
@@ -49,6 +52,15 @@ async fn main() {
         let ClientMessage::ConfigUpdate(flags) = config_update else {
             unreachable!()
         };
+
+        // write message from flags to server
+        if let Some(action) = startup_action
+            && let Ok(payload_bin) = SizedMessageObj::try_from(&action)
+            && stream.write_sized(payload_bin).await.is_ok()
+            && action.exit()
+        {
+            return;
+        }
 
         let piped = read_stdin_piped();
         if !piped.is_empty() {

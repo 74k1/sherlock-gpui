@@ -1,7 +1,4 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{fs, path::Path};
 
 use crate::{
     sherlock_msg,
@@ -19,10 +16,10 @@ impl SherlockConfig {
     /// # Arguments
     /// loc: PathBuf
     /// Pathbuf should be a directory **not** a file
-    pub fn to_file(loc: PathBuf, ext: &str) -> Result<(), SherlockMessage> {
+    pub fn to_file(loc: &Path, ext: &str) -> Result<(), SherlockMessage> {
         // create config location
         let home = home_dir()?;
-        let path = expand_path(&loc, &home);
+        let path = expand_path(loc, &home);
 
         fn ensure_dir(path: &Path, label: &str) {
             match std::fs::create_dir(path) {
@@ -78,7 +75,7 @@ impl SherlockConfig {
         ensure_dir(&path.join("themes/"), "themes");
 
         // build default config
-        let config = SherlockConfig::with_root(&loc);
+        let config = SherlockConfig::with_root(loc);
         match ext {
             "json" => {
                 let json_str = serde_json::to_string_pretty(&config).map_err(|e| {

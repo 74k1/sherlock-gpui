@@ -18,7 +18,7 @@ pub fn reload(
     let mut messages: Vec<SherlockMessage> = Vec::new();
 
     if needs.config {
-        let mut flags = Loader::load_flags()?;
+        let mut flags = Loader::load_flags().flags;
         let config = match flags.get_config() {
             Err(e) => {
                 messages.push(e);

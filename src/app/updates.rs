@@ -1,5 +1,6 @@
 use gpui::{AppContext, AsyncApp, Focusable, WindowHandle};
 use serde::de::DeserializeOwned;
+use smallvec::SmallVec;
 use std::os::unix::net::UnixStream as StdUnixStream;
 use std::{
     collections::VecDeque,
@@ -13,6 +14,9 @@ use tokio::{
     sync::Notify,
 };
 
+use crate::utils::intent::Intent;
+use crate::utils::intent::cursor::Cursor;
+use crate::utils::intent::parsers::timer::TimerParser;
 use crate::{
     app::{RenderableChildEntity, run_async_updates, spawn_launcher},
     launcher::Launcher,
@@ -102,6 +106,26 @@ pub(super) async fn run_event_loop(
                     continue;
                 }
             };
+
+            // Handle New Timer Creation
+            if let ClientMessage::Timer { duration, command } = &msg {
+                let clean: SmallVec<[&str; 16]> =
+                    Intent::tokenize_kill_noise(duration).take(16).collect();
+                let cur = Cursor::new(&clean);
+
+                if let Some(Intent::Timer { duration }) = TimerParser::parse_intent(cur) {
+                    data.update(&mut cx, |this, cx| {
+                        let timer = this
+                            .iter()
+                            .find(|&w| matches!(w, RenderableChild::Timer { .. }));
+
+                        if let Some(RenderableChild::Timer { inner, .. }) = timer {
+                            inner.new_timer(duration, command.clone(), cx);
+                        }
+                    })
+                }
+                continue;
+            }
 
             // handle new config transfer
             if let ClientMessage::ConfigUpdate(mut flags) = msg {

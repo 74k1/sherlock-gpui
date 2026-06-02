@@ -11,12 +11,12 @@ use crate::utils::errors::SherlockMessage;
 use crate::utils::errors::types::{FileAction, SherlockErrorType};
 use crate::utils::paths;
 
-pub fn repair_config(mut flags: SherlockFlags) {
+pub fn repair_config(flags: &mut SherlockFlags) {
     // parse configs
     let config = match flags.get_config() {
         Err(_) => {
             let mut defaults = SherlockConfig::default();
-            defaults.apply_flags(&mut flags);
+            defaults.apply_flags(flags);
             defaults
         }
         Ok((cfg, _)) => cfg,
