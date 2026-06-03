@@ -157,10 +157,7 @@ impl LauncherView {
         {
             self.focus_nth(target_idx, cx);
             if old != target_idx {
-                self.active_bar = 0;
-                self.text_input.update(cx, |this, cx| {
-                    this.focus_handle(cx).focus(win, cx);
-                });
+                self.focus_search_bar(win, cx);
             }
         }
     }
@@ -285,6 +282,7 @@ impl LauncherView {
 
             // update context menu actions in case of no-exit action and changed actions
             self.refresh_context_actions(cx);
+            self.focus_search_bar(win, cx);
             cx.notify();
         } else {
             let keyword = self.text_input.read(cx).content.clone();
@@ -304,6 +302,7 @@ impl LauncherView {
             }
 
             self.refresh_context_actions(cx);
+            self.focus_search_bar(win, cx);
             self.force_filter_and_sort(cx);
         }
     }
@@ -323,6 +322,18 @@ impl LauncherView {
             self.context_actions = Default::default();
             self.close_context(cx);
         }
+    }
+
+    #[inline(always)]
+    fn focus_search_bar(&mut self, win: &mut Window, cx: &mut Context<Self>) {
+        if self.active_bar == 0 {
+            return;
+        }
+
+        self.active_bar = 0;
+        self.text_input.update(cx, |this, cx| {
+            this.focus_handle(cx).focus(win, cx);
+        });
     }
 
     pub(super) fn execute_helper(
