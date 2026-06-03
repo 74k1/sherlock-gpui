@@ -36,7 +36,7 @@ build_and_check() {
     cargo test -r
 
     echo "Generating docs..."
-    SHERLOCK_DEV=1 ./target/release/sherlock-gpui --generate-docs
+    SHERLOCK_DEV=true ./target/release/sherlock-gpui --generate-docs
     git add docs/src/launchers.md
     git commit -m "[Release Bot]: Auto-generated launcher docs"
 }
