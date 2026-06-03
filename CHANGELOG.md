@@ -40,7 +40,79 @@ run `git log main..dev` for all changes
 
 ## [Unreleased]
 
-* as of ****
+* as of **a5bb592f4432fa07e1ec4a1a295073ee9a324a72**
+
+## [0.2.3-dev] - 03.06.26
+
+### Added
+
+* **Search Results:** Added limiting functionality to restrict the number of
+  search results displayed per launcher (`e963bacb`)
+* **Command Completion:** Added support for fetching executable files located
+  outside the standard `$PATH` (`a9071661`)
+* **Search Bar:** Enhanced interface with native PNG/symbolic asset icons, a
+  blinking cursor animation, and a selected field indicator (`31a3c98b`,
+  `4de3e585`, `45e9edc7`, `85e499b2`)
+* **Variable Input:** Added choice dropdown fields to variable input selections
+  (`52185ef7`)
+* **Documentation:** Added automatic documentation generation utilities for
+  launchers and integrated them into the release pipeline (`68194737`,
+  `e330f121`, `c28b6bdd`)
+* **Subcommand:** Added a `sherlock repair` subcommand to fix corrupted
+  `fallback.json` and counter files (`0dbe376f`)
+* **Config Watcher:** Added a dynamic file watcher to notify the system when
+  application configurations change (`c1c77b8f`)
+* **User Actions:** Added mouse click support to focus/execute items and
+  introduced in-place context action executions (`84ee0cff`, `7575d0ce`)
+* **Debug Utility:** Added a built-in debug launcher utility and integrated
+  timer start capabilities from the Sherlock CLI (`3fde4978`, `bd0c766b`)
+
+### improvements
+
+* **Changelog:** Configured changelog generation to completely ignore
+  unreleased changes (`a5bb592f`)
+* **Client-Server:** Added a server-side `FIN` window-close message, a
+  `-w/--wait` flag to pause for output, and direct piping capabilities
+  (`628c4f50`, `74321634`)
+* **Pango Parser:** Optimized rendering performance, added benchmarking suites,
+  and streamlined span state transitions (`b7b61fc0`, `f0b04a3f`)
+* **Timer:** Rewrote system timers to persist and continue running through
+  system sleep mode (`e22f5a64`)
+* **Architecture:** Shifted heavy `RenderableChild` clones to asynchronous
+  context tasks and refactored core layout modules (`b38473b9`, `c617fbd9`,
+  `6f16db3b`)
+* **Binds & Parsing:** Enhanced keybindings to accept outer functions and
+  refactored launcher parsing to map the `name` key directly (`73eed652`,
+  `3e34cbfc`, `6c01dfc7`)
+* **Core Systems:** Improved URL detection accuracy, application loading
+  sequences, error notation layout, and counter tracking (`f167cceb`,
+  `27e0c276`, `18e9fdff`, `dea10500`)
+
+### Removed
+
+* **Cargo Config:** Removed the default target entry from the internal Cargo
+  `config.toml` setup (`60a4b49f`)
+* **Icon Cache:** Deleted the obsolete `clear icon cache` utility function
+  (`238414d2`)
+
+### Fixed
+
+* **Variable Input:** Fixed fields to correctly reset focus back to the search
+  bar immediately following execution (`2d352980`)
+* **Icons & Assets:** Resolved rendering, asset caching, and color assignment
+  bugs for SVGs and clipboard icons (`7b9fcb8f`, `913ddd87`, `57a2e255`)
+* **Navigation Focus:** Patched text cursor blinking animations and prevented
+  focus or alias contexts from leaking into hidden layout views (`660f9ea4`,
+  `23af41e5`, `89f7ec0d`)
+* **Documentation:** Fixed layout formatting errors, typographical mistakes,
+  and unhandled details blocks (`3467591b`, `23be3dd4`)
+* **App Loading:** Corrected context menu parsing failures and resolved an
+  inverted search scoring order glitch (`8f877c24`, `949e28eb`, `19fe55c0`)
+* **Execution Glitches:** Ensured launchers without actions handle returns
+  smoothly and guarded against crashes from oversized intent payloads
+  (`9b080570`, `cb668086`, `35c93477`)
+* **Media Layout:** Fixed the MPRIS media view to safely hide the lower layout
+  column if no artist metadata tags exist (`862b140f`)
 
 ## [0.2.2-dev] - 28.04.26
 
