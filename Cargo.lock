@@ -5843,7 +5843,7 @@ dependencies = [
 
 [[package]]
 name = "sherlock-gpui"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "arrayvec",
  "async-io",
