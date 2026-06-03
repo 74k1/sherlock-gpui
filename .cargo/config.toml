@@ -1,9 +1,2 @@
 [alias]
 bench-sherlock = "test --features bench --release -- bench --nocapture"
-
-[target.x86_64-unknown-linux-gnu]
-linker = "clang"
-rustflags = ["-C", "link-arg=-fuse-ld=mold"]
-
-[build]
-rustflags = ["-C", "link-arg=-fuse-ld=mold"]
