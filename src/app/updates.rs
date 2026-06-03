@@ -82,8 +82,7 @@ pub(super) async fn run_event_loop(
                         if let Some(stream) = tokio_stream {
                             // Process all messages until the client disconnects
                             let _ = process_connection(stream, |msg| {
-                                let mut q = slot.lock().unwrap();
-                                q.push_back((msg, writer.clone()));
+                                slot.lock().unwrap().push_back((msg, writer.clone()));
                                 notify.notify_one();
                             })
                             .await;

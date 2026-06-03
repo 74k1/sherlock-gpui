@@ -284,6 +284,9 @@ pub struct RawLauncher {
     pub r#type: LauncherVariant,
     pub priority: u16,
 
+    #[serde(default)]
+    pub limit: Option<u16>,
+
     #[serde(default = "default_true")]
     #[serde(skip_serializing_if = "is_true")]
     pub exit: bool,

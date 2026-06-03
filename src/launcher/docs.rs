@@ -47,6 +47,13 @@ pub const BASE_FIELDS: &[FieldDoc] = &[
         description: "Display order weight. Lower values appear first. `0` only appears in alias mode.",
     },
     FieldDoc {
+        name: "limit",
+        ty: "u16",
+        required: false,
+        default: None,
+        description: "The number of items to display per launcher. Useful to limit the number of search results to the best `n` items.",
+    },
+    FieldDoc {
         name: "home",
         ty: "HomeType",
         required: false,

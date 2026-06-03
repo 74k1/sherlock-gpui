@@ -5,6 +5,7 @@ use gpui::{
     point, px,
 };
 use std::{
+    collections::HashMap,
     os::unix::net::UnixStream,
     rc::Rc,
     sync::{
@@ -172,6 +173,7 @@ fn spawn_launcher(
                 variable_input: Vec::new(),
                 active_bar: 0,
                 navigation,
+                limit_cache: Arc::new(HashMap::new()),
                 config_initialized: ConfigGuard::is_initialized(),
                 response_socket,
             }

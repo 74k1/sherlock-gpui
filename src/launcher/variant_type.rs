@@ -57,7 +57,7 @@ macro_rules! create_variants {
             Empty,
         }
 
-        #[derive(Deserialize, Debug, Serialize, Clone, Copy, Default, Display, PartialEq, Eq)]
+        #[derive(Deserialize, Debug, Serialize, Clone, Copy, Default, Display, PartialEq, Eq, Hash)]
         #[serde(rename_all = "snake_case")]
         #[strum(serialize_all = "snake_case")]
         pub enum LauncherVariant {

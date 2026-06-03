@@ -1,5 +1,5 @@
 use crate::app::{RenderableChildEntity, RenderableChildWeak};
-use crate::launcher::{Launcher, LauncherValues};
+use crate::launcher::{Launcher, LauncherId, LauncherValues};
 use crate::tokio_utils::SizedMessageObj;
 use crate::ui::choice::Choice;
 use crate::ui::traits::RenderableChildDelegate;
@@ -16,6 +16,7 @@ use crate::utils::sized_message_sync::SizedMessage;
 use gpui::WeakEntity;
 use gpui::{AnyElement, AsyncApp, IntoElement};
 use gpui::{App, Context, Entity, FocusHandle, Focusable, SharedString, Subscription};
+use std::collections::HashMap;
 use std::os::unix::net::UnixStream;
 use std::sync::Arc;
 
@@ -97,6 +98,7 @@ pub struct LauncherView {
 
     // Model
     pub navigation: NavigationStack,
+    pub limit_cache: Arc<HashMap<LauncherId, u16>>,
 
     // State
     pub config_initialized: bool,
@@ -277,6 +279,9 @@ impl LauncherView {
                 });
             }
             ModelKind::Standard { data } => {
+                // reset cache
+                Arc::make_mut(&mut self.limit_cache).clear();
+
                 // drop active tasks
                 self.navigation.with_model_mut(cx, |mdl, _| {
                     if let Model::Standard {
@@ -288,17 +293,26 @@ impl LauncherView {
                     }
                 });
 
+                // filter result struct
+                struct FilterResult {
+                    index: usize,
+                    prio: SortKey,
+                    limiter: Option<(LauncherId, u16)>,
+                }
+
                 let mode = self.navigation.current().mode.clone();
                 let data_arc = data.read(cx).clone();
+                let mut limit_cache = self.limit_cache.clone();
                 let render_task = Some(cx.spawn(
                     move |this: WeakEntity<LauncherView>, cx: &mut AsyncApp| {
                         let mut cx = cx.clone();
                         async move {
                             let mode = mode.as_str();
                             let is_home = query.is_empty() && mode == "all";
+                            let counter_cache = Arc::make_mut(&mut limit_cache);
 
                             // collects Vec<(index, priority)>
-                            let mut results: Vec<(usize, SortKey)> = (0..data_arc.len())
+                            let mut results: Vec<FilterResult> = (0..data_arc.len())
                                 .map(|i| (i, &data_arc[i]))
                                 .filter(|(_, data)| {
                                     let home = data.home();
@@ -339,9 +353,12 @@ impl LauncherView {
                                     // Check if query matches
                                     data.search().fuzzy_match(&query)
                                 })
-                                .map(|(i, data)| {
-                                    let prio = data.priority().sort_key(&query, data.search());
-                                    (i, prio)
+                                .map(|(index, data)| FilterResult {
+                                    index,
+                                    prio: data.priority().sort_key(&query, data.search()),
+                                    limiter: data.with_launcher(|l| {
+                                        l.limit.map(|limit| (LauncherId::from(l.as_ref()), limit))
+                                    }),
                                 })
                                 .collect();
 
@@ -349,12 +366,20 @@ impl LauncherView {
                             drop(data_arc);
 
                             // sort based on priority
-                            results.sort_unstable_by_key(|a| a.1);
+                            results.sort_unstable_by_key(|a| a.prio);
 
                             // strip the priority from results
                             let results_arc: Arc<[usize]> = results
                                 .into_iter()
-                                .map(|(i, _)| i)
+                                .filter_map(|r| {
+                                    if let Some((id, limit)) = r.limiter {
+                                        let count = counter_cache.entry(id).or_insert(0);
+                                        *count += 1;
+                                        (*count <= limit).then_some(r.index)
+                                    } else {
+                                        Some(r.index)
+                                    }
+                                })
                                 .collect::<Vec<_>>()
                                 .into();
 

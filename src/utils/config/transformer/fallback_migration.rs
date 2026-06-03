@@ -236,6 +236,7 @@ impl LegacyRawLauncher {
             next_content: self.next_content,
             r#type: new_type,
             priority: self.priority as u16,
+            limit: None,
             exit: self.exit,
             shortcut: self.shortcut,
             spawn_focus: self.spawn_focus,

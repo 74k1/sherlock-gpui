@@ -41,7 +41,11 @@ use crate::{
     },
 };
 use gpui::{App, SharedString};
-use std::{fmt::Display, sync::Arc};
+use std::{
+    fmt::Display,
+    hash::{DefaultHasher, Hash, Hasher},
+    sync::Arc,
+};
 
 pub trait LauncherProvider {
     fn parse(raw: &RawLauncher) -> LauncherType;
@@ -91,6 +95,9 @@ pub struct Launcher {
 
     /// Sorting weight for display order. Lower values appear first, 0 appears only in alias mode
     pub priority: u16,
+
+    /// The maximum number of items to show for this launcher
+    pub limit: Option<u16>,
 
     /// Determines when to show the widgets
     pub home: HomeType,
@@ -152,6 +159,7 @@ impl Launcher {
             on_return: raw.on_return,
             exit: raw.exit,
             priority: raw.priority,
+            limit: raw.limit,
             home: raw.home,
             launcher_type,
             shortcut: raw.shortcut,
@@ -180,6 +188,25 @@ impl Display for Launcher {
         }
 
         f.write_str(&format!("{:?}", self.launcher_type))
+    }
+}
+
+impl Hash for Launcher {
+    fn hash<H: std::hash::Hasher>(&self, h: &mut H) {
+        self.name.hash(h);
+        self.alias.hash(h);
+        LauncherVariant::from(&self.launcher_type).hash(h);
+        self.priority.hash(h);
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct LauncherId(u64);
+impl From<&Launcher> for LauncherId {
+    fn from(value: &Launcher) -> Self {
+        let mut hasher = DefaultHasher::new();
+        value.hash(&mut hasher);
+        Self(hasher.finish())
     }
 }
 
