@@ -68,12 +68,12 @@ impl ArgParser {
                 .find(|s| arg == s.long || s.short.is_some_and(|sh| arg == sh))
             else {
                 eprintln!("{}", ParseError::UnknownFlag(arg));
-                return None
+                return None;
             };
 
             if matches!(spec.section, FlagSection::None) && !self.dev_mode {
                 eprintln!("{}", ParseError::UnknownFlag(arg));
-                return None
+                return None;
             }
 
             if let Err(e) = (spec.parse)(args, &mut iter, &mut flags, &mut startup) {
