@@ -9,7 +9,7 @@ use crate::{
         UIFunction,
         launcher::{
             Execute, NextVar, OpenContext, PrevVar, Quit, SelectionDown, SelectionLeft,
-            SelectionRight, SelectionUp,
+            SelectionRight, SelectionUp, actions::ExecuteInplace,
         },
         search_bar::actions::{
             Backspace, Copy, Cut, Delete, DeleteAll, End, Home, Paste, SelectAll, ShortcutAction,
@@ -51,6 +51,10 @@ pub(super) fn register_bindings(cx: &mut App) {
         UIFunction::Complete.get_binding("variable.tab").unwrap(),
     );
     add("enter", KeyBinding::new("enter", Execute, None));
+    add(
+        "ctrl-enter",
+        KeyBinding::new("ctrl-enter", ExecuteInplace, None),
+    );
     add("tab", KeyBinding::new("tab", NextVar, None));
     add("shift-tab", KeyBinding::new("shift-tab", PrevVar, None));
     add("ctrl-l", KeyBinding::new("ctrl-l", OpenContext, None));

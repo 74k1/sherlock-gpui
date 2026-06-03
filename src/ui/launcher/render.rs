@@ -48,6 +48,7 @@ impl Render for LauncherView {
             .on_action(cx.listener(Self::next_var))
             .on_action(cx.listener(Self::prev_var))
             .on_action(cx.listener(Self::execute_listener))
+            .on_action(cx.listener(Self::execute_inplace_listener))
             .on_action(cx.listener(Self::shortcut_listener))
             .on_action(cx.listener(Self::quit))
             .on_action(cx.listener(Self::open_context))

@@ -39,6 +39,7 @@ actions!(
         NextVar,
         PrevVar,
         Execute,
+        ExecuteInplace,
         OpenContext,
         Backspace,
     ]
@@ -75,11 +76,13 @@ impl LauncherView {
             self.focus_nth(n, cx);
         }
     }
+
     #[inline(always)]
     fn valid_selection_idx(&self, n: usize, cx: &mut Context<Self>) -> bool {
         let list_len = self.navigation.with_model(cx, |mdl| mdl.len());
         n < list_len && list_len != 0
     }
+
     pub fn focus_nth(&mut self, n: usize, cx: &mut Context<Self>) {
         // early return on invalid index
         if !self.valid_selection_idx(n, cx) {
@@ -103,6 +106,7 @@ impl LauncherView {
 
         cx.notify()
     }
+
     fn move_selection(
         &mut self,
         direction: MoveDirection,
@@ -165,6 +169,7 @@ impl LauncherView {
             }
         }
     }
+
     pub(super) fn selection_down(
         &mut self,
         _: &SelectionDown,
@@ -262,10 +267,73 @@ impl LauncherView {
             cx.notify();
         }
     }
+
+    fn execute_current(&mut self, exit_override: bool, win: &mut Window, cx: &mut Context<Self>) {
+        if let Some(idx) = self.context_idx {
+            if let Some(action) = self.context_actions.get(idx) {
+                if let Some(what) = self
+                    .navigation
+                    .with_selected_item(cx, |item, cx| item.build_action_exec(action.clone(), cx))
+                {
+                    match self.execute_helper(what, "", exit_override, cx) {
+                        Ok(exit) if exit => self.close_window(win, cx),
+                        Err(e) => self.navigation.push_message(e, cx),
+                        _ => {}
+                    }
+                }
+
+                // update context menu actions in case of no-exit action and changed actions
+                if self
+                    .navigation
+                    .with_selected_item(cx, |item, cx| item.has_actions(cx))
+                    .unwrap_or_default()
+                {
+                    self.context_actions = self.navigation.current_actions(cx).unwrap_or_default();
+                    self.context_idx = self
+                        .context_idx
+                        .map(|idx| idx.min(self.context_actions.len().saturating_sub(1)));
+                } else {
+                    self.context_actions = Default::default();
+                    self.close_context(cx);
+                }
+                cx.notify();
+            }
+        } else {
+            let keyword = self.text_input.read(cx).content.clone();
+
+            if let Some(what) = self
+                .navigation
+                .with_selected_item(cx, ExecMode::from_child)
+                .and_then(|m| m)
+            {
+                match self.execute_helper(what, keyword.as_ref(), exit_override, cx) {
+                    Ok(exit) if exit => {
+                        self.close_window(win, cx);
+                    }
+                    Err(e) => {
+                        self.navigation.push_message(e, cx);
+                    }
+                    _ => {}
+                }
+            }
+
+            let has_actions = self
+                .navigation
+                .with_selected_item(cx, |item, cx| item.has_actions(cx))
+                .unwrap_or_default();
+            if has_actions {
+                self.has_actions = true;
+                self.context_actions = self.navigation.current_actions(cx).unwrap_or_default();
+            }
+            self.force_filter_and_sort(cx);
+        }
+    }
+
     pub(super) fn execute_helper(
         &mut self,
         what: ExecMode,
         keyword: &str,
+        exit_override: bool,
         cx: &mut Context<Self>,
     ) -> Result<bool, SherlockMessage> {
         let variables = &self.get_variables(cx);
@@ -289,7 +357,7 @@ impl LauncherView {
                         }
                         ExecEffect::None => {}
                     }
-                    return Ok(exit);
+                    return Ok(exit && exit_override);
                 };
             }
             ExecMode::App { exec, terminal } => {
@@ -312,7 +380,7 @@ impl LauncherView {
                     this.reset();
                 });
                 self.filter_and_sort(cx);
-                return Ok(false);
+                return Ok(false && exit_override);
             }
             ExecMode::Command { exec } => {
                 spawn_detached(&exec, keyword, variables)?;
@@ -333,11 +401,11 @@ impl LauncherView {
                 self.text_input.update(cx, |this, _| this.reset());
                 self.navigation.push(mode.create_view(launcher, cx));
                 self.filter_and_sort(cx);
-                return Ok(false);
+                return Ok(false && exit_override);
             }
             ExecMode::DynamicContextMenuFunc { action } => {
                 let ContextMenuAction::Fn(opts) = action.as_ref() else {
-                    return Ok(false);
+                    return Ok(false && exit_override);
                 };
 
                 if let Some(func) = opts.func.as_ref() {
@@ -345,12 +413,12 @@ impl LauncherView {
                 }
 
                 cx.notify();
-                return Ok(opts.exit);
+                return Ok(opts.exit && exit_override);
             }
             ExecMode::SwitchView { idx } if self.navigation.set_active_idx(idx) => {
                 self.text_input.update(cx, |this, _| this.reset());
                 self.filter_and_sort(cx);
-                return Ok(false);
+                return Ok(false && exit_override);
             }
             ExecMode::Web {
                 engine,
@@ -366,13 +434,14 @@ impl LauncherView {
                 websearch(engine, query, browser.as_deref(), variables)?;
             }
             ExecMode::None => {
-                return Ok(false);
+                return Ok(false && exit_override);
             }
             _ => {}
         };
 
-        Ok(true)
+        Ok(true && exit_override)
     }
+
     pub(super) fn shortcut_listener(
         &mut self,
         action: &ShortcutAction,
@@ -386,7 +455,7 @@ impl LauncherView {
                 })
         {
             let keyword = self.text_input.read(cx).content.clone();
-            match self.execute_helper(what, keyword.as_ref(), cx) {
+            match self.execute_helper(what, keyword.as_ref(), true, cx) {
                 Ok(exit) if exit => {
                     self.close_window(win, cx);
                 }
@@ -397,6 +466,7 @@ impl LauncherView {
             }
         }
     }
+
     pub(super) fn inner_bind_listener(
         &mut self,
         ev: &KeyUpEvent,
@@ -419,7 +489,7 @@ impl LauncherView {
             let query = self.text_input.read(cx).content.clone();
 
             if let Some(what) = what {
-                match self.execute_helper(what, query.as_str(), cx) {
+                match self.execute_helper(what, query.as_str(), true, cx) {
                     Ok(exit) if exit => self.close_window(win, cx),
                     Err(e) => self.navigation.push_message(e, cx),
                     _ => {}
@@ -428,6 +498,7 @@ impl LauncherView {
             cx.notify();
         }
     }
+
     fn get_variables(&self, cx: &mut App) -> SmallVec<[(SharedString, SharedString); 4]> {
         let mut variables: SmallVec<[(SharedString, SharedString); 4]> = SmallVec::new();
         for input in &self.variable_input {
@@ -463,71 +534,27 @@ impl LauncherView {
         }
         variables
     }
+
+    #[inline(always)]
+    pub(super) fn execute_inplace_listener(
+        &mut self,
+        _: &ExecuteInplace,
+        win: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.execute_current(false, win, cx);
+    }
+
+    #[inline(always)]
     pub(super) fn execute_listener(
         &mut self,
         _: &Execute,
         win: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        if let Some(idx) = self.context_idx {
-            if let Some(action) = self.context_actions.get(idx) {
-                if let Some(what) = self
-                    .navigation
-                    .with_selected_item(cx, |item, cx| item.build_action_exec(action.clone(), cx))
-                {
-                    match self.execute_helper(what, "", cx) {
-                        Ok(exit) if exit => self.close_window(win, cx),
-                        Err(e) => self.navigation.push_message(e, cx),
-                        _ => {}
-                    }
-                }
-
-                // update context menu actions in case of no-exit action and changed actions
-                if self
-                    .navigation
-                    .with_selected_item(cx, |item, cx| item.has_actions(cx))
-                    .unwrap_or_default()
-                {
-                    self.context_actions = self.navigation.current_actions(cx).unwrap_or_default();
-                    self.context_idx = self
-                        .context_idx
-                        .map(|idx| idx.min(self.context_actions.len().saturating_sub(1)));
-                } else {
-                    self.context_actions = Default::default();
-                    self.close_context(cx);
-                }
-                cx.notify();
-            }
-        } else {
-            let keyword = self.text_input.read(cx).content.clone();
-
-            if let Some(what) = self
-                .navigation
-                .with_selected_item(cx, ExecMode::from_child)
-                .and_then(|m| m)
-            {
-                match self.execute_helper(what, keyword.as_ref(), cx) {
-                    Ok(exit) if exit => {
-                        self.close_window(win, cx);
-                    }
-                    Err(e) => {
-                        self.navigation.push_message(e, cx);
-                    }
-                    _ => {}
-                }
-            }
-
-            let has_actions = self
-                .navigation
-                .with_selected_item(cx, |item, cx| item.has_actions(cx))
-                .unwrap_or_default();
-            if has_actions {
-                self.has_actions = true;
-                self.context_actions = self.navigation.current_actions(cx).unwrap_or_default();
-            }
-            self.force_filter_and_sort(cx);
-        }
+        self.execute_current(true, win, cx);
     }
+
     pub(super) fn open_context(
         &mut self,
         _: &OpenContext,
@@ -568,11 +595,13 @@ impl LauncherView {
 
         cx.notify();
     }
+
     pub(super) fn close_context(&mut self, cx: &mut Context<Self>) {
         if self.context_idx.take().is_some() {
             cx.notify();
         }
     }
+
     pub(super) fn quit(&mut self, _: &Quit, win: &mut Window, cx: &mut Context<Self>) {
         if self.context_idx.is_some() {
             self.close_context(cx);
@@ -580,6 +609,7 @@ impl LauncherView {
             self.close_window(win, cx);
         }
     }
+
     pub(super) fn close_window(&mut self, win: &mut Window, cx: &mut Context<Self>) {
         // Cleanup
         self.variable_input.clear();
@@ -592,6 +622,7 @@ impl LauncherView {
         reset_generation();
         cx.notify();
     }
+
     pub(super) fn update_vars(&mut self, cx: &mut Context<Self>) {
         let Some(idx) = self.navigation.selected_item_index(cx) else {
             self.variable_input.clear();
@@ -635,6 +666,7 @@ impl LauncherView {
             self.variable_input.clear();
         }
     }
+
     pub(crate) fn update_async(&mut self, cx: &mut Context<Self>) {
         let data = self.navigation.with_model(cx, |mdl| mdl.data());
         let data_snapshot_rc = data.read(cx).clone();
@@ -643,6 +675,7 @@ impl LauncherView {
             .filter(|item| item.is_async())
             .for_each(|item| item.update_async(cx));
     }
+
     pub(crate) fn update_sync(&mut self, query: SharedString, cx: &mut Context<Self>) {
         let data_entity = self.navigation.with_model(cx, |mdl| mdl.data().clone());
 
