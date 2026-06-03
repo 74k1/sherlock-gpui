@@ -13,6 +13,7 @@ tasks=(
     "Updated CHANGELOG.md header"
     "Updated README.md version"
     "Merged into 'main'"
+    "Pushed into 'main'"
 )
 
 status=()
