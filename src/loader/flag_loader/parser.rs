@@ -51,13 +51,13 @@ pub struct ArgParser {
 }
 
 impl ArgParser {
-    pub fn from_env() -> ParsedArgs {
+    pub fn from_env() -> Option<ParsedArgs> {
         let args: Vec<String> = std::env::args().skip(1).collect();
         let dev_mode = std::env::var("SHERLOCK_DEV").is_ok();
         Self { dev_mode }.parse(&args)
     }
 
-    fn parse(&self, args: &[String]) -> ParsedArgs {
+    fn parse(&self, args: &[String]) -> Option<ParsedArgs> {
         let mut startup: Option<StartupAction> = None;
         let mut flags = SherlockFlags::default();
         let mut iter: Peekable<Iter<'_, String>> = args.iter().peekable();
@@ -68,11 +68,12 @@ impl ArgParser {
                 .find(|s| arg == s.long || s.short.is_some_and(|sh| arg == sh))
             else {
                 eprintln!("{}", ParseError::UnknownFlag(arg));
-                continue;
+                return None
             };
 
             if matches!(spec.section, FlagSection::None) && !self.dev_mode {
-                continue;
+                eprintln!("{}", ParseError::UnknownFlag(arg));
+                return None
             }
 
             if let Err(e) = (spec.parse)(args, &mut iter, &mut flags, &mut startup) {
@@ -80,6 +81,6 @@ impl ArgParser {
             }
         }
 
-        ParsedArgs { flags, startup }
+        Some(ParsedArgs { flags, startup })
     }
 }

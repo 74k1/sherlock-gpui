@@ -23,7 +23,7 @@ pub enum DebugAction {
 
 impl Loader {
     /// This loads the application flags.
-    pub fn load_flags() -> ParsedArgs {
+    pub fn load_flags() -> Option<ParsedArgs> {
         ArgParser::from_env()
     }
 }

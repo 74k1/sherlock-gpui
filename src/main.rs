@@ -39,7 +39,9 @@ async fn main() {
     let socket_path = "/tmp/sherlock.sock";
     if let Ok(mut stream) = UnixStream::connect(socket_path).await {
         // update flags
-        let mut flags = Loader::load_flags();
+        let Some(mut flags) = Loader::load_flags() else {
+            return;
+        };
         if flags.execute_startup() {
             return;
         }
