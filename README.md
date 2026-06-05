@@ -75,8 +75,6 @@ Make sure you have the following dependencies installed:
    ```bash
    sudo dpkg -i target/debian/sherlock-launcher_v0.2.3_amd64.deb
    ```
-
-   > [!NOTE]
    > You can also use tab-completion to auto complete the file name.
 
 </details>

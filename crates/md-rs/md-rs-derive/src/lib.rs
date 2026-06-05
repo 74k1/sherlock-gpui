@@ -18,30 +18,45 @@ pub fn derive_text_component(input: TokenStream) -> TokenStream {
 pub fn derive_span_node(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
-
     let prefix = input
         .attrs
         .iter()
         .find(|a| a.path().is_ident("span_node"))
-        .and_then(|a| a.parse_args::<syn::LitStr>().ok())
-        .map(|l| l.value())
+        .and_then(|a| {
+            a.parse_args::<syn::MetaNameValue>().ok().and_then(|mnv| {
+                if mnv.path.is_ident("prefix") {
+                    if let syn::Expr::Lit(syn::ExprLit {
+                        lit: syn::Lit::Str(s),
+                        ..
+                    }) = mnv.value
+                    {
+                        return Some(s.value());
+                    }
+                }
+                None
+            })
+        })
         .unwrap_or_default();
 
-    quote! {
-        impl #name {
-            pub fn new() -> Self {
-                Self { spans: Vec::new() }
-            }
-            pub fn span(mut self, span: Span) -> Self {
-                self.spans.push(span);
-                self
-            }
-        }
+    let write_prefix = if prefix.is_empty() {
+        quote! {}
+    } else {
+        quote! { write!(out, #prefix)?; }
+    };
 
-        impl Component for #name {
-            fn render_inline(&self, out: &mut dyn std::fmt::Write) -> std::fmt::Result {
-                write!(out, #prefix)?;
-                for span in &self.spans {
+    quote! {
+        impl ::md_rs::components::Component for #name {
+            fn render_inline(&self, out: &mut dyn ::std::fmt::Write) -> ::std::fmt::Result {
+                #write_prefix
+                for (i, span) in self.spans.iter().enumerate() {
+                    if i > 0 {
+                        let prev = &self.spans[i - 1];
+                        let needs_space = span.needs_space_before()
+                            && !matches!(prev, ::md_rs::components::span::Span::LineBreak);
+                        if needs_space {
+                            write!(out, " ")?;
+                        }
+                    }
                     span.render(out)?;
                 }
                 Ok(())

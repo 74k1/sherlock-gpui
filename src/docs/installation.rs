@@ -7,9 +7,8 @@ use md_rs::{
         details::{Details, details},
         heading::{h2, h3, h4},
         list::{ListItem, list, listitem},
-        span_nodes::paragraph,
+        span_nodes::{blockquote, paragraph},
     },
-    github::components::alert::alert,
     md,
 };
 
@@ -326,7 +325,10 @@ impl Documentation for Debian {
                 env!("CARGO_PKG_VERSION"),
                 "_amd64.deb"
             )))
-            .child(alert().text("You can also use tab-completion to auto complete the file name."));
+            .child(
+                blockquote()
+                    .text("You can also use tab-completion to auto complete the file name."),
+            );
 
         md().child(h3().with_text_underline("Build Debian Package"))
             .child(
