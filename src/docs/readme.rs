@@ -1,7 +1,13 @@
-use indoc::indoc;
 use md_rs::{
-    components::{container::Container, heading::h1, raw::raw, span_nodes::paragraph},
-    github::components::alert::{alert, warning},
+    components::{
+        ParentComponentExt, container::Container, heading::h1, span_nodes::paragraph,
+    },
+    github::components::{
+        alert::{alert, warning},
+        badge::badge,
+        html_block::htmlblock,
+        image::{image, source_dark, source_light},
+    },
     md,
 };
 
@@ -11,27 +17,38 @@ pub(super) struct Readme;
 impl Documentation for Readme {
     type Docs = Container;
     fn docs() -> Self::Docs {
-        md()
-            .child(raw(indoc! {r#"
-                <div align="center" style="text-align:center; border-radius:10px;">
-                      <picture>
-                        <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
-                        <source media="(prefers-color-scheme: light)" srcset="assets/logo-light.svg">
-                        <img alt="sherlock logo" height="250" src="assets/logo-light.svg">
-                      </picture>
-
-                      [![Discord](https://img.shields.io/discord/1357746313646833945.svg?color=7289da&&logo=discord)](https://discord.gg/AQ44g4Yp9q)
-                      <picture>
-                        <img alt="application screenshot" width="100%" style="border-radius: 10px;" src="assets/mockup.png">
-                      </picture>
-                </div>
-
-            "#}))
-            .child(Description::docs())
-            .child(h1().text("Getting Started"))
-            .child(Installation::docs())
-            .child(Contributing::docs())
-            .child(License::docs())
+        md().child(
+            htmlblock()
+                .orientation("center")
+                .child(
+                    image()
+                        .source(source_dark("assets/logo-dark.svg"))
+                        .source(source_light("assets/logo-light.svg"))
+                        .src("assets/logo-light.svg")
+                        .alt("sherlock logo")
+                        .height("250"),
+                )
+                .child(
+                    badge()
+                        .alt("Discord")
+                        .image_url(
+                            "https://img.shields.io/discord/\
+                            1357746313646833945.svg?color=7289da&&logo=discord",
+                        )
+                        .link("https://discord.gg/AQ44g4Yp9q"),
+                )
+                .child(
+                    image()
+                        .src("assets/mockup.png")
+                        .width("100%")
+                        .alt("application screenshot"),
+                ),
+        )
+        .child(Description::docs())
+        .child(h1().text("Getting Started"))
+        .child(Installation::docs())
+        .child(Contributing::docs())
+        .child(License::docs())
     }
 }
 
@@ -61,7 +78,7 @@ impl Documentation for Description {
                 .text("."),
         )
         .child(
-            alert().child(
+            alert().text(
                 paragraph()
                     .text("Sherlock has been rewritten entirely, to be compatible with")
                     .code("GPUI")
@@ -74,7 +91,7 @@ impl Documentation for Description {
                     ),
             ),
         )
-        .child(warning().child(
+        .child(warning().text(
             "Disclaimer: Due to GPUI's development primarily \
             focusing on Zed, some features may not be complete yet. \
             In Sherlock, this is barely noticeable though.",

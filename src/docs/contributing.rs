@@ -1,6 +1,11 @@
 use md_rs::{
     components::{
-        code_block::codeblock, container::{Container, container}, heading::h1, list::{ListItem, list}, span_nodes::paragraph
+        ParentComponentExt,
+        code_block::codeblock,
+        container::{Container, container},
+        heading::h1,
+        list::{ListItem, list},
+        span_nodes::paragraph,
     },
     md,
 };
@@ -11,8 +16,7 @@ pub(super) struct Contributing;
 impl Documentation for Contributing {
     type Docs = Container;
     fn docs() -> Self::Docs {
-        md()
-            .child(h1().text("Contributing"))
+        md().child(h1().text("Contributing"))
             .child("Contributions are welcome! Please follow these guidelines:")
             .child(
                 container().child(paragraph().bold("Prerequisites")).child(
@@ -45,7 +49,7 @@ impl Documentation for Contributing {
                     .child(paragraph().bold("Before opening a PR"))
                     .child(
                         codeblock()
-                            .language("bash")
+                            .lang("bash")
                             .line("cargo fmt")
                             .line("cargo clippy -- -D warnings")
                             .line("cargo test"),
@@ -62,7 +66,7 @@ impl Documentation for Contributing {
                     )
                     .child(
                         codeblock()
-                            .language("bash")
+                            .lang("bash")
                             .line("git tag v0.x.0")
                             .line("git push origin v0.x.0"),
                     ),

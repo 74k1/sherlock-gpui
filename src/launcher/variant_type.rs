@@ -1,5 +1,5 @@
 use gpui::{App, SharedString};
-use md_rs::components::container::Container;
+use md_rs::components::{ParentComponentExt, container::Container};
 use std::mem;
 use std::sync::Arc;
 

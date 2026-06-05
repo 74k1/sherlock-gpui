@@ -1,3 +1,5 @@
+extern crate self as md_rs;
+
 use crate::components::container::Container;
 
 pub mod components;

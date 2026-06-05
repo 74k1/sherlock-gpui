@@ -1,5 +1,6 @@
 use md_rs::{
     components::{
+        ParentComponentExt,
         container::Container,
         heading::h2,
         list::{ListItem, list},

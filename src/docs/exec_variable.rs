@@ -1,6 +1,7 @@
 use indoc::indoc;
 use md_rs::{
     components::{
+        ParentComponentExt,
         code_block::{CodeBlock, codeblock},
         container::Container,
         details::details,
@@ -113,7 +114,7 @@ impl Documentation for ExecVariable {
                     .child(h2().text(doc.title))
                     .child(paragraph().code(doc.name))
                     .child((doc.description)())
-                    .child(codeblock().language("json").content(doc.example))
+                    .child(codeblock().lang("json").content(doc.example))
             }))
     }
 }
@@ -145,7 +146,7 @@ impl Documentation for ReplacementVariables {
                         or system-detected default terminal emulator.",
                     )
                     .child(
-                        tip().child(
+                        tip().text(
                             paragraph()
                                 .text(
                                     "Most terminal emulators close instant \
@@ -157,7 +158,7 @@ impl Documentation for ReplacementVariables {
                                 .code(r#"{terminal} sh -c "<command>; exec $SHELL""#),
                         ),
                     ),
-                syntax_example: codeblock().language("json").line(
+                syntax_example: codeblock().lang("json").line(
                     r#"{terminal} sh -c \"ssh {variable:user}@{variable:host}; exec $SHELL\""#,
                 ),
             },
@@ -173,7 +174,7 @@ impl Documentation for ReplacementVariables {
                         .code("variables")
                         .text("array"),
                 ),
-                syntax_example: codeblock().language("json").content(indoc! {r#"
+                syntax_example: codeblock().lang("json").content(indoc! {r#"
                         {
                             "variables": [
                                 { "string_input": "query" }
@@ -213,7 +214,7 @@ impl Documentation for ReplacementVariables {
                         "This is highly effective for injecting optional CLI flags \
                         or toggling between a website's landing pgae and its search index.",
                     ),
-                syntax_example: codeblock().language("json").content(indoc! {r#"
+                syntax_example: codeblock().lang("json").content(indoc! {r#"
                         {
                             "variables": [
                                 { "string_input": "query" }
@@ -223,7 +224,7 @@ impl Documentation for ReplacementVariables {
                     "#}),
             },
         ];
-        let example = codeblock().language("json").content(indoc! {r#"
+        let example = codeblock().lang("json").content(indoc! {r#"
         {
             "name": "System & Network Utils",
             "type": "command",

@@ -1,29 +1,12 @@
 use std::fmt::{Result, Write};
 
-use md_rs_derive::ComponentConstructor;
+use md_rs_derive::{ComponentBuilder, ComponentConstructor, ParentComponent};
 
 use crate::components::{Component, IntoComponent, span_nodes::Paragraph};
 
-#[derive(Default, ComponentConstructor)]
+#[derive(Default, ComponentConstructor, ParentComponent)]
 pub struct ListItem {
     children: Vec<Box<dyn Component>>,
-}
-impl ListItem {
-    pub fn child(mut self, child: impl IntoComponent + 'static) -> Self {
-        self.children.push(Box::new(child.into_component()));
-        self
-    }
-    pub fn children(
-        mut self,
-        children: impl IntoIterator<Item = impl IntoComponent + 'static>,
-    ) -> Self {
-        self.children.extend(
-            children
-                .into_iter()
-                .map(|c| Box::new(c.into_component()) as Box<dyn Component>),
-        );
-        self
-    }
 }
 
 impl<C: IntoComponent + 'static> From<C> for ListItem {
@@ -34,23 +17,14 @@ impl<C: IntoComponent + 'static> From<C> for ListItem {
     }
 }
 
-#[derive(Default, ComponentConstructor)]
+#[derive(Default, ComponentConstructor, ComponentBuilder)]
 pub struct List {
     title: Option<Paragraph>,
-    items: Vec<ListItem>,
     style: ListStyle,
+    #[md_rs(skip_builder)]
+    items: Vec<ListItem>,
 }
 impl List {
-    pub fn style(mut self, style: impl Into<ListStyle>) -> Self {
-        self.style = style.into();
-        self
-    }
-
-    pub fn title(mut self, title: impl Into<Paragraph>) -> Self {
-        self.title = Some(title.into());
-        self
-    }
-
     pub fn item(mut self, item: ListItem) -> Self {
         self.items.push(item);
         self

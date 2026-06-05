@@ -1,41 +1,20 @@
 use std::fmt::{Result, Write};
 
-use crate::components::{IntoComponent, span_nodes::Paragraph};
+use crate::components::span_nodes::Paragraph;
 
 use super::Component;
-use md_rs_derive::ComponentConstructor;
+use md_rs_derive::{ComponentBuilder, ComponentConstructor, ParentComponent};
 
-#[derive(Default, ComponentConstructor)]
+#[derive(Default, ComponentConstructor, ParentComponent, ComponentBuilder)]
 pub struct Details {
     summary: Paragraph,
+    #[md_rs(skip_builder)]
     children: Vec<Box<dyn Component>>,
 }
 
 impl Details {
-    pub fn summary(mut self, summary: impl Into<Paragraph>) -> Self {
-        self.summary = summary.into();
-        self
-    }
-
-    pub fn child(mut self, child: impl IntoComponent + 'static) -> Self {
-        self.children.push(Box::new(child.into_component()));
-        self
-    }
-
     pub fn when(self, cond: bool, f: impl FnOnce(Self) -> Self) -> Self {
         if cond { f(self) } else { self }
-    }
-
-    pub fn children(
-        mut self,
-        children: impl IntoIterator<Item = impl IntoComponent + 'static>,
-    ) -> Self {
-        self.children.extend(
-            children
-                .into_iter()
-                .map(|c| Box::new(c.into_component()) as Box<dyn Component>),
-        );
-        self
     }
 }
 

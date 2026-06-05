@@ -2,7 +2,7 @@ use indoc::indoc;
 use md_rs::{
     cached_component,
     components::{
-        Component,
+        Component, ParentComponentExt,
         code_block::codeblock,
         container::Container,
         details::details,
@@ -214,7 +214,7 @@ impl From<&LauncherDocEntry> for Container {
                 this.child(h3().text("Examples"))
                     .children(value.examples.iter().map(|ex| {
                         md().child(paragraph().italic(ex.description))
-                            .child(codeblock().language("json").content(ex.json.trim()))
+                            .child(codeblock().lang("json").content(ex.json.trim()))
                     }))
             })
             .child(hr())
@@ -305,7 +305,7 @@ pub fn capabilities_section() -> Raw {
                 )
                 .child(
                     codeblock()
-                        .language("json")
+                        .lang("json")
                         .content(r#"{ "capabilities": ["calc.math", "calc.units"] }"#),
                 )
                 .children(CAPABILITY_DOCS.iter().map(|cap| {

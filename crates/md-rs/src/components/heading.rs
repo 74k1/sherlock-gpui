@@ -3,23 +3,19 @@ use std::{
     fmt::{Result, Write},
 };
 
-use md_rs_derive::HeadingConstructors;
+use md_rs_derive::{ComponentBuilder, HeadingConstructors};
 
 use super::{Component, span::Span};
 
-#[derive(Default, HeadingConstructors)]
+#[derive(Default, HeadingConstructors, ComponentBuilder)]
 pub struct Heading {
     level: u8,
+    #[md_rs(skip_builder)]
     spans: Vec<Span>,
 }
 impl Heading {
     pub fn span(mut self, span: Span) -> Self {
         self.spans.push(span);
-        self
-    }
-
-    pub fn level(mut self, level: u8) -> Self {
-        self.level = level.clamp(1, 6);
         self
     }
 

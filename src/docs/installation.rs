@@ -1,6 +1,7 @@
 use indoc::indoc;
 use md_rs::{
     components::{
+        ParentComponentExt,
         code_block::codeblock,
         container::{Container, container},
         details::{Details, details},
@@ -86,7 +87,7 @@ impl Documentation for ArchLinux {
             )
             .child(
                 codeblock()
-                    .language("bash")
+                    .lang("bash")
                     .content("yay -S sherlock-launcher-bin"),
             )
             .child(
@@ -97,7 +98,7 @@ impl Documentation for ArchLinux {
             )
             .child(
                 codeblock()
-                    .language("bash")
+                    .lang("bash")
                     .content("yay -S sherlock-launcher-git"),
             )
     }
@@ -124,7 +125,7 @@ impl Documentation for Source {
                                 .child(paragraph().bold("Clone the repository").text(":"))
                                 .child(
                                     codeblock()
-                                        .language("bash")
+                                        .lang("bash")
                                         .line("git clone https://github.com/skxxtz/sherlock.git")
                                         .line("cd sherlock"),
                                 ),
@@ -134,7 +135,7 @@ impl Documentation for Source {
                                         .bold("Build the project using the following command")
                                         .text(":"),
                                 )
-                                .child(codeblock().language("bash").line("cargo build --release")),
+                                .child(codeblock().lang("bash").line("cargo build --release")),
                             listitem()
                                 .child(paragraph().bold("Install the binary").text(":"))
                                 .child(
@@ -142,7 +143,7 @@ impl Documentation for Source {
                                 )
                                 .child(
                                     codeblock()
-                                        .language("bash")
+                                        .lang("bash")
                                         .line("sudo cp target/release/sherlock /usr/local/bin/"),
                                 ),
                             listitem()
@@ -152,11 +153,7 @@ impl Documentation for Source {
                                         .text(":"),
                                 )
                                 .child("You can optionally remove the source code directory")
-                                .child(
-                                    codeblock()
-                                        .language("bash")
-                                        .line("rm -rf /path/to/sherlock"),
-                                ),
+                                .child(codeblock().lang("bash").line("rm -rf /path/to/sherlock")),
                         ]),
                     ),
             )
@@ -206,14 +203,14 @@ impl Documentation for NixOS {
                             .code("flake.nix")
                             .text("if you want to use the lastest upstream version of Sherlock."),
                     )
-                    .child(codeblock().language("nix").content(indoc! {r#"
+                    .child(codeblock().lang("nix").content(indoc! {r#"
                             sherlock = {
                                 url = "github:Skxxtz/sherlock";
                                 inputs.nixpkgs.follows = "nixpkgs";
                             };
                         "#}))
                     .child("Home-Manager config:")
-                    .child(codeblock().language("nix").content(indoc! {r#"
+                    .child(codeblock().lang("nix").content(indoc! {r#"
                         programs.sherlock = {
                             enable = true;
 
@@ -301,7 +298,7 @@ impl Documentation for Debian {
                     .code("cargo-deb")
                     .text("tool, which specifies packaging Rust projects as Debian packages:"),
             )
-            .child(codeblock().language("bash").line("cargo deb"));
+            .child(codeblock().lang("bash").line("cargo deb"));
 
         let build_step_2 = listitem()
             .child(paragraph().bold("Build the Debian package").text(":"))
@@ -313,7 +310,7 @@ impl Documentation for Debian {
                     .code(".deb")
                     .text("package:"),
             )
-            .child(codeblock().language("bash").line("cargo deb"));
+            .child(codeblock().lang("bash").line("cargo deb"));
 
         let build_step_3 = listitem()
             .child(
@@ -324,14 +321,12 @@ impl Documentation for Debian {
                     .text(":"),
             )
             .child("Once the package is built, you can install it using:")
-            .child(codeblock().language("bash").line(concat!(
+            .child(codeblock().lang("bash").line(concat!(
                 "sudo dpkg -i target/debian/sherlock-launcher_v",
                 env!("CARGO_PKG_VERSION"),
                 "_amd64.deb"
             )))
-            .child(
-                alert().child("You can also use tab-completion to auto complete the file name."),
-            );
+            .child(alert().text("You can also use tab-completion to auto complete the file name."));
 
         md().child(h3().with_text_underline("Build Debian Package"))
             .child(
@@ -483,6 +478,6 @@ impl Documentation for PostInstallation {
                     .text("subdirectories.")
                     .text("All you have to do is run the following command:"),
             )
-            .child(codeblock().language("bash").line("sherlock init"))
+            .child(codeblock().lang("bash").line("sherlock init"))
     }
 }

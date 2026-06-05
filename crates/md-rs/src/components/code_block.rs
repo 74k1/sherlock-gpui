@@ -3,11 +3,11 @@ use std::{
     fmt::{Result, Write},
 };
 
-use md_rs_derive::ComponentConstructor;
+use md_rs_derive::{ComponentBuilder, ComponentConstructor};
 
 use super::Component;
 
-#[derive(Default, ComponentConstructor)]
+#[derive(Default, ComponentConstructor, ComponentBuilder)]
 pub struct CodeBlock {
     pub lang: Option<Cow<'static, str>>,
     pub content: Cow<'static, str>,
@@ -19,14 +19,6 @@ impl CodeBlock {
             content.push('\n');
         }
         content.push_str(line.as_ref());
-        self
-    }
-    pub fn content(mut self, content: impl Into<Cow<'static, str>>) -> Self {
-        self.content = content.into();
-        self
-    }
-    pub fn language(mut self, lang: impl Into<Cow<'static, str>>) -> Self {
-        self.lang = Some(lang.into());
         self
     }
 }

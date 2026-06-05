@@ -1,12 +1,10 @@
 use std::fmt::{Result, Write};
 
-use md_rs_derive::ComponentConstructor;
-
-use crate::components::IntoComponent;
+use md_rs_derive::{ComponentConstructor, ParentComponent};
 
 use super::Component;
 
-#[derive(Default, ComponentConstructor)]
+#[derive(Default, ComponentConstructor, ParentComponent)]
 pub struct Container {
     children: Vec<Box<dyn Component>>,
 }
@@ -16,25 +14,9 @@ impl Container {
             children: Vec::with_capacity(cap),
         }
     }
-    pub fn child(mut self, child: impl IntoComponent + 'static) -> Self {
-        self.children.push(Box::new(child.into_component()));
-        self
-    }
 
     pub fn when(self, cond: bool, f: impl FnOnce(Self) -> Self) -> Self {
         if cond { f(self) } else { self }
-    }
-
-    pub fn children(
-        mut self,
-        children: impl IntoIterator<Item = impl IntoComponent + 'static>,
-    ) -> Self {
-        self.children.extend(
-            children
-                .into_iter()
-                .map(|c| Box::new(c.into_component()) as Box<dyn Component>),
-        );
-        self
     }
 }
 

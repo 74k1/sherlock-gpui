@@ -1,6 +1,7 @@
 use std::fmt::Result;
 use std::fmt::Write;
 
+use md_rs_derive::ComponentBuilder;
 use md_rs_derive::ComponentConstructor;
 
 use crate::components::Component;
@@ -28,21 +29,10 @@ impl AlertKind {
     }
 }
 
-#[derive(Default, ComponentConstructor)]
+#[derive(Default, ComponentConstructor, ComponentBuilder)]
 pub struct Alert {
     kind: AlertKind,
     text: Option<Paragraph>,
-}
-
-impl Alert {
-    pub fn kind(mut self, kind: AlertKind) -> Self {
-        self.kind = kind;
-        self
-    }
-    pub fn child(mut self, child: impl Into<Paragraph>) -> Self {
-        self.text = Some(child.into());
-        self
-    }
 }
 
 // kind impls

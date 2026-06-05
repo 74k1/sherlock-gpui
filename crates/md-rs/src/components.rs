@@ -47,3 +47,8 @@ impl<C: Component> IntoComponent for C {
         self
     }
 }
+
+pub trait ParentComponentExt: Sized {
+    fn child(self, child: impl IntoComponent + 'static) -> Self;
+    fn children(self, children: impl IntoIterator<Item = impl IntoComponent + 'static>) -> Self;
+}
