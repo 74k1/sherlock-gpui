@@ -4,12 +4,8 @@ use serde::Deserialize;
 
 use crate::{
     display_name,
-    launcher::{
-        LauncherProvider,
-        app_launcher::app_data::AppData,
-        docs::{LauncherDoc, LauncherDocEntry},
-        variant_type::LauncherType,
-    },
+    docs::launcher::{LauncherDoc, LauncherDocEntry},
+    launcher::{LauncherProvider, app_launcher::app_data::AppData, variant_type::LauncherType},
     loader::{
         resolve_icon_path,
         utils::{PriorityGuard, RawLauncher},

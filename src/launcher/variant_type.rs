@@ -1,4 +1,5 @@
 use gpui::{App, SharedString};
+use md_rs::components::container::Container;
 use std::mem;
 use std::sync::Arc;
 
@@ -6,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use strum::Display;
 
 use crate::{
+    docs::{Documentation, launcher::LauncherDoc},
     launcher::{
         Bind, ExecEffect, LauncherProvider,
         app_launcher::AppLauncher,
@@ -16,7 +18,6 @@ use crate::{
         clipboard_launcher::ClipboardLauncher,
         debug_launcher::{DebugFunctions, DebugLauncher},
         dmenu_launcher::DmenuLauncher,
-        docs::{LauncherDoc, LauncherDocEntry},
         emoji_launcher::EmojiPicker,
         event_launcher::{EventLauncher, EventLauncherFunctions},
         file_launcher::FileLauncher,
@@ -111,13 +112,16 @@ macro_rules! create_variants {
             }
         }
 
-        impl $name {
-            pub fn all_docs() -> Vec<LauncherDocEntry> {
-                vec![
-                    $( <$inner>::doc(),)*
-                ]
+        impl Documentation for LauncherType {
+            type Docs = Container;
+            fn docs() -> Self::Docs {
+                Container::default().children(
+                    [ $( <$inner>::doc(),)* ].iter().map(Container::from)
+                )
             }
+        }
 
+        impl $name {
             pub fn get_render_obj(
                 &self,
                 launcher: std::sync::Arc<crate::launcher::Launcher>,
@@ -207,6 +211,7 @@ macro_rules! create_variants {
         #[cfg(test)]
         mod launcher_doc_tests {
             use super::*;
+            use crate::docs::launcher::LauncherDocEntry;
 
             #[tokio::test]
             async fn test_all_docs_valid() {

@@ -6,11 +6,9 @@ use serde::Deserialize;
 
 use crate::{
     display_name,
+    docs::launcher::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
     launcher::{
-        Launcher, LauncherProvider,
-        app_launcher::app_data::AppData,
-        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
-        variant_type::LauncherType,
+        Launcher, LauncherProvider, app_launcher::app_data::AppData, variant_type::LauncherType,
     },
     loader::{
         resolve_icon_path,

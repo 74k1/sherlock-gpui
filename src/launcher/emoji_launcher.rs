@@ -6,10 +6,9 @@ use strum::FromRepr;
 
 use crate::{
     display_name,
+    docs::launcher::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
     launcher::{
-        Launcher, LauncherProvider, LauncherType,
-        app_launcher::app_data::AppData,
-        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
+        Launcher, LauncherProvider, LauncherType, app_launcher::app_data::AppData,
         emoji_launcher::data::EmojiEntry,
     },
     loader::{resolve_icon_path, utils::PriorityGuard},

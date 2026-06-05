@@ -2,8 +2,8 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::docs::launcher::{Example, InnerFunctionDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::app_launcher::app_data::AppData;
-use crate::launcher::docs::{Example, InnerFunctionDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::variant_type::InnerFunction;
 use crate::launcher::{ExecEffect, LauncherProvider, LauncherType};
 use crate::loader::resolve_icon_path;

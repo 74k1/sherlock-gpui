@@ -5,10 +5,11 @@ use indoc::indoc;
 use serde::Deserialize;
 
 use crate::{
-    display_name, ensure_func,
+    display_name,
+    docs::launcher::{Example, FieldDoc, InnerFunctionDoc, LauncherDoc, LauncherDocEntry},
+    ensure_func,
     launcher::{
         ExecEffect, LauncherProvider,
-        docs::{Example, FieldDoc, InnerFunctionDoc, LauncherDoc, LauncherDocEntry},
         variant_type::{InnerFunction, LauncherType},
     },
     loader::utils::RawLauncher,

@@ -4,11 +4,11 @@ use serde_json::Value;
 use std::sync::Arc;
 
 use crate::{
-    define_inner_functions, display_name, ensure_func,
+    define_inner_functions, display_name,
+    docs::launcher::{Example, FieldDoc, InnerFunctionDoc, LauncherDoc, LauncherDocEntry},
+    ensure_func,
     launcher::{
-        Bind, ExecEffect, LauncherProvider, LauncherType, LoadContext,
-        docs::{Example, FieldDoc, InnerFunctionDoc, LauncherDoc, LauncherDocEntry},
-        variant_type::InnerFunction,
+        Bind, ExecEffect, LauncherProvider, LauncherType, LoadContext, variant_type::InnerFunction,
     },
     loader::utils::RawLauncher,
     sherlock_msg, skip_func_if_nav,

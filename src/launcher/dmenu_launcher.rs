@@ -2,10 +2,8 @@ use std::sync::Arc;
 
 use crate::{
     display_name,
-    launcher::{
-        Launcher, LauncherProvider, LauncherType,
-        docs::{LauncherDoc, LauncherDocEntry},
-    },
+    docs::launcher::{LauncherDoc, LauncherDocEntry},
+    launcher::{Launcher, LauncherProvider, LauncherType},
     ui::widgets::RenderableChild,
     utils::errors::SherlockMessage,
     variant_name,

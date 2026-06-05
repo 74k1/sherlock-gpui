@@ -6,7 +6,6 @@ pub mod category_launcher;
 pub mod clipboard_launcher;
 pub mod debug_launcher;
 pub mod dmenu_launcher;
-pub mod docs;
 pub mod emoji_launcher;
 pub mod event_launcher;
 pub mod file_launcher;

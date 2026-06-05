@@ -5,23 +5,29 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::launcher::Launcher;
-use crate::launcher::app_launcher::app_data::AppData;
-use crate::launcher::docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry};
-use crate::loader::application_loader::file_has_changed;
-use crate::loader::resolve_icon_path;
-use crate::loader::utils::{PriorityGuard, construct_search};
-use crate::ui::widgets::RenderableChild;
-use crate::utils::cache::BinaryCache;
-use crate::utils::config::{ConfigGuard, ConstantDefaults};
-use crate::utils::errors::SherlockMessage;
-use crate::utils::errors::types::{DbAction, FileAction, SherlockErrorType};
-use crate::utils::files::home_dir;
-use crate::utils::paths::get_cache_dir;
-use crate::{display_name, sher_log, sherlock_msg, variant_name};
-
-use crate::launcher::{LauncherProvider, LauncherType};
-use crate::loader::utils::RawLauncher;
+use crate::{
+    display_name,
+    docs::launcher::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
+    launcher::{Launcher, LauncherProvider, LauncherType, app_launcher::app_data::AppData},
+    loader::{
+        application_loader::file_has_changed,
+        resolve_icon_path,
+        utils::{PriorityGuard, RawLauncher, construct_search},
+    },
+    sher_log, sherlock_msg,
+    ui::widgets::RenderableChild,
+    utils::{
+        cache::BinaryCache,
+        config::{ConfigGuard, ConstantDefaults},
+        errors::{
+            SherlockMessage,
+            types::{DbAction, FileAction, SherlockErrorType},
+        },
+        files::home_dir,
+        paths::get_cache_dir,
+    },
+    variant_name,
+};
 
 /// The following arguments are available to users:
 /// - `browser`: The browser from which the bookmarks should be parsed

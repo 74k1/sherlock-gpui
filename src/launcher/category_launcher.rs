@@ -3,8 +3,8 @@ use std::sync::Arc;
 use indoc::indoc;
 use serde::de::IntoDeserializer;
 
+use crate::docs::launcher::{Example, FieldDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::app_launcher::app_serde::deserialize_named_appdata;
-use crate::launcher::docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::{LauncherProvider, LauncherType};
 use crate::loader::utils::{ApplicationAction, RawLauncher};
 use crate::ui::launcher::context_menu::ContextMenuAction;

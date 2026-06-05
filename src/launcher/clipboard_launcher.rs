@@ -3,10 +3,8 @@ use serde_json::Value;
 
 use crate::{
     display_name,
-    launcher::{
-        LauncherProvider, LauncherType,
-        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry, capabilities_section},
-    },
+    docs::launcher::{Example, FieldDoc, LauncherDoc, LauncherDocEntry, capabilities_section},
+    launcher::{LauncherProvider, LauncherType},
     loader::utils::RawLauncher,
     ui::widgets::{RenderableChild, clipboard::ClipWidget},
     utils::{errors::SherlockMessage, intent::Capabilities},
@@ -57,12 +55,7 @@ impl LauncherDoc for ClipboardLauncher {
                 name: "capabilities",
                 ty: "Capabilities[]",
                 required: false,
-                default: Some(
-                    r#"[
-                    "calc.units",
-                    "calc.math"
-                ]"#,
-                ),
+                default: Some(r#"[ "calc.units", "calc.math" ]"#),
                 description: "The capabilities the clipboard executor should have.",
             }],
             args_explanations: &[capabilities_section],

@@ -5,10 +5,9 @@ use serde::de::IntoDeserializer;
 
 use crate::{
     display_name,
+    docs::launcher::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
     launcher::{
-        LauncherProvider, LauncherType,
-        app_launcher::app_serde::deserialize_named_appdata,
-        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
+        LauncherProvider, LauncherType, app_launcher::app_serde::deserialize_named_appdata,
     },
     loader::utils::RawLauncher,
     sherlock_msg,

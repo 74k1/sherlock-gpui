@@ -1,9 +1,7 @@
 use crate::{
     display_name,
-    launcher::{
-        LauncherProvider, LauncherType,
-        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry, capabilities_section},
-    },
+    docs::launcher::{Example, FieldDoc, LauncherDoc, LauncherDocEntry, capabilities_section},
+    launcher::{LauncherProvider, LauncherType},
     loader::utils::RawLauncher,
     ui::widgets::{RenderableChild, calculator::CalcData},
     utils::{errors::SherlockMessage, intent::Capabilities},

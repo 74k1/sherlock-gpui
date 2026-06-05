@@ -1,10 +1,7 @@
 use crate::{
     display_name,
-    launcher::{
-        LauncherProvider, LauncherType,
-        app_launcher::app_data::AppData,
-        docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
-    },
+    docs::launcher::{Example, FieldDoc, LauncherDoc, LauncherDocEntry},
+    launcher::{LauncherProvider, LauncherType, app_launcher::app_data::AppData},
     loader::utils::{PriorityGuard, RawLauncher},
     ui::widgets::RenderableChild,
     utils::errors::SherlockMessage,

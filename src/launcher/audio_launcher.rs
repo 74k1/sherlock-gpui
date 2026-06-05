@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use zbus::blocking::{Connection, Proxy};
 
-use crate::launcher::docs::{Example, InnerFunctionDoc, LauncherDoc, LauncherDocEntry};
+use crate::docs::launcher::{Example, InnerFunctionDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::utils::binds::Bind;
 use crate::launcher::variant_type::InnerFunction;
 use crate::ui::widgets::RenderableChild;

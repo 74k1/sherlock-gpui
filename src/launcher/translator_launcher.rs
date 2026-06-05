@@ -6,10 +6,8 @@ use serde_json::Value;
 
 use crate::{
     display_name,
-    launcher::{
-        LauncherProvider, LauncherType, LoadContext,
-        docs::{Example, LauncherDoc, LauncherDocEntry},
-    },
+    docs::launcher::{Example, LauncherDoc, LauncherDocEntry},
+    launcher::{LauncherProvider, LauncherType, LoadContext},
     loader::utils::RawLauncher,
     ui::widgets::{RenderableChild, translator::TranslationData},
     utils::errors::SherlockMessage,

@@ -4,7 +4,7 @@ use gpui::App;
 use indoc::indoc;
 
 use crate::app::theme::{ActiveTheme, ThemeData};
-use crate::launcher::docs::{Example, FieldDoc, InnerFunctionDoc, LauncherDoc, LauncherDocEntry};
+use crate::docs::launcher::{Example, FieldDoc, InnerFunctionDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::variant_type::InnerFunction;
 use crate::launcher::{ExecEffect, LauncherProvider, LauncherType};
 use crate::loader::utils::RawLauncher;

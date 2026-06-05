@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 use strum::Display;
 
-use crate::launcher::docs::{Example, FieldDoc, LauncherDoc, LauncherDocEntry};
+use crate::docs::launcher::{Example, FieldDoc, LauncherDoc, LauncherDocEntry};
 use crate::launcher::weather_launcher::utils::transform_weather;
 use crate::launcher::weather_launcher::wttr_serde::WttrResponse;
 use crate::loader::{IconType, resolve_icon_path};
