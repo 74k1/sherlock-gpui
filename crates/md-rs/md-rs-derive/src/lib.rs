@@ -27,13 +27,12 @@ pub fn derive_span_node(input: TokenStream) -> TokenStream {
         }
 
         impl Component for #name {
-            fn render(&self, out: &mut dyn std::fmt::Write) -> std::fmt::Result {
+            fn render_inline(&self, out: &mut dyn std::fmt::Write) -> std::fmt::Result {
                 write!(out, #prefix)?;
                 for span in &self.spans {
                     span.render(out)?;
                 }
-                writeln!(out)?;
-                writeln!(out)
+                Ok(())
             }
         }
     }

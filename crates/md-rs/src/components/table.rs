@@ -1,10 +1,12 @@
+use md_rs_derive::ComponentConstructor;
+
 use super::Component;
 use std::{
     borrow::Cow,
     fmt::{Result, Write},
 };
 
-#[derive(Default)]
+#[derive(Default, ComponentConstructor)]
 pub struct Table {
     headers: Vec<Cow<'static, str>>,
     rows: Vec<Vec<Cow<'static, str>>>,
@@ -35,39 +37,46 @@ impl Table {
     }
 }
 
+fn render_cell(out: &mut dyn Write, content: &str) -> Result {
+    for c in content.chars() {
+        match c {
+            '\n' => write!(out, "<br>")?,
+            '|' => write!(out, "\\|")?,
+            _ => write!(out, "{c}")?,
+        }
+    }
+    Ok(())
+}
+
 impl Component for Table {
-    fn render(&self, out: &mut dyn Write) -> Result {
+    fn is_block(&self) -> bool {
+        true
+    }
+    fn render_inline(&self, out: &mut dyn Write) -> Result {
         if self.headers.is_empty() {
             return Ok(());
         }
-
-        // header row
         write!(out, "|")?;
         for h in &self.headers {
             write!(out, " {} |", h)?;
         }
         writeln!(out)?;
-
-        // separator
         write!(out, "|")?;
         for _ in &self.headers {
             write!(out, "---|")?;
         }
         writeln!(out)?;
-
-        // rows
         for row in &self.rows {
             write!(out, "|")?;
             for cell in row {
-                write!(out, " {} |", cell)?;
+                write!(out, " ")?;
+                render_cell(out, cell)?;
+                write!(out, " |")?;
             }
-            writeln!(out)?;
+            if row != self.rows.last().unwrap() {
+                writeln!(out)?;
+            }
         }
-
-        writeln!(out)
+        Ok(()) // last row has no trailing \n — render() adds it
     }
-}
-
-pub fn table() -> Table {
-    Table::default()
 }

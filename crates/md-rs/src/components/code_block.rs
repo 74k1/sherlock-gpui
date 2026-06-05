@@ -31,12 +31,14 @@ impl CodeBlock {
     }
 }
 impl Component for CodeBlock {
-    fn render(&self, out: &mut dyn Write) -> Result {
+    fn is_block(&self) -> bool {
+        true
+    }
+    fn render_inline(&self, out: &mut dyn Write) -> Result {
         let fence = "```";
         let lang = self.lang.as_deref().unwrap_or("");
         writeln!(out, "{fence}{lang}")?;
-        writeln!(out, "{}", self.content)?;
-        writeln!(out, "{fence}")?;
-        writeln!(out)
+        writeln!(out, "{}", self.content.trim_end())?;
+        write!(out, "{fence}")
     }
 }

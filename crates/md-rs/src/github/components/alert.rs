@@ -1,9 +1,10 @@
+use std::fmt::Result;
 use std::fmt::Write;
-use std::{borrow::Cow, fmt::Result};
 
 use md_rs_derive::ComponentConstructor;
 
-use crate::components::{Component, span::Span};
+use crate::components::Component;
+use crate::components::span_nodes::Paragraph;
 
 #[derive(Default)]
 pub enum AlertKind {
@@ -30,7 +31,7 @@ impl AlertKind {
 #[derive(Default, ComponentConstructor)]
 pub struct Alert {
     kind: AlertKind,
-    spans: Vec<Span>,
+    text: Option<Paragraph>,
 }
 
 impl Alert {
@@ -38,44 +39,50 @@ impl Alert {
         self.kind = kind;
         self
     }
-
-    pub fn with_text(mut self, text: impl Into<Cow<'static, str>>) -> Self {
-        self.spans.push(Span::Text(text.into()));
-        self
-    }
-
-    pub fn span(mut self, span: Span) -> Self {
-        self.spans.push(span);
+    pub fn child(mut self, child: impl Into<Paragraph>) -> Self {
+        self.text = Some(child.into());
         self
     }
 }
 
 // kind impls
-impl Alert {
-    pub fn warning() -> Self {
-        Self::default().kind(AlertKind::Warning)
-    }
-    pub fn note() -> Self {
-        Self::default().kind(AlertKind::Note)
-    }
-    pub fn tip() -> Self {
-        Self::default().kind(AlertKind::Tip)
-    }
-    pub fn important() -> Self {
-        Self::default().kind(AlertKind::Important)
-    }
-    pub fn caution() -> Self {
-        Self::default().kind(AlertKind::Caution)
-    }
+pub fn warning() -> Alert {
+    Alert::default().kind(AlertKind::Warning)
+}
+pub fn note() -> Alert {
+    Alert::default().kind(AlertKind::Note)
+}
+pub fn tip() -> Alert {
+    Alert::default().kind(AlertKind::Tip)
+}
+pub fn important() -> Alert {
+    Alert::default().kind(AlertKind::Important)
+}
+pub fn caution() -> Alert {
+    Alert::default().kind(AlertKind::Caution)
 }
 
 impl Component for Alert {
-    fn render(&self, out: &mut dyn Write) -> Result {
-        writeln!(out, "> [!{}]", self.kind.as_str())?;
-        write!(out, "> ")?;
-        for span in &self.spans {
-            span.render(out)?;
+    fn is_block(&self) -> bool {
+        true
+    }
+    fn render_inline(&self, out: &mut dyn Write) -> Result {
+        let Some(text) = self.text.as_ref() else {
+            return Ok(());
+        };
+
+        let mut buf = String::new();
+        writeln!(buf, "> [!{}]", self.kind.as_str())?;
+        text.render_inline(&mut buf)?;
+        let mut first = true;
+        for line in buf.lines() {
+            if first {
+                first = false;
+                write!(out, "{line}")?;
+            } else {
+                write!(out, "\n{line}")?;
+            }
         }
-        writeln!(out)
+        Ok(())
     }
 }
