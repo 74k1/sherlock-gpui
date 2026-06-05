@@ -1,14 +1,13 @@
-<div align="center" style="text-align:center; border-radius:10px;">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
-        <source media="(prefers-color-scheme: light)" srcset="assets/logo-light.svg">
-        <img alt="sherlock logo" height="250" src="assets/logo-light.svg">
-      </picture>
+<div align="center" style="">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/logo-light.svg">
+  <img height="250" alt="sherlock logo" src="assets/logo-light.svg">
+</picture>
 
-      [![Discord](https://img.shields.io/discord/1357746313646833945.svg?color=7289da&&logo=discord)](https://discord.gg/AQ44g4Yp9q)
-      <picture>
-        <img alt="application screenshot" width="100%" style="border-radius: 10px;" src="assets/mockup.png">
-      </picture>
+[![Discord](https://img.shields.io/discord/1357746313646833945.svg?color=7289da&&logo=discord)][https://discord.gg/AQ44g4Yp9q]
+<img width="100%" alt="application screenshot" src="assets/mockup.png">
+
 </div>
 
 Sherlock is a **fast**, **extensible** application launcher for Wayland, build with [GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui). Sherlock's widgets inherit from launcher configurations. There are several launcher types, inlclugin a [File Search](), [Emoji Picker](), and [Translator]().
