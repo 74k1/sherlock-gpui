@@ -9,13 +9,10 @@ mod flags;
 mod parser;
 mod utils;
 
-const DOCS_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/docs/src/launchers.md");
-
 #[derive(PartialEq)]
 pub enum DebugAction {
     Help,
     Version,
-    Docs,
     GenerateDocs,
     Repair,
     Init { path: PathBuf, extension: String },

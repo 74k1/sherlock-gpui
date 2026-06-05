@@ -1,8 +1,7 @@
 use std::path::Path;
 
 use crate::{
-    launcher::{docs::to_markdown, variant_type::LauncherType},
-    loader::flag_loader::{DOCS_PATH, DebugAction, flags::FLAGS, utils::FlagSection},
+    loader::flag_loader::{DebugAction, flags::FLAGS, utils::FlagSection},
     sherlock_msg,
     tokio_utils::SizedMessageObj,
     utils::{
@@ -63,23 +62,6 @@ impl StartupAction {
             *internal_exit = exit;
         }
         self
-    }
-}
-
-pub(super) fn print_launcher_docs() {
-    match to_markdown(&LauncherType::all_docs()) {
-        Ok(docs) => println!("{docs}"),
-        Err(e) => eprint!("{:?}", e),
-    }
-}
-
-pub(super) fn generate_docs() {
-    match to_markdown(&LauncherType::all_docs()) {
-        Ok(docs) if let Err(e) = std::fs::write(DOCS_PATH, &docs) => {
-            eprintln!("{:?}", e);
-        }
-        Err(e) => eprint!("{:?}", e),
-        _ => {}
     }
 }
 

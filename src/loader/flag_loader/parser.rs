@@ -2,14 +2,14 @@ use std::{iter::Peekable, slice::Iter};
 
 use super::{
     DebugAction,
-    actions::{
-        StartupAction, flag_documentation, generate_docs, init_config, print_launcher_docs,
-        print_version,
-    },
+    actions::{StartupAction, flag_documentation, init_config, print_version},
     flags::FLAGS,
     utils::{FlagSection, ParseError},
 };
-use crate::utils::config::{SherlockFlags, repair_config};
+use crate::{
+    docs::SherlockDocumentation,
+    utils::config::{SherlockFlags, repair_config},
+};
 
 pub struct ParsedArgs {
     pub flags: SherlockFlags,
@@ -36,8 +36,7 @@ impl ParsedArgs {
         match action {
             DebugAction::Help => flag_documentation(),
             DebugAction::Version => print_version(),
-            DebugAction::Docs => print_launcher_docs(),
-            DebugAction::GenerateDocs => generate_docs(),
+            DebugAction::GenerateDocs => SherlockDocumentation::generate(),
             DebugAction::Repair => repair_config(&mut self.flags),
             DebugAction::Init { path, extension } => init_config(&path, &extension),
         }

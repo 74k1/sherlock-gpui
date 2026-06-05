@@ -146,10 +146,12 @@ fn spawn_launcher(
                     .sub_menu
                     .as_deref()
                     .and_then(|submenu| {
-                        modes.iter().find(|m| matches!(
-                            m,
-                            LauncherMode::Alias { short, .. } if short.eq_ignore_ascii_case(submenu)
-                        ))
+                        modes.iter().find(|m| {
+                            matches!(
+                                m,
+                                LauncherMode::Alias { short, .. } if short.eq_ignore_ascii_case(submenu)
+                            )
+                        })
                     })
                     .cloned()
                     .unwrap_or(LauncherMode::Home)

@@ -75,18 +75,6 @@ pub const FLAGS: &[FlagSpec] = &[
         },
     },
     FlagSpec {
-        long: "docs",
-        short: None,
-        section: FlagSection::Basics,
-        help: "Print launcher documentation.",
-        parse: |_args, _iter, _flags, startup| {
-            if startup.is_none() {
-                *startup = Some(DebugAction::Docs.into());
-            }
-            Ok(())
-        },
-    },
-    FlagSpec {
         long: "repair",
         short: None,
         section: FlagSection::Basics,
