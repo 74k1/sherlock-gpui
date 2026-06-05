@@ -5,7 +5,7 @@
   <img height="250" alt="sherlock logo" src="assets/logo-light.svg">
 </picture>
 
-[![Discord](https://img.shields.io/discord/1357746313646833945.svg?color=7289da&&logo=discord)][https://discord.gg/AQ44g4Yp9q]
+[![Discord](https://img.shields.io/discord/1357746313646833945.svg?color=7289da&&logo=discord)](https://discord.gg/AQ44g4Yp9q)
 <img width="100%" alt="application screenshot" src="assets/mockup.png">
 
 </div>

@@ -26,7 +26,7 @@ impl Component for Badge {
 
     fn render_inline(&self, out: &mut dyn Write) -> Result {
         if let Some(link) = &self.link {
-            write!(out, "[![{}]({})][{}]", self.alt, self.image_url, link)
+            write!(out, "[![{}]({})]({})", self.alt, self.image_url, link)
         } else {
             write!(out, "![{}]({})", self.alt, self.image_url)
         }
