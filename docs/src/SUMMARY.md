@@ -1,6 +1,10 @@
 # Summary
 
-- [Introduction](./introduction.md)
+- [Installation](./installation.md)
+  - [Arch Linux](./arch-linux.md)
+  - [Debian / Ubuntu](./debian.md)
+  - [NixOs](./nixos.md)
+  - [Build from Source](./source.md)
 - [Configuration](./configuration.md)
-  - [Variable Inputs](./variable-inputs.md)
   - [Launchers](./launchers.md)
+  - [Exec Variables](./exec-variables.md)

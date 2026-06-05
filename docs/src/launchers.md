@@ -112,10 +112,7 @@ Allows math calculations and different unit conversions.
 | `currency_update_interval` | `u64` |  | 1440 | Number of minutes to keep the currency cache alive. |
 
 <details>
-<summary>
-<strong>Capabilities:</strong>
-
-</summary>
+<summary><strong>Capabilities:</strong></summary>
 
 Capabilities control what the calculator can compute. Pass them via the `capabilities` arg:
 
@@ -124,30 +121,21 @@ Capabilities control what the calculator can compute. Pass them via the `capabil
 ```
 
 <details>
-<summary>
-Math
-
-</summary>
+<summary>Math</summary>
 
 `calc.math`
 
 </details>
 
 <details>
-<summary>
-Colors
-
-</summary>
+<summary>Colors</summary>
 
 `colors`
 
 </details>
 
 <details>
-<summary>
-Currency
-
-</summary>
+<summary>Currency</summary>
 
 `calc.currencies`
 
@@ -174,10 +162,7 @@ Currency
 </details>
 
 <details>
-<summary>
-Length
-
-</summary>
+<summary>Length</summary>
 
 `calc.length`
 
@@ -196,10 +181,7 @@ Length
 </details>
 
 <details>
-<summary>
-Volume
-
-</summary>
+<summary>Volume</summary>
 
 `calc.volume`
 
@@ -222,10 +204,7 @@ Volume
 </details>
 
 <details>
-<summary>
-Weight
-
-</summary>
+<summary>Weight</summary>
 
 `calc.weight`
 
@@ -245,10 +224,7 @@ Weight
 </details>
 
 <details>
-<summary>
-Temperature
-
-</summary>
+<summary>Temperature</summary>
 
 `calc.temperature`
 
@@ -260,10 +236,7 @@ Temperature
 </details>
 
 <details>
-<summary>
-Pressure
-
-</summary>
+<summary>Pressure</summary>
 
 `calc.pressure`
 
@@ -279,10 +252,7 @@ Pressure
 </details>
 
 <details>
-<summary>
-Digital
-
-</summary>
+<summary>Digital</summary>
 
 `calc.digital`
 
@@ -302,10 +272,7 @@ Digital
 </details>
 
 <details>
-<summary>
-Time
-
-</summary>
+<summary>Time</summary>
 
 `calc.time`
 
@@ -323,10 +290,7 @@ Time
 </details>
 
 <details>
-<summary>
-Area
-
-</summary>
+<summary>Area</summary>
 
 `calc.area`
 
@@ -342,10 +306,7 @@ Area
 </details>
 
 <details>
-<summary>
-Speed
-
-</summary>
+<summary>Speed</summary>
 
 `calc.speed`
 
@@ -465,16 +426,10 @@ Executes commands based on the clipboard content.
 
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `capabilities` | `Capabilities[]` |  | [
-                    "calc.units",
-                    "calc.math"
-                ] | The capabilities the clipboard executor should have. |
+| `capabilities` | `Capabilities[]` |  | [ "calc.units", "calc.math" ] | The capabilities the clipboard executor should have. |
 
 <details>
-<summary>
-<strong>Capabilities:</strong>
-
-</summary>
+<summary><strong>Capabilities:</strong></summary>
 
 Capabilities control what the calculator can compute. Pass them via the `capabilities` arg:
 
@@ -483,30 +438,21 @@ Capabilities control what the calculator can compute. Pass them via the `capabil
 ```
 
 <details>
-<summary>
-Math
-
-</summary>
+<summary>Math</summary>
 
 `calc.math`
 
 </details>
 
 <details>
-<summary>
-Colors
-
-</summary>
+<summary>Colors</summary>
 
 `colors`
 
 </details>
 
 <details>
-<summary>
-Currency
-
-</summary>
+<summary>Currency</summary>
 
 `calc.currencies`
 
@@ -533,10 +479,7 @@ Currency
 </details>
 
 <details>
-<summary>
-Length
-
-</summary>
+<summary>Length</summary>
 
 `calc.length`
 
@@ -555,10 +498,7 @@ Length
 </details>
 
 <details>
-<summary>
-Volume
-
-</summary>
+<summary>Volume</summary>
 
 `calc.volume`
 
@@ -581,10 +521,7 @@ Volume
 </details>
 
 <details>
-<summary>
-Weight
-
-</summary>
+<summary>Weight</summary>
 
 `calc.weight`
 
@@ -604,10 +541,7 @@ Weight
 </details>
 
 <details>
-<summary>
-Temperature
-
-</summary>
+<summary>Temperature</summary>
 
 `calc.temperature`
 
@@ -619,10 +553,7 @@ Temperature
 </details>
 
 <details>
-<summary>
-Pressure
-
-</summary>
+<summary>Pressure</summary>
 
 `calc.pressure`
 
@@ -638,10 +569,7 @@ Pressure
 </details>
 
 <details>
-<summary>
-Digital
-
-</summary>
+<summary>Digital</summary>
 
 `calc.digital`
 
@@ -661,10 +589,7 @@ Digital
 </details>
 
 <details>
-<summary>
-Time
-
-</summary>
+<summary>Time</summary>
 
 `calc.time`
 
@@ -682,10 +607,7 @@ Time
 </details>
 
 <details>
-<summary>
-Area
-
-</summary>
+<summary>Area</summary>
 
 `calc.area`
 
@@ -701,10 +623,7 @@ Area
 </details>
 
 <details>
-<summary>
-Speed
-
-</summary>
+<summary>Speed</summary>
 
 `calc.speed`
 
@@ -806,6 +725,14 @@ _Basic app launcher_
     "exit": false
 }
 ```
+
+---
+
+## Dmenu Launcher
+
+`type = dmenu`
+
+The launcher to handle Dmenu-style piping
 
 ---
 
@@ -914,6 +841,14 @@ _Basic event launcher_
     "home": "Home"
 }
 ```
+
+---
+
+## Message Launcher
+
+`type = message`
+
+The launcher to provide the message view
 
 ---
 
@@ -1051,11 +986,6 @@ Preview and select Sherlock themes.
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
 | `path` | `path` |  | ~/.config/sherlock/themes/ | The path to the Sherlock themes directory. |
-
-### Inner Functions
-
-| Name | Identifier | Description |
-|---|---|---|
 
 ### Examples
 
@@ -1215,4 +1145,3 @@ _Basic web launcher_
 ```
 
 ---
-
