@@ -9,6 +9,11 @@ pub fn derive_component_builder(input: TokenStream) -> TokenStream {
     builder::derive_builder(input)
 }
 
+#[proc_macro_derive(TextCompomponent, attributes(md_rs))]
+pub fn derive_text_component(input: TokenStream) -> TokenStream {
+    builder::derive_text_component(input)
+}
+
 #[proc_macro_derive(SpanNode, attributes(span_node))]
 pub fn derive_span_node(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

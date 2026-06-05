@@ -1,7 +1,7 @@
 use indoc::indoc;
 use md_rs::{
     components::{
-        ParentComponentExt,
+        ParentComponentExt, TextComponentExt,
         code_block::codeblock,
         container::{Container, container},
         details::{Details, details},

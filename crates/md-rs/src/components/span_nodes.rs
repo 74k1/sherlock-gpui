@@ -1,72 +1,14 @@
 use std::borrow::Cow;
 use std::fmt::Write;
 
-use md_rs_derive::{ComponentConstructor, SpanNode};
-
-use crate::components::span::LinkData;
+use md_rs_derive::{ComponentConstructor, SpanNode, TextCompomponent};
 
 use super::Component;
 use super::span::Span;
 
-#[derive(Default, ComponentConstructor)]
+#[derive(Default, ComponentConstructor, TextCompomponent)]
 pub struct Paragraph {
     pub spans: Vec<Span>,
-}
-impl Paragraph {
-    pub fn br(mut self) -> Self {
-        self.spans.push(Span::LineBreak);
-        self
-    }
-
-    pub fn text(mut self, text: impl Into<Cow<'static, str>>) -> Self {
-        self.spans.push(Span::Text(text.into()));
-        self
-    }
-
-    pub fn italic(mut self, text: impl Into<Cow<'static, str>>) -> Self {
-        self.spans.push(Span::Italic(text.into()));
-        self
-    }
-
-    pub fn bold(mut self, text: impl Into<Cow<'static, str>>) -> Self {
-        self.spans.push(Span::Bold(text.into()));
-        self
-    }
-
-    pub fn code(mut self, text: impl Into<Cow<'static, str>>) -> Self {
-        self.spans.push(Span::Code(text.into()));
-        self
-    }
-
-    pub fn link(
-        mut self,
-        title: impl Into<Cow<'static, str>>,
-        target: impl Into<Cow<'static, str>>,
-    ) -> Self {
-        self.spans.push(Span::Link(Box::new(LinkData {
-            title: vec![Span::Text(title.into())],
-            target: target.into(),
-        })));
-        self
-    }
-
-    pub fn link_bold(
-        mut self,
-        title: impl Into<Cow<'static, str>>,
-        target: impl Into<Cow<'static, str>>,
-    ) -> Self {
-        self.spans.push(Span::Link(Box::new(LinkData {
-            title: vec![Span::Bold(title.into())],
-            target: target.into(),
-        })));
-        self
-    }
-
-    #[cfg(feature = "github")]
-    pub fn html_strong(mut self, text: impl Into<Cow<'static, str>>) -> Self {
-        self.spans.push(Span::HtmlStrong(text.into()));
-        self
-    }
 }
 
 impl Component for Paragraph {
@@ -98,7 +40,7 @@ impl From<Span> for Paragraph {
     }
 }
 
-#[derive(Default, SpanNode, ComponentConstructor)]
+#[derive(Default, SpanNode, ComponentConstructor, TextCompomponent)]
 #[span_node(prefix = "> ")]
 pub struct Blockquote {
     pub spans: Vec<Span>,

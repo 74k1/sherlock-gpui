@@ -64,3 +64,36 @@ fn unwrap_option(ty: &syn::Type) -> Option<syn::Type> {
     }
     None
 }
+
+pub fn derive_text_component(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+
+    let fields = match &input.data {
+        syn::Data::Struct(s) => &s.fields,
+        _ => panic!("SpanContainer can only be derived for structs"),
+    };
+
+    let span_field = match fields {
+        syn::Fields::Named(f) => f.named.iter().find(|f| {
+            f.ident.as_ref().is_some_and(|i| i == "spans")
+                || f.attrs.iter().any(|a| {
+                    a.path().is_ident("md_rs")
+                        && a.parse_args::<syn::Ident>().is_ok_and(|i| i == "spans")
+                })
+        }),
+        _ => panic!("SpanContainer requires named fields"),
+    }
+    .expect("No `spans` field found — add one or mark it with #[md_rs(spans)]");
+
+    let field_name = &span_field.ident;
+
+    quote! {
+        impl ::md_rs::components::TextComponentExt for #name {
+            fn spans_mut(&mut self) -> &mut Vec<::md_rs::components::span::Span> {
+                &mut self.#field_name
+            }
+        }
+    }
+    .into()
+}

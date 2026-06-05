@@ -1,4 +1,9 @@
-use std::fmt::{Result, Write};
+use std::{
+    borrow::Cow,
+    fmt::{Result, Write},
+};
+
+use crate::components::span::{LinkData, Span};
 
 pub mod code_block;
 pub mod container;
@@ -51,4 +56,81 @@ impl<C: Component> IntoComponent for C {
 pub trait ParentComponentExt: Sized {
     fn child(self, child: impl IntoComponent + 'static) -> Self;
     fn children(self, children: impl IntoIterator<Item = impl IntoComponent + 'static>) -> Self;
+}
+
+pub trait TextComponentExt {
+    fn spans_mut(&mut self) -> &mut Vec<Span>;
+
+    fn br(mut self) -> Self
+    where
+        Self: Sized,
+    {
+        self.spans_mut().push(Span::LineBreak);
+        self
+    }
+    fn text(mut self, text: impl Into<Cow<'static, str>>) -> Self
+    where
+        Self: Sized,
+    {
+        self.spans_mut().push(Span::Text(text.into()));
+        self
+    }
+    fn italic(mut self, text: impl Into<Cow<'static, str>>) -> Self
+    where
+        Self: Sized,
+    {
+        self.spans_mut().push(Span::Italic(text.into()));
+        self
+    }
+    fn bold(mut self, text: impl Into<Cow<'static, str>>) -> Self
+    where
+        Self: Sized,
+    {
+        self.spans_mut().push(Span::Bold(text.into()));
+        self
+    }
+    fn code(mut self, text: impl Into<Cow<'static, str>>) -> Self
+    where
+        Self: Sized,
+    {
+        self.spans_mut().push(Span::Code(text.into()));
+        self
+    }
+    fn link(
+        mut self,
+        title: impl Into<Cow<'static, str>>,
+        target: impl Into<Cow<'static, str>>,
+    ) -> Self
+    where
+        Self: Sized,
+    {
+        self.spans_mut().push(Span::Link(Box::new(LinkData {
+            title: vec![Span::Text(title.into())],
+            target: target.into(),
+        })));
+        self
+    }
+    fn link_bold(
+        mut self,
+        title: impl Into<Cow<'static, str>>,
+        target: impl Into<Cow<'static, str>>,
+    ) -> Self
+    where
+        Self: Sized,
+    {
+        self.spans_mut().push(Span::Link(Box::new(LinkData {
+            title: vec![Span::Bold(title.into())],
+            target: target.into(),
+        })));
+        self
+    }
+
+    #[cfg(feature = "github")]
+    fn html_strong(mut self, text: impl Into<Cow<'static, str>>) -> Self
+    where
+        Self: Sized,
+    {
+        self.spans_mut().push(Span::HtmlStrong(text.into()));
+        self
+    }
 }

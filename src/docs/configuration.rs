@@ -1,6 +1,6 @@
 use md_rs::{
     components::{
-        ParentComponentExt,
+        ParentComponentExt, TextComponentExt,
         container::Container,
         heading::h2,
         list::{ListItem, list},

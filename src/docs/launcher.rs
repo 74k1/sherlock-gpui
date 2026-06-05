@@ -2,7 +2,7 @@ use indoc::indoc;
 use md_rs::{
     cached_component,
     components::{
-        Component, ParentComponentExt,
+        Component, ParentComponentExt, TextComponentExt,
         code_block::codeblock,
         container::Container,
         details::details,

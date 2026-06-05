@@ -1,6 +1,7 @@
 use md_rs::{
     components::{
-        ParentComponentExt, container::Container, heading::h1, span_nodes::paragraph,
+        ParentComponentExt, TextComponentExt, container::Container, heading::h1,
+        span_nodes::paragraph,
     },
     github::components::{
         alert::{alert, warning},
