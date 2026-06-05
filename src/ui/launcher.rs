@@ -57,28 +57,6 @@ impl IntoElement for VariableInput {
     }
 }
 
-// Choice {
-//                 options: Arc::from([
-//                     ChoiceOption {
-//                         value: false,
-//                         label: SharedString::from("One"),
-//                     },
-//                     ChoiceOption {
-//                         value: false,
-//                         label: SharedString::from("Two"),
-//                     },
-//                     ChoiceOption {
-//                         value: false,
-//                         label: SharedString::from("Threeeeeeeeeeeeeee"),
-//                     },
-//                 ]),
-//                 placeholder: SharedString::from("Option"),
-//                 selected: Some(0),
-//                 is_opened: false,
-
-//                 focus_handle: cx.focus_handle(),
-//                 scope: Some("variable"),
-//             }
 pub struct LauncherView {
     pub text_input: Entity<TextInput>,
     pub focus_handle: FocusHandle,

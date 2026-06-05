@@ -16,6 +16,7 @@ use crate::{
 };
 
 mod app;
+mod docs;
 mod launcher;
 mod loader;
 mod prelude;
