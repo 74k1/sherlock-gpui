@@ -14,10 +14,10 @@
 Sherlock is a **fast**, **extensible** application launcher for Wayland, build with [GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui). Sherlock's widgets inherit from launcher configurations. There are several launcher types, inlclugin a [File Search](), [Emoji Picker](), and [Translator]().
 
 > [!NOTE]
-Sherlock has been rewritten entirely, to be compatible with `GPUI` instead of `GTK4`. This included major refactorings, causing some changes to configuration files.
+> Sherlock has been rewritten entirely, to be compatible with `GPUI` instead of `GTK4`. This included major refactorings, causing some changes to configuration files.
 
 > [!WARNING]
-Disclaimer: Due to GPUI's development primarily focusing on Zed, some features may not be complete yet. In Sherlock, this is barely noticeable though.
+> Disclaimer: Due to GPUI's development primarily focusing on Zed, some features may not be complete yet. In Sherlock, this is barely noticeable though.
 
 # Getting Started
 
@@ -44,7 +44,7 @@ To build a `.deb` package directly from source, follow these steps:
 Make sure you have the following dependencies installed:
 
 <details>
-<summary><strong>Dependencies</strong></summary>
+<summary><strong>Dependencies:</strong></summary>
 
 1. `rust` - [How to install rust](https://www.rust-lang.org/tools/install)
 2. `git` - [How to install git](https://github.com/git-guides/install-git)
@@ -78,18 +78,18 @@ Make sure you have the following dependencies installed:
    ```
 
    > [!NOTE]
-   You can also use tab-completion to auto complete the file name.
+   > You can also use tab-completion to auto complete the file name.
 
 </details>
 
 ### <ins>From Source</ins>
 
-To build Sherlock from source, follow these steps.
+To build Sherlock from source, follow these steps. 
 
 Make sure to have the following dependencies installed:
 
 <details>
-<summary><strong>Dependencies</strong></summary>
+<summary><strong>Dependencies:</strong></summary>
 
 1. `rust` - [How to install rust](https://www.rust-lang.org/tools/install)
 2. `git` - [How to install git](https://github.com/git-guides/install-git)
@@ -213,7 +213,7 @@ To install the standalone package, add `sherlock.packages.${pkgs.system}.default
 
 ### Config Setup
 
-After the installation is completed, you can set up your configuration files. Those files live in the `~/.config/sherlock/` directory. Depending on your needs, you should add the following files:
+After the installation is completed, you can set up your configuration files. Those files live in the `~/.config/sherlock/` directory. Depending on your needs, you should add the following files: 
 
 1. [**config.toml**](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/config.toml): This file specifies the behavior and defaults of your launcher. [Documentation](https://github.com/Skxxtz/sherlock/blob/main/docs/config.md)
 2. [**fallback.json**](https://github.com/Skxxtz/sherlock/blob/main/docs/examples/fallback.json): This file specifies the features your launcher should have. [Documentation](https://github.com/Skxxtz/sherlock/blob/main/docs/launchers.md)

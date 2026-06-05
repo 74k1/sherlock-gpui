@@ -80,7 +80,7 @@ impl Component for Alert {
                 first = false;
                 write!(out, "{line}")?;
             } else {
-                write!(out, "\n{line}")?;
+                write!(out, "\n> {line}")?;
             }
         }
         Ok(())

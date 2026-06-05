@@ -22,7 +22,7 @@ The replacement variable notation allows you to dynamically replace tokens in co
    Automatically resolbes the user-defined or system-detected default terminal emulator.
 
    > [!TIP]
-   Most terminal emulators close instant once their child process finishes executing. To keep the terminal window open after your command runs,wrap the execution string like this: `{terminal} sh -c "<command>; exec $SHELL"`
+   > Most terminal emulators close instant once their child process finishes executing. To keep the terminal window open after your command runs,wrap the execution string like this: `{terminal} sh -c "<command>; exec $SHELL"`
 
    #### Syntax Example:
 

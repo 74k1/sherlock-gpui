@@ -5,7 +5,7 @@ To build a `.deb` package directly from source, follow these steps:
 Make sure you have the following dependencies installed:
 
 <details>
-<summary><strong>Dependencies</strong></summary>
+<summary><strong>Dependencies:</strong></summary>
 
 1. `rust` - [How to install rust](https://www.rust-lang.org/tools/install)
 2. `git` - [How to install git](https://github.com/git-guides/install-git)
@@ -39,6 +39,6 @@ Make sure you have the following dependencies installed:
    ```
 
    > [!NOTE]
-   You can also use tab-completion to auto complete the file name.
+   > You can also use tab-completion to auto complete the file name.
 
 </details>

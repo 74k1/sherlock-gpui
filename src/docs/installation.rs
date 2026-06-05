@@ -355,7 +355,7 @@ impl Documentation for BuildDependencies {
     type Docs = Details;
     fn docs() -> Self::Docs {
         details()
-            .summary(paragraph().html_strong("Dependencies"))
+            .summary(paragraph().html_strong("Dependencies:"))
             .child(
                 list().items([
                     ListItem::from(paragraph().code("rust").text("-").link(
