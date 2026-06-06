@@ -11,7 +11,7 @@ pub mod heading;
 pub mod hr;
 pub mod list;
 pub mod raw;
-pub(crate) mod span;
+pub mod span;
 pub mod span_nodes;
 pub mod table;
 

@@ -1,5 +1,8 @@
 use std::{borrow::Cow, fmt::Write};
 
+use crate::components::{IntoComponent, span_nodes::Paragraph};
+use crate::p;
+
 pub struct LinkData {
     pub title: Vec<Span>,
     pub target: Cow<'static, str>,
@@ -57,4 +60,93 @@ impl Span {
             _ => true,
         }
     }
+}
+
+impl From<&'static str> for Span {
+    fn from(s: &'static str) -> Self {
+        Span::Text(Cow::Borrowed(s))
+    }
+}
+
+impl From<Cow<'static, str>> for Span {
+    fn from(s: Cow<'static, str>) -> Self {
+        Span::Text(s)
+    }
+}
+
+impl From<String> for Span {
+    fn from(s: String) -> Self {
+        Span::Text(Cow::Owned(s))
+    }
+}
+
+impl IntoComponent for Span {
+    type Comp = Paragraph;
+    fn into_component(self) -> Self::Comp {
+        p!(self)
+    }
+}
+
+pub fn br() -> Span {
+    Span::LineBreak
+}
+
+pub fn text(s: impl Into<Cow<'static, str>>) -> Span {
+    Span::Text(s.into())
+}
+
+pub fn bold(s: impl Into<Cow<'static, str>>) -> Span {
+    Span::Bold(s.into())
+}
+
+pub fn italic(s: impl Into<Cow<'static, str>>) -> Span {
+    Span::Italic(s.into())
+}
+
+pub fn code(s: impl Into<Cow<'static, str>>) -> Span {
+    Span::Code(s.into())
+}
+
+pub fn strikethrough(s: impl Into<Cow<'static, str>>) -> Span {
+    Span::StrikeThrough(s.into())
+}
+
+pub fn underline(s: impl Into<Cow<'static, str>>) -> Span {
+    Span::Underline(s.into())
+}
+
+pub fn link(title: impl Into<Cow<'static, str>>, target: impl Into<Cow<'static, str>>) -> Span {
+    Span::Link(Box::new(LinkData {
+        title: vec![Span::Text(title.into())],
+        target: target.into(),
+    }))
+}
+
+pub fn link_bold(
+    title: impl Into<Cow<'static, str>>,
+    target: impl Into<Cow<'static, str>>,
+) -> Span {
+    Span::Link(Box::new(LinkData {
+        title: vec![Span::Bold(title.into())],
+        target: target.into(),
+    }))
+}
+
+pub fn linebreak() -> Span {
+    Span::LineBreak
+}
+
+#[cfg(feature = "github")]
+pub fn html_strong(s: impl Into<Cow<'static, str>>) -> Span {
+    Span::HtmlStrong(s.into())
+}
+
+#[cfg(feature = "github")]
+pub fn html_underline(s: impl Into<Cow<'static, str>>) -> Span {
+    Span::HtmlUnderline(s.into())
+}
+
+#[cfg(feature = "github")]
+pub fn keybind(s: impl Into<Cow<'static, str>>) -> Span {
+    Span::Keybind(s.into())
 }

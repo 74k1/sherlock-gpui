@@ -1,7 +1,6 @@
 use md_rs::{
     components::{
-        ParentComponentExt, TextComponentExt, container::Container, heading::h1,
-        span_nodes::paragraph,
+        ParentComponentExt, TextComponentExt, container::Container, heading::h1, span_nodes::p,
     },
     github::components::{
         alert::{alert, warning},
@@ -12,13 +11,13 @@ use md_rs::{
     md,
 };
 
-use crate::docs::{Documentation, Installation, contributing::Contributing};
+use crate::docs::{Documentation, Installation, contributing::ContributingShort};
 
 pub(super) struct Readme;
 impl Documentation for Readme {
     type Docs = Container;
     fn docs() -> Self::Docs {
-        md().child(
+        md!(
             htmlblock()
                 .orientation("center")
                 .child(
@@ -44,12 +43,12 @@ impl Documentation for Readme {
                         .width("100%")
                         .alt("application screenshot"),
                 ),
+            Description::docs(),
+            h1("Getting Started"),
+            Installation::docs(),
+            ContributingShort::docs(),
+            License::docs()
         )
-        .child(Description::docs())
-        .child(h1().text("Getting Started"))
-        .child(Installation::docs())
-        .child(Contributing::docs())
-        .child(License::docs())
     }
 }
 
@@ -57,9 +56,8 @@ struct Description;
 impl Documentation for Description {
     type Docs = Container;
     fn docs() -> Self::Docs {
-        md().child(
-            paragraph()
-                .text("Sherlock is a")
+        md!(
+            p().text("Sherlock is a")
                 .bold("fast")
                 .text(",")
                 .bold("extensible")
@@ -77,11 +75,8 @@ impl Documentation for Description {
                 .text(", and")
                 .link("Translator", "") // TODO:
                 .text("."),
-        )
-        .child(
             alert().text(
-                paragraph()
-                    .text("Sherlock has been rewritten entirely, to be compatible with")
+                p().text("Sherlock has been rewritten entirely, to be compatible with")
                     .code("GPUI")
                     .text("instead of")
                     .code("GTK4")
@@ -91,12 +86,12 @@ impl Documentation for Description {
                         causing some changes to configuration files.",
                     ),
             ),
+            warning().text(
+                "Disclaimer: Due to GPUI's development primarily \
+                focusing on Zed, some features may not be complete yet. \
+                In Sherlock, this is barely noticeable though.",
+            )
         )
-        .child(warning().text(
-            "Disclaimer: Due to GPUI's development primarily \
-            focusing on Zed, some features may not be complete yet. \
-            In Sherlock, this is barely noticeable though.",
-        ))
     }
 }
 
@@ -104,9 +99,9 @@ struct License;
 impl Documentation for License {
     type Docs = Container;
     fn docs() -> Self::Docs {
-        md().child(h1().text("License")).child(
-            paragraph()
-                .text("GNU GENERAL LICENSE")
+        md!(
+            h1("License"),
+            p().text("GNU GENERAL LICENSE")
                 .text("-")
                 .text("see")
                 .link(

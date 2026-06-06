@@ -3,13 +3,13 @@ use md_rs::{
     components::{
         ParentComponentExt, TextComponentExt,
         code_block::codeblock,
-        container::{Container, container},
+        container::Container,
         details::{Details, details},
         heading::{h2, h3, h4},
-        list::{ListItem, list, listitem},
-        span_nodes::{blockquote, paragraph},
+        span::{bold, br, code, html_strong, html_underline, link, link_bold},
+        span_nodes::blockquote,
     },
-    md,
+    item, list, list_iter, md, p,
 };
 
 use crate::docs::{
@@ -22,28 +22,32 @@ pub(super) struct Installation;
 impl Documentation for Installation {
     type Docs = Container;
     fn docs() -> Self::Docs {
-        md().child(h2().text("Installation"))
-            .child(ArchLinux::docs())
-            .child(Debian::docs())
-            .child(Source::docs())
-            .child(NixOS::docs())
-            .child(PostInstallation::docs())
+        md!(
+            h2("Installation"),
+            ArchLinux::docs(),
+            Debian::docs(),
+            Source::docs(),
+            NixOS::docs(),
+            PostInstallation::docs(),
+        )
     }
 }
 
 impl TopLevelEntry for Installation {
     type Summary = Container;
     fn summary() -> Self::Summary {
-        md().child(h2().with_text_underline("Installation"))
-            .child(
-                paragraph()
-                    .text("Sherlock can be installed on a variety of Linux distributions.")
-                    .br()
-                    .text("Choose your distribution below to get started:"),
+        md!(
+            h2(html_underline("Installation")),
+            p!(
+                "Sherlock can be installed on a variety of Linux distributions.",
+                br(),
+                "Choose your distribution below to get started:"
+            ),
+            list_iter!(
+                Dash,
+                Self::children().map(|child| link(child.title, child.file.unwrap_or("#"))),
             )
-            .child(list().style("-").items(Self::children().map(|child| {
-                ListItem::from(paragraph().link(child.title, child.file.unwrap_or("#")))
-            })))
+        )
     }
     fn children() -> impl Iterator<Item = BookEntry> + 'static {
         [
@@ -79,27 +83,22 @@ struct ArchLinux;
 impl Documentation for ArchLinux {
     type Docs = Container;
     fn docs() -> Self::Docs {
-        md().child(h3().with_text_underline("Arch Linux"))
-            .child(
-                "If you're using Arch Linux, you can install the pre-built \
-                binary package with the follwing command:",
-            )
-            .child(
-                codeblock()
-                    .lang("bash")
-                    .content("yay -S sherlock-launcher-bin"),
-            )
-            .child(
-                paragraph()
-                    .text("Or install the community-maintained")
-                    .code("git")
-                    .text("build with the following command:"),
-            )
-            .child(
-                codeblock()
-                    .lang("bash")
-                    .content("yay -S sherlock-launcher-git"),
-            )
+        md!(
+            h3(html_underline("Arch Linux")),
+            "If you're using Arch Linux, you can install the pre-built \
+            binary package with the follwing command:",
+            codeblock()
+                .lang("bash")
+                .content("yay -S sherlock-launcher-bin"),
+            p!(
+                "Or install the community-maintained",
+                code("git"),
+                "build with the following command:"
+            ),
+            codeblock()
+                .lang("bash")
+                .content("yay -S sherlock-launcher-git"),
+        )
     }
 }
 
@@ -107,55 +106,41 @@ struct Source;
 impl Documentation for Source {
     type Docs = Container;
     fn docs() -> Self::Docs {
-        md().child(h3().with_text_underline("From Source"))
-            .child(
-                paragraph()
-                    .text("To build Sherlock from source, follow these steps.")
-                    .br()
-                    .text("Make sure to have the following dependencies installed:"),
-            )
-            .child(BuildDependencies::docs())
-            .child(
-                details()
-                    .summary(paragraph().html_strong("Build Steps:"))
-                    .child(
-                        list().items([
-                            listitem()
-                                .child(paragraph().bold("Clone the repository").text(":"))
-                                .child(
-                                    codeblock()
-                                        .lang("bash")
-                                        .line("git clone https://github.com/skxxtz/sherlock.git")
-                                        .line("cd sherlock"),
-                                ),
-                            listitem()
-                                .child(
-                                    paragraph()
-                                        .bold("Build the project using the following command")
-                                        .text(":"),
-                                )
-                                .child(codeblock().lang("bash").line("cargo build --release")),
-                            listitem()
-                                .child(paragraph().bold("Install the binary").text(":"))
-                                .child(
-                                    "After the build completes, install the binary to your system:",
-                                )
-                                .child(
-                                    codeblock()
-                                        .lang("bash")
-                                        .line("sudo cp target/release/sherlock /usr/local/bin/"),
-                                ),
-                            listitem()
-                                .child(
-                                    paragraph()
-                                        .bold("(Recommended) Remove the build directory")
-                                        .text(":"),
-                                )
-                                .child("You can optionally remove the source code directory")
-                                .child(codeblock().lang("bash").line("rm -rf /path/to/sherlock")),
-                        ]),
-                    ),
-            )
+        md!(
+            h3(html_underline("From Source")),
+            p!(
+                "To build Sherlock from source, follow these steps.",
+                br(),
+                "Make sure to have the following dependencies installed:"
+            ),
+            BuildDependencies::docs(),
+            details().summary(html_strong("Build Steps:")).child(list!(
+                Ordered,
+                item!(
+                    p!(bold("Clone the repository"), ":"),
+                    codeblock()
+                        .lang("bash")
+                        .line("git clone https://github.com/skxxtz/sherlock.git")
+                        .line("cd sherlock"),
+                ),
+                item!(
+                    p!(bold("Build the project using the following command"), ":"),
+                    codeblock().lang("bash").line("cargo build --release"),
+                ),
+                item!(
+                    p!(bold("Install the binary"), ":"),
+                    "After the build completes, install the binary to your system:",
+                    codeblock()
+                        .lang("bash")
+                        .line("sudo cp target/release/sherlock /usr/local/bin/"),
+                ),
+                item!(
+                    p!(bold("(Recommended) Remove the build directory"), ":"),
+                    "You can optionally remove the source code directory",
+                    codeblock().lang("bash").line("rm -rf /path/to/sherlock"),
+                ),
+            )),
+        )
     }
 }
 
@@ -163,120 +148,118 @@ struct NixOS;
 impl Documentation for NixOS {
     type Docs = Container;
     fn docs() -> Self::Docs {
-        let non_flake_systems = container().child(h4().text("Non-Flake Systems")).child(
-            paragraph()
-                .text("Sherlock is available in")
-                .code("nixpkgs/unstable")
-                .text("as")
-                .code("sherlock-launcher")
-                .text(".")
-                .text("If you're installing it as a standalone package,")
-                .text("you'll need to do the")
-                .link("config setup", "#config-setup")
-                .text("yourself."),
+        let non_flake_systems = md!(
+            h4("Non-Flake Systems"),
+            p!(
+                "Sherlock is available in",
+                code("nixpkgs/unstable"),
+                "as",
+                code("sherlock-launcher"),
+                ". If you're installing it as a standalone package, \
+                you'll need to do the",
+                link("config setup", "#config-setup"),
+                "yourself."
+            ),
         );
 
-        let flakes_with_home_manager = container()
-            .child(h4().text("Flakes & Home-Manager"))
-            .child(
-                paragraph()
-                    .text("A module for Sherlock is available in home manager.")
-                    .text("You can find it's configuration")
-                    .link(
-                        "here",
-                        "https://github.com/nix-community/home-manager/blob\
+        let flakes_with_home_manager = md!(
+            h4("Flakes & Home-Manager"),
+            p!(
+                "A module for Sherlock is available in home manager. \
+                You can find it's configuration",
+                link(
+                    "here",
+                    "https://github.com/nix-community/home-manager/blob\
                         /master/modules/programs/sherlock.nix",
-                    )
-                    .text(".")
-                    .text("If you want to use the lastest updates and module options,")
-                    .text("follow the steps below."),
-            )
-            .child(
-                details()
-                    .summary(paragraph().html_strong("Home-Manager Example Configuration"))
-                    .child(
-                        paragraph()
-                            .text("Add the floowing")
-                            .code("inputs")
-                            .text("of")
-                            .code("flake.nix")
-                            .text("if you want to use the lastest upstream version of Sherlock."),
-                    )
-                    .child(codeblock().lang("nix").content(indoc! {r#"
-                            sherlock = {
-                                url = "github:Skxxtz/sherlock";
-                                inputs.nixpkgs.follows = "nixpkgs";
-                            };
-                        "#}))
-                    .child("Home-Manager config:")
-                    .child(codeblock().lang("nix").content(indoc! {r#"
-                        programs.sherlock = {
-                            enable = true;
+                ),
+                ". If you want to use the lastest updates and module options, \
+                follow the steps below.",
+            ),
+            details()
+                .summary(html_strong("Home-Manager Example Configuration"))
+                .child(p!(
+                    "Add the floowing",
+                    code("inputs"),
+                    "of",
+                    code("flake.nix"),
+                    "if you want to use the lastest upstream version of Sherlock."
+                ),)
+                .child(codeblock().lang("nix").content(indoc! {r#"
+                    sherlock = {
+                        url = "github:Skxxtz/sherlock";
+                        inputs.nixpkgs.follows = "nixpkgs";
+                    };
+                "#}))
+                .child("Home-Manager config:")
+                .child(codeblock().lang("nix").content(indoc! {r#"
+                    programs.sherlock = {
+                        enable = true;
 
-                            # to run sherlock as a daemon
-                            systemd.enable = true;
+                        # to run sherlock as a daemon
+                        systemd.enable = true;
 
-                            # If wanted, you can use this line for the _latest_ package.
-                            # Otherwise, you're relying on nixpkgs to update it frequently enough.
-                            # For this to work, make sure to add sherlock as a flake input!
-                            # package = inputs.sherlock.packages.${pkgs.system}.default;
+                        # If wanted, you can use this line for the _latest_ package.
+                        # Otherwise, you're relying on nixpkgs to update it frequently enough.
+                        # For this to work, make sure to add sherlock as a flake input!
+                        # package = inputs.sherlock.packages.${pkgs.system}.default;
 
-                            # config.toml
-                            settings = {};
+                        # config.toml
+                        settings = {};
 
-                            # sherlock_alias.json
-                            aliases = {
-                                vesktop = { name = "Discord"; };
-                            };
-
-                            # sherlockignore
-                            ignore = ''
-                                Avahi*
-                            '';
-
-                            # fallback.json
-                            launchers = [
-                                {
-                                    name = "Calculator";
-                                    type = "calculation";
-                                    args = {
-                                        capabilities = [
-                                            "calc.math"
-                                            "calc.units"
-                                        ];
-                                    };
-                                    priority = 1;
-                                }
-                                {
-                                    name = "App Launcher";
-                                    type = "apps";
-                                    args = {};
-                                    priority = 2;
-                                    home = "Home";
-                                }
-                            ];
+                        # sherlock_alias.json
+                        aliases = {
+                            vesktop = { name = "Discord"; };
                         };
-                        "#})),
-            );
 
-        let flakes_without_home_manager = container()
-            .child(h4().text("Flakes without Home-Manager"))
-            .child(
-                paragraph()
-                    .text("To install the standalone package, add")
-                    .code("sherlock.packages.${pkgs.system}.default")
-                    .text("to")
-                    .code("environment.systemPackages")
-                    .text("/")
-                    .code("home.packages")
-                    .text(".")
-                    .text("You will need to create the configuration files yourself, see below."),
-            );
+                        # sherlockignore
+                        ignore = ''
+                            Avahi*
+                        '';
 
-        md().child(h3().with_text_underline("NixOs"))
-            .child(non_flake_systems)
-            .child(flakes_with_home_manager)
-            .child(flakes_without_home_manager)
+                        # fallback.json
+                        launchers = [
+                            {
+                                name = "Calculator";
+                                type = "calculation";
+                                args = {
+                                    capabilities = [
+                                        "calc.math"
+                                        "calc.units"
+                                    ];
+                                };
+                                priority = 1;
+                            }
+                            {
+                                name = "App Launcher";
+                                type = "apps";
+                                args = {};
+                                priority = 2;
+                                home = "Home";
+                            }
+                        ];
+                    };
+                    "#})),
+        );
+
+        let flakes_without_home_manager = md!(
+            h4("Flakes without Home-Manager"),
+            p!(
+                "To install the standalone package, add",
+                code("sherlock.packages.${pkgs.system}.default"),
+                "to",
+                code("environment.systemPackages"),
+                "/",
+                code("home.packages"),
+                ". You will need to create the configuration files yourself, see below.",
+            )
+        );
+
+        md!(
+            h3(html_underline("NixOs")),
+            non_flake_systems,
+            flakes_with_home_manager,
+            flakes_without_home_manager,
+        )
     }
 }
 
@@ -284,66 +267,60 @@ struct Debian;
 impl Documentation for Debian {
     type Docs = Container;
     fn docs() -> Self::Docs {
-        let build_step_1 = listitem()
-            .child(
-                paragraph()
-                    .bold("Install the")
-                    .code("cargo-deb")
-                    .bold("tool:"),
-            )
-            .child(
-                paragraph()
-                    .text("First, you need to install the")
-                    .code("cargo-deb")
-                    .text("tool, which specifies packaging Rust projects as Debian packages:"),
-            )
-            .child(codeblock().lang("bash").line("cargo deb"));
+        let build_step_1 = item!(
+            p!(bold("Install the"), code("cargo-deb"), bold("tool:")),
+            p!(
+                "First, you need to install the",
+                code("cargo-deb"),
+                "tool, which specifies packaging Rust projects as Debian packages:"
+            ),
+            codeblock().lang("bash").line("cargo deb")
+        );
 
-        let build_step_2 = listitem()
-            .child(paragraph().bold("Build the Debian package").text(":"))
-            .child(
-                paragraph()
-                    .text("After installing")
-                    .code("cargo-deb")
-                    .text(", run the following command to build the")
-                    .code(".deb")
-                    .text("package:"),
-            )
-            .child(codeblock().lang("bash").line("cargo deb"));
+        let build_step_2 = item!(
+            p!(bold("Build the Debian package"), ":"),
+            p!(
+                "After installing",
+                code("cargo-deb"),
+                ", run the following command to build the",
+                code(".deb"),
+                "package:"
+            ),
+            codeblock().lang("bash").line("cargo deb")
+        );
 
-        let build_step_3 = listitem()
-            .child(
-                paragraph()
-                    .bold("Install the generated")
-                    .code(".deb")
-                    .bold("package")
-                    .text(":"),
-            )
-            .child("Once the package is built, you can install it using:")
-            .child(codeblock().lang("bash").line(concat!(
+        let build_step_3 = item!(
+            p!(
+                bold("Install the generated"),
+                code(".deb"),
+                bold("package"),
+                ":"
+            ),
+            "Once the package is built, you can install it using:",
+            codeblock().lang("bash").line(concat!(
                 "sudo dpkg -i target/debian/sherlock-launcher_v",
                 env!("CARGO_PKG_VERSION"),
                 "_amd64.deb"
-            )))
-            .child(
-                blockquote()
-                    .text("You can also use tab-completion to auto complete the file name."),
-            );
+            )),
+            blockquote().text("You can also use tab-completion to auto complete the file name."),
+        );
 
-        md().child(h3().with_text_underline("Build Debian Package"))
-            .child(
-                paragraph()
-                    .text("To build a")
-                    .code(".deb")
-                    .text("package directly from source, follow these steps:"),
-            )
-            .child("Make sure you have the following dependencies installed:")
-            .child(BuildDependencies::docs())
-            .child(
-                details()
-                    .summary(paragraph().html_strong("Build Steps:"))
-                    .child(list().items([build_step_1, build_step_2, build_step_3])),
-            )
+        md!(
+            h3(html_underline("Build Debian Package")),
+            p!(
+                "To build a",
+                code(".deb"),
+                "package directly from source, follow these steps:"
+            ),
+            "Make sure you have the following dependencies installed:",
+            BuildDependencies::docs(),
+            details().summary(html_strong("Build Steps:")).child(list!(
+                Ordered,
+                build_step_1,
+                build_step_2,
+                build_step_3,
+            )),
+        )
     }
 }
 
@@ -351,30 +328,34 @@ struct BuildDependencies;
 impl Documentation for BuildDependencies {
     type Docs = Details;
     fn docs() -> Self::Docs {
-        details()
-            .summary(paragraph().html_strong("Dependencies:"))
-            .child(
-                list().items([
-                    ListItem::from(paragraph().code("rust").text("-").link(
-                        "How to install rust",
-                        "https://www.rust-lang.org/tools/install",
-                    )),
-                    ListItem::from(paragraph().code("git").text("-").link(
-                        "How to install git",
-                        "https://github.com/git-guides/install-git",
-                    )),
-                    ListItem::from(paragraph().code("gtk-4-layer-shell").text("-").link(
-                        "GTK4 Layer Shell",
-                        "https://github.com/wmww/gtk4-layer-shell",
-                    )),
-                    ListItem::from(
-                        paragraph()
-                            .code("dbus")
-                            .text("-")
-                            .text("(Used to get currently playing song)"),
-                    ),
-                ]),
-            )
+        details().summary(html_strong("Dependencies:")).child(list!(
+            Ordered,
+            p!(
+                code("rust"),
+                "-",
+                link(
+                    "How to install rust",
+                    "https://www.rust-lang.org/tools/install",
+                )
+            ),
+            p!(
+                code("git"),
+                "-",
+                link(
+                    "How to install git",
+                    "https://github.com/git-guides/install-git",
+                )
+            ),
+            p!(
+                code("gtk-4-layer-shell"),
+                "-",
+                link(
+                    "GTK4 Layer Shell",
+                    "https://github.com/wmww/gtk4-layer-shell",
+                )
+            ),
+            p!(code("dbus"), "-", "(Used to get currently playing song)"),
+        ))
     }
 }
 
@@ -382,104 +363,91 @@ struct PostInstallation;
 impl Documentation for PostInstallation {
     type Docs = Container;
     fn docs() -> Self::Docs {
-        let config_files = list().items([
-            ListItem::from(
-                paragraph()
-                    .link_bold(
-                        "config.toml",
-                        "https://github.com/Skxxtz/sherlock/blob\
-                        /main/docs/examples/config.toml",
-                    )
-                    .text(":")
-                    .text("This file specifies the behavior and defaults of your launcher.")
-                    .link(
-                        "Documentation",
-                        "https://github.com/Skxxtz/sherlock/blob\
-                        /main/docs/config.md",
-                    ),
+        let config_files = list!(
+            Ordered,
+            p!(
+                link_bold(
+                    "config.toml",
+                    "https://github.com/Skxxtz/sherlock/blob\
+                    /main/docs/examples/config.toml",
+                ),
+                ": This file specifies the behavior and defaults of your launcher.",
+                link(
+                    "Documentation",
+                    "https://github.com/Skxxtz/sherlock/blob\
+                    /main/docs/config.md",
+                ),
             ),
-            ListItem::from(
-                paragraph()
-                    .link_bold(
-                        "fallback.json",
-                        "https://github.com/Skxxtz/sherlock/blob\
-                        /main/docs/examples/fallback.json",
-                    )
-                    .text(":")
-                    .text("This file specifies the features your launcher should have.")
-                    .link(
-                        "Documentation",
-                        "https://github.com/Skxxtz/sherlock/blob\
-                        /main/docs/launchers.md",
-                    ),
+            p!(
+                link_bold(
+                    "fallback.json",
+                    "https://github.com/Skxxtz/sherlock/blob\
+                    /main/docs/examples/fallback.json",
+                ),
+                ": This file specifies the features your launcher should have.",
+                link(
+                    "Documentation",
+                    "https://github.com/Skxxtz/sherlock/blob\
+                    /main/docs/launchers.md",
+                )
             ),
-            ListItem::from(
-                paragraph()
-                    .link_bold(
-                        "sherlock_alias.json",
-                        "https://github.com/Skxxtz/sherlock/blob\
-                        /main/docs/examples/sherlock_alias.json",
-                    )
-                    .text(":")
-                    .text("This file spcifies aliases for applications.")
-                    .link(
-                        "Documentation",
-                        "https://github.com/Skxxtz/sherlock/blob\
-                        /main/docs/aliases.md",
-                    ),
+            p!(
+                link_bold(
+                    "sherlock_alias.json",
+                    "https://github.com/Skxxtz/sherlock/blob\
+                    /main/docs/examples/sherlock_alias.json",
+                ),
+                ": This file spcifies aliases for applications.",
+                link(
+                    "Documentation",
+                    "https://github.com/Skxxtz/sherlock/blob\
+                    /main/docs/aliases.md",
+                ),
             ),
-            ListItem::from(
-                paragraph()
-                    .link_bold(
-                        "sherlockignore",
-                        "https://github.com/Skxxtz/sherlock/blob\
-                        /main/docs/examples/sherlockignore",
-                    )
-                    .text(":")
-                    .text("This file specifies applications to exclude from your search.")
-                    .link(
-                        "Documentation",
-                        "https://github.com/Skxxtz/sherlock/blob\
-                        /main/docs/sherlockignore.md",
-                    ),
+            p!(
+                link_bold(
+                    "sherlockignore",
+                    "https://github.com/Skxxtz/sherlock/blob\
+                    /main/docs/examples/sherlockignore",
+                ),
+                ": This file specifies applications to exclude from your search.",
+                link(
+                    "Documentation",
+                    "https://github.com/Skxxtz/sherlock/blob\
+                    /main/docs/sherlockignore.md",
+                ),
             ),
-        ]);
+        );
 
-        md().child(h2().text("Post Installation"))
-            .child(h3().text("Config Setup"))
-            .child(
-                paragraph()
-                    .text(
-                        "After the installation is completed, \
-                        you can set up your configuration files. \
-                        Those files live in the",
-                    )
-                    .code("~/.config/sherlock/")
-                    .text(
-                        "directory. Depending on your needs, \
-                        you should add the following files: ",
-                    ),
-            )
-            .child(config_files)
-            .child(
-                paragraph()
-                    .text("As of")
-                    .code("version 0.1.11")
-                    .text(", Sherlock comes with the")
-                    .code("init")
-                    .text("subcommand to automatically create your config.")
-                    .text(
-                        "This will create versions of the files above, \
-                        populated with the default values. Additionally, it will create the",
-                    )
-                    .code("icons/")
-                    .text(",")
-                    .code("scripts/")
-                    .text(", and")
-                    .code("themes/")
-                    .text("subdirectories.")
-                    .text("All you have to do is run the following command:"),
-            )
-            .child(codeblock().lang("bash").line("sherlock init"))
+        md!(
+            h2("Post Installation"),
+            h3("Config Setup"),
+            p!(
+                "After the installation is completed, \
+                you can set up your configuration files. \
+                Those files live in the",
+                code("~/.config/sherlock/"),
+                "directory. Depending on your needs, \
+                you should add the following files: ",
+            ),
+            config_files,
+            p!(
+                "As of",
+                code("version 0.1.11"),
+                ", Sherlock comes with the",
+                code("init"),
+                "subcommand to automatically create your config. This \
+                will create versions of the files above, \
+                populated with the default values. Additionally, \
+                it will create the",
+                code("icons/"),
+                ",",
+                code("scripts/"),
+                ", and",
+                code("themes/"),
+                "subdirectories. All you have to do is run the following command:",
+            ),
+            codeblock().lang("bash").line("sherlock init"),
+        )
     }
 }

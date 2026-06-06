@@ -2,17 +2,18 @@ use indoc::indoc;
 use md_rs::{
     cached_component,
     components::{
-        Component, ParentComponentExt, TextComponentExt,
+        Component, ParentComponentExt,
         code_block::codeblock,
         container::Container,
         details::details,
         heading::{h1, h2, h3},
         hr::hr,
         raw::{Raw, raw},
-        span_nodes::{Paragraph, paragraph},
+        span::{bold, code, html_strong, italic},
+        span_nodes::Paragraph,
         table::{Table, table},
     },
-    md,
+    md, p,
 };
 
 use crate::{
@@ -197,27 +198,31 @@ pub struct Example {
 
 impl From<&LauncherDocEntry> for Container {
     fn from(value: &LauncherDocEntry) -> Self {
-        md().child(h2().text(value.name))
-            .child(format!("`type = {}`", value.variant_name))
-            .child(value.description)
-            .when(!value.args.is_empty(), |this| {
-                this.child(h3().text("Args")).child(field_table(value.args))
-            })
-            .when(!value.args_explanations.is_empty(), |this| {
-                this.children(value.args_explanations.iter().map(|f| f()))
-            })
-            .when(value.has_visible_functions(), |this| {
-                this.child(h3().text("Inner Functions"))
-                    .child(function_table(value.inner_functions))
-            })
-            .when(!value.examples.is_empty(), |this| {
-                this.child(h3().text("Examples"))
-                    .children(value.examples.iter().map(|ex| {
-                        md().child(paragraph().italic(ex.description))
-                            .child(codeblock().lang("json").content(ex.json.trim()))
-                    }))
-            })
-            .child(hr())
+        md!(
+            h2(value.name),
+            format!("`type = {}`", value.variant_name),
+            value.description,
+        )
+        .when(!value.args.is_empty(), |this| {
+            this.child(h3("Args")).child(field_table(value.args))
+        })
+        .when(!value.args_explanations.is_empty(), |this| {
+            this.children(value.args_explanations.iter().map(|f| f()))
+        })
+        .when(value.has_visible_functions(), |this| {
+            this.child(h3("Inner Functions"))
+                .child(function_table(value.inner_functions))
+        })
+        .when(!value.examples.is_empty(), |this| {
+            this.child(h3("Examples"))
+                .children(value.examples.iter().map(|ex| {
+                    md!(
+                        italic(ex.description),
+                        codeblock().lang("json").content(ex.json.trim()),
+                    )
+                }))
+        })
+        .child(hr())
     }
 }
 
@@ -251,19 +256,18 @@ impl Documentation for Launcher {
     type Docs = Container;
     fn docs() -> Self::Docs {
         fn get_intro() -> Paragraph {
-            paragraph()
-                .text("Sherlock separates")
-                .bold("Launchers")
-                .text("(The Logic) from")
-                .bold("Widgets")
-                .text(
-                    "(The View). One Launcher configuration can generate multiple Widgets \
+            p!(
+                "Sherlock separates",
+                bold("Launchers"),
+                "(The Logic) from",
+                bold("Widgets"),
+                "(The View). One Launcher configuration can generate multiple Widgets \
                 (like a weather tile and a clock tile), but they all follow the same",
-                )
-                .code("priority")
-                .text("and")
-                .code("home")
-                .text("rules.")
+                code("priority"),
+                "and",
+                code("home"),
+                "rules."
+            )
         }
         const EXAMPLE: &str = indoc! {"
         [Weather Launcher]
@@ -273,53 +277,54 @@ impl Documentation for Launcher {
             [Widget] App 2
             [Widget] App 3"};
 
-        md().child(h1().text("Launchers"))
-            .child(get_intro())
-            .child(codeblock().content(EXAMPLE))
-            .child(
-                paragraph()
-                    .text("The Widgets get sorted based by a tiered sort:")
-                    .code("Launcher Priority")
-                    .text("then")
-                    .code("Search Score")
-                    .text("then")
-                    .code("Number of Executions"),
-            )
-            .child(h2().text("Shared Launcher Configuration"))
-            .child(h3().text("Fields"))
-            .child(field_table(BASE_FIELDS))
-            .child(hr())
-            .child(LauncherType::docs())
+        md!(
+            h1("Launchers"),
+            get_intro(),
+            codeblock().content(EXAMPLE),
+            p!(
+                "The Widgets get sorted based by a tiered sort:",
+                code("Launcher Priority"),
+                "then",
+                code("Search Score"),
+                "then",
+                code("Number of Executions"),
+            ),
+            h2("Shared Launcher Configuration"),
+            h3("Fields"),
+            field_table(BASE_FIELDS),
+            hr(),
+            LauncherType::docs()
+        )
     }
 }
 
 pub fn capabilities_section() -> Raw {
     cached_component!(
         8 * 1024,
-        md().child(
-            details()
-                .summary(paragraph().html_strong("Capabilities:"))
-                .child(
-                    "Capabilities control what the calculator can compute. \
-                    Pass them via the `capabilities` arg:",
-                )
-                .child(
-                    codeblock()
-                        .lang("json")
-                        .content(r#"{ "capabilities": ["calc.math", "calc.units"] }"#),
-                )
-                .children(CAPABILITY_DOCS.iter().map(|cap| {
-                    details()
-                        .summary(cap.name)
-                        .child(format!("`{}`", cap.identifier))
-                        .when(!cap.units.is_empty(), |this| {
-                            this.child(table().headers(["Unit", "Aliases", "Symbol"]).rows(
+        md!(details()
+            .summary(html_strong("Capabilities:"))
+            .child(
+                "Capabilities control what the calculator can compute. \
+                Pass them via the `capabilities` arg:",
+            )
+            .child(
+                codeblock()
+                    .lang("json")
+                    .content(r#"{ "capabilities": ["calc.math", "calc.units"] }"#),
+            )
+            .children(CAPABILITY_DOCS.iter().map(|cap| {
+                details()
+                    .summary(cap.name)
+                    .child(format!("`{}`", cap.identifier))
+                    .when(!cap.units.is_empty(), |this| {
+                        this.child(
+                            table().headers(["Unit", "Aliases", "Symbol"]).rows(
                                 cap.units.iter().map(|u| {
                                     [u.name.into(), u.aliases.join(", "), u.symbol.into()]
                                 }),
-                            ))
-                        })
-                })),
-        )
+                            ),
+                        )
+                    })
+            })),)
     )
 }

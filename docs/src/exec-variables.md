@@ -146,7 +146,7 @@ A text input featuring path completion. By default, completion paths are resolve
 
 `command_input`
 
-A text input featuring path completion. Unlike `path_input`, this will only look at executeable files. First, it will look at the `$PATH`, then it will try to complete like path_input
+A text input featuring path completion. Unlike `path_input`, this will only look at executeable files. First, it will look at the `$PATH`, then it will try to complete like `path_input`.
 
 ```json
 { "command_input": "command" }

@@ -5,6 +5,7 @@ use crate::{
     docs::{
         book::{Book, BookEntry},
         configuration::Configuration,
+        contributing::Contributing,
         installation::Installation,
         readme::Readme,
     },
@@ -40,11 +41,15 @@ pub trait Documentation {
 pub struct SherlockDocumentation;
 impl SherlockDocumentation {
     pub fn generate() {
-        [Self::create_book, Self::write_readme]
-            .into_iter()
-            .map(|f| (f)())
-            .filter_map(Result::err)
-            .for_each(|e| eprintln!("{:?}", e));
+        [
+            Self::create_book,
+            Self::write_readme,
+            Self::write_contributing,
+        ]
+        .into_iter()
+        .map(|f| (f)())
+        .filter_map(Result::err)
+        .for_each(|e| eprintln!("{:?}", e));
     }
     pub fn create_book() -> Result<(), SherlockMessage> {
         let dir: &Path = concat!(env!("CARGO_MANIFEST_DIR"), "/docs/src/").as_ref();
@@ -67,6 +72,18 @@ impl SherlockDocumentation {
         let path: &Path = concat!(env!("CARGO_MANIFEST_DIR"), "/README.md").as_ref();
 
         std::fs::write(path, Readme::docs_md()).map_err(|e| {
+            sherlock_msg!(
+                Warning,
+                SherlockErrorType::FileError(FileAction::Write, path.to_path_buf()),
+                e
+            )
+        })
+    }
+
+    pub fn write_contributing() -> Result<(), SherlockMessage> {
+        let path: &Path = concat!(env!("CARGO_MANIFEST_DIR"), "/.github/CONTRIBUTING.md").as_ref();
+
+        std::fs::write(path, Contributing::docs_md()).map_err(|e| {
             sherlock_msg!(
                 Warning,
                 SherlockErrorType::FileError(FileAction::Write, path.to_path_buf()),

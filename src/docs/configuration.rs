@@ -3,10 +3,10 @@ use md_rs::{
         ParentComponentExt, TextComponentExt,
         container::Container,
         heading::h2,
-        list::{ListItem, list},
-        span_nodes::paragraph,
+        span::{br, html_underline},
+        span_nodes::p,
     },
-    md,
+    item, list_iter, md, p,
 };
 
 use crate::{
@@ -19,16 +19,19 @@ pub struct Configuration;
 impl TopLevelEntry for Configuration {
     type Summary = Container;
     fn summary() -> Self::Summary {
-        md().child(h2().with_text_underline("Configuration"))
-            .child(
-                paragraph()
-                    .text("Sherlock can be customized in many ways.")
-                    .br()
-                    .text("Choose one topic to get started:"),
+        md!(
+            h2(html_underline("Configuration")),
+            p!(
+                "Sherlock can be customized in many ways.",
+                br(),
+                "Choose one topic to get started:"
+            ),
+            list_iter!(
+                Dash,
+                Self::children()
+                    .map(|child| item!(p().link(child.title, child.file.unwrap_or("#"))))
             )
-            .child(list().style("-").items(Self::children().map(|child| {
-                ListItem::from(paragraph().link(child.title, child.file.unwrap_or("#")))
-            })))
+        )
     }
     fn children() -> impl Iterator<Item = BookEntry> + 'static {
         [

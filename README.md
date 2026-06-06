@@ -235,7 +235,7 @@ Ensure you have the latest stable Rust toolchain installed along with `rustfmt` 
 
 - `main`: stable releases only
 - Feature branches: `feat/your-feature`
-- Bug fixes: `fix/description`
+- Feature branches: `fix/description`
 
 **Before opening a PR**
 

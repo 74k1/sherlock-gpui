@@ -24,14 +24,13 @@ pub fn derive_span_node(input: TokenStream) -> TokenStream {
         .find(|a| a.path().is_ident("span_node"))
         .and_then(|a| {
             a.parse_args::<syn::MetaNameValue>().ok().and_then(|mnv| {
-                if mnv.path.is_ident("prefix") {
-                    if let syn::Expr::Lit(syn::ExprLit {
+                if mnv.path.is_ident("prefix")
+                    && let syn::Expr::Lit(syn::ExprLit {
                         lit: syn::Lit::Str(s),
                         ..
                     }) = mnv.value
-                    {
-                        return Some(s.value());
-                    }
+                {
+                    return Some(s.value());
                 }
                 None
             })
@@ -66,11 +65,29 @@ pub fn derive_span_node(input: TokenStream) -> TokenStream {
     .into()
 }
 
-#[proc_macro_derive(ComponentConstructor)]
+#[proc_macro_derive(ComponentConstructor, attributes(md_rs))]
 pub fn derive_component_constructor(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
-    let fn_name = syn::Ident::new(&name.to_string().to_lowercase(), name.span());
+
+    let fn_name = input
+        .attrs
+        .iter()
+        .find(|a| a.path().is_ident("md_rs"))
+        .and_then(|a| {
+            a.parse_args::<syn::MetaNameValue>().ok().and_then(|mnv| {
+                if mnv.path.is_ident("rename")
+                    && let syn::Expr::Lit(syn::ExprLit {
+                        lit: syn::Lit::Str(s),
+                        ..
+                    }) = mnv.value
+                {
+                    return Some(syn::Ident::new(&s.value(), name.span()));
+                }
+                None
+            })
+        })
+        .unwrap_or_else(|| syn::Ident::new(&name.to_string().to_lowercase(), name.span()));
 
     quote! {
         pub fn #fn_name() -> #name {
@@ -81,15 +98,15 @@ pub fn derive_component_constructor(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_derive(HeadingConstructors)]
-pub fn derive_heading_constructors(input: TokenStream) -> TokenStream {
+pub fn iderive_heading_constructors(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = &input.ident;
 
     let constructors = (1u8..=6).map(|level| {
         let fn_name = syn::Ident::new(&format!("h{level}"), proc_macro2::Span::call_site());
         quote! {
-            pub fn #fn_name() -> #name {
-                #name::default().level(#level)
+            pub fn #fn_name(heading: impl Into<::md_rs::components::span_nodes::Paragraph>) -> #name {
+                #name::from(heading).level(#level)
             }
         }
     });

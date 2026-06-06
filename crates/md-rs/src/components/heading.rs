@@ -1,38 +1,24 @@
-use std::{
-    borrow::Cow,
-    fmt::{Result, Write},
-};
+use std::fmt::{Result, Write};
 
 use md_rs_derive::{ComponentBuilder, HeadingConstructors};
 
-use super::{Component, span::Span};
+use crate::components::span_nodes::Paragraph;
+
+use super::Component;
 
 #[derive(Default, HeadingConstructors, ComponentBuilder)]
 pub struct Heading {
     level: u8,
     #[md_rs(skip_builder)]
-    spans: Vec<Span>,
+    text: Paragraph,
 }
-impl Heading {
-    pub fn span(mut self, span: Span) -> Self {
-        self.spans.push(span);
-        self
-    }
 
-    pub fn text(mut self, text: impl Into<Cow<'static, str>>) -> Self {
-        self.spans.push(Span::Text(text.into()));
-        self
-    }
-
-    pub fn bold(mut self, text: impl Into<Cow<'static, str>>) -> Self {
-        self.spans.push(Span::Bold(text.into()));
-        self
-    }
-
-    #[cfg(feature = "github")]
-    pub fn with_text_underline(mut self, text: impl Into<Cow<'static, str>>) -> Self {
-        self.spans.push(Span::HtmlUnderline(text.into()));
-        self
+impl<C: Into<Paragraph>> From<C> for Heading {
+    fn from(value: C) -> Self {
+        Self {
+            level: 1,
+            text: value.into(),
+        }
     }
 }
 
@@ -43,9 +29,8 @@ impl Component for Heading {
     fn render_inline(&self, out: &mut dyn Write) -> Result {
         let hashes = "#".repeat(self.level as usize);
         write!(out, "{hashes} ")?;
-        for span in &self.spans {
-            span.render(out)?;
-        }
+        self.text.render_inline(out)?;
+
         Ok(()) // no trailing \n
     }
 }

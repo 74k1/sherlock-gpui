@@ -8,6 +8,13 @@ use crate::components::{Component, IntoComponent, span_nodes::Paragraph};
 pub struct ListItem {
     children: Vec<Box<dyn Component>>,
 }
+impl ListItem {
+    pub fn with_capacity(cap: usize) -> Self {
+        Self {
+            children: Vec::with_capacity(cap),
+        }
+    }
+}
 
 impl<C: IntoComponent + 'static> From<C> for ListItem {
     fn from(value: C) -> Self {
@@ -18,6 +25,7 @@ impl<C: IntoComponent + 'static> From<C> for ListItem {
 }
 
 #[derive(Default, ComponentConstructor, ComponentBuilder)]
+#[md_rs(rename = "md_list")]
 pub struct List {
     title: Option<Paragraph>,
     style: ListStyle,
@@ -25,8 +33,8 @@ pub struct List {
     items: Vec<ListItem>,
 }
 impl List {
-    pub fn item(mut self, item: ListItem) -> Self {
-        self.items.push(item);
+    pub fn item(mut self, item: impl Into<ListItem>) -> Self {
+        self.items.push(item.into());
         self
     }
 
@@ -132,4 +140,41 @@ impl Write for IndentWriter<'_> {
         }
         Ok(())
     }
+}
+
+#[macro_export]
+macro_rules! item {
+    ($($child:expr),* $(,)?) => {
+        {
+            const COUNT: usize = [$( { _ = stringify!($child); 1 } ),*].len();
+            let mut list_item = ::md_rs::components::list::ListItem::with_capacity(COUNT);
+            $(
+                list_item = list_item.child($child);
+            )*
+            list_item
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! list {
+    ($style:ident, $($item:expr),+ $(,)?) => {
+        {
+            let mut l = ::md_rs::components::list::List::default()
+                .style(::md_rs::components::list::ListStyle::$style);
+            $(
+                l = l.item($item);
+            )*
+            l
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! list_iter {
+    ($style:ident, $iter:expr $(,)?) => {
+        ::md_rs::components::list::List::default()
+            .style(::md_rs::components::list::ListStyle::$style)
+            .items($iter)
+    };
 }
